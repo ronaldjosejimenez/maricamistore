@@ -1,0 +1,108 @@
+@page
+@model MariCamiStore.Pages.Transactions.IndexModel
+@{
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Transacciones</h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <button id="btn-nueva-tx" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Nueva Transacción
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="card">
+        <div class="card-header">
+            <div class="row align-items-end">
+                <div class="col-md-2">
+                    <label class="mb-0">Desde</label>
+                    <input type="date" id="filter-from" class="form-control form-control-sm" />
+                </div>
+                <div class="col-md-2">
+                    <label class="mb-0">Hasta</label>
+                    <input type="date" id="filter-to" class="form-control form-control-sm" />
+                </div>
+                <div class="col-md-3">
+                    <label class="mb-0">Cliente</label>
+                    <select id="filter-customer" class="form-control form-control-sm">
+                        <option value="">-- Todos --</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="mb-0">Tipo</label>
+                    <select id="filter-type" class="form-control form-control-sm">
+                        <option value="">-- Todos --</option>
+                        <option value="Charge">Cargo</option>
+                        <option value="Payment">Pago</option>
+                        <option value="Void">Anulación</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button id="btn-filter" class="btn btn-primary btn-sm mt-3">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div id="transactions-table-container">
+                <p class="p-3 text-muted">Cargando...</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal Nueva Transacción -->
+<div class="modal fade" id="modal-new-tx" tabindex="-1" role="dialog" aria-labelledby="modal-new-tx-label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-new-tx-label">Nueva Transacción</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Cliente <span class="text-danger">*</span></label>
+                    <select id="tx-customer" class="form-control">
+                        <option value="">-- Seleccione cliente --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo <span class="text-danger">*</span></label>
+                    <select id="tx-type" class="form-control">
+                        <option value="">-- Seleccione tipo --</option>
+                        <option value="Charge">Cargo</option>
+                        <option value="Payment">Pago</option>
+                        <option value="Void">Anulación</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Monto <span class="text-danger">*</span></label>
+                    <input type="number" id="tx-amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" />
+                </div>
+                <div class="form-group">
+                    <label>Descripción <span class="text-muted">(opcional)</span></label>
+                    <input type="text" id="tx-description" class="form-control" placeholder="Se genera automáticamente si se deja vacío" />
+                </div>
+                <div id="tx-error" class="text-danger" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" id="btn-guardar-tx" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>var localCurrencySign = @Html.Raw(Json.Serialize(ViewData["LocalCurrencySign"]));</script>
+<script src="/js/pages/transactions/index.js"></script>

@@ -1,0 +1,58 @@
+Actúa como un Ingeniero de Software Senior experto en .NET 10 y Entity Framework Core. Vamos a implementar una serie de mejoras, correcciones y nuevas funcionalidades en el sistema utilizando Spec-Driven Development (SDD). 
+
+Por favor, lee atentamente los siguientes requerimientos y estructura el plan de ejecución:
+
+---
+
+## 1. REQUERIMIENTOS TÉCNICOS Y ARQUITECTURA
+
+Aplica las siguientes reglas estrictas en todos los cambios de backend:
+- **Capa de Datos y Negocio:** Todos los accesos a la base de datos mediante Entity Framework Core (consultas y comandos) y las reglas de negocio deben residir exclusivamente en la capa de **Services**. Las capas superiores (Controladores/Minimal APIs/UI) solo invocan estos servicios.
+- **Manejo de Errores y Logs:** Cualquier fallo en las pantallas o procesos debe capturar la excepción, registrar un log detallado en el sistema de telemetría/logging configurado, y retornar/mostrar un mensaje amigable y limpio al usuario final (evitando exponer stack traces).
+
+---
+
+## 2. REQUERIMIENTOS GLOBALES Y DE ORGANIZACIÓN
+
+### 2.1 Organización por Defecto (Appsettings)
+- Modifica la configuración para permitir definir un `OrganizationId` por defecto en el archivo `appsettings.json`.
+- Al iniciar la aplicación, si este ID está configurado, la organización debe cargarse automáticamente para evitar que el usuario tenga que seleccionarla manualmente.
+
+### 2.2 Validación de Organización en Pantallas
+- Implementa una validación/middleware/guardia para que, al ingresar a cualquier pantalla que dependa de una organización, si esta no ha sido seleccionada o cargada por defecto, se muestre un mensaje claro e instructivo al usuario indicando que debe seleccionar una organización.
+
+### 2.3 Corrección en Vistas de Catálogos (Moneda)
+- Revisa las consultas donde se utilicen catálogos (especialmente la entidad Moneda). Actualmente se está mostrando el `ID` numérico/alfanumérico en la interfaz; corrígelo para que se muestre la **abreviación** correspondiente (ej. "USD", "CRC").
+
+---
+
+## 3. NUEVOS MANTENIMIENTOS (CRUDS) Y REGLAS DE NEGOCIO
+
+### 3.1 CRUD de Organizaciones
+- Crea el mantenimiento completo (Crear, Leer, Actualizar, Eliminar) para Organizaciones.
+- **Regla de Validación:** No se permite la eliminación de ninguna organización que esté siendo utilizada en registros relacionados de otras tablas (integridad referencial controlada por software en la capa de servicio).
+
+### 3.2 Mantenimiento de Configuraciones por Organización
+- En el mantenimiento de configuraciones del sistema, restringe la creación a **una sola configuración por organización**.
+- **Regla de Validación:** Si la organización ya cuenta con una configuración existente, la interfaz y el servicio solo deben permitir la **edición** de la misma, bloqueando o impidiendo la creación de un nuevo registro.
+
+---
+
+## 4. FLUJO DE CREACIÓN Y GESTIÓN DE ÓRDENES
+
+Modifica la pantalla y la lógica de creación/edición de Órdenes con los siguientes cambios específicos:
+
+1. **Orden de Campos y Sugerencia de Nombre:** Ubica el combo/select de *Proveedor* en la primera posición del formulario, sin ningún elemento seleccionado por defecto. Al momento en que el usuario seleccione un proveedor, genera y sugiere automáticamente un nombre para la orden con el formato: `{NombreProveedor}-{DD}-{MM}-{YYYY}` (basado en la fecha actual).
+2. **Carga de Tipo de Cambio:** Carga automáticamente el Tipo de Cambio configurado en la organización activa.
+3. **Carga de Impuesto por Defecto:** Carga automáticamente el porcentaje de Impuesto por defecto asociado a la configuración de la organización activa.
+4. **Manejo de Errores en Órdenes:** Si el proceso de creación falla, registra el log con el detalle técnico y muestra un mensaje amigable al usuario.
+5. **Gestión de Ítems de la Orden:** Implementa las opciones para **Agregar, Editar y Eliminar ítems (líneas)** dentro de la orden. 
+   - *Restricción Crítica:* Estas acciones de modificación de ítems solo deben estar permitidas si el estado de la orden es **"Pendiente"**. Si está en cualquier otro estado, la edición debe estar completamente bloqueada.
+
+---
+
+## INSTRUCCIONES PARA LA EJECUCIÓN (Paso a Paso)
+
+1. **Fase de Análisis:** Analiza la estructura actual del proyecto. Identifica los archivos de la capa de servicios, las vistas/componentes de la orden, los controladores/endpoints y el archivo de configuración.
+2. **Fase de Especificación (SDD):** Si utilizas archivos de especificación (ej. `spec.md` o Spec-Kit), actualiza o redacta la especificación técnica de los cambios antes de picar código.
+3. **Implementación Incremental:** Comienza modificando la configuración base (Organización por defecto), seguido por los mantenimientos y finalmente la lógica compleja de las Órdenes. Haz commits o pausas incrementales para validar que compile correctamente.

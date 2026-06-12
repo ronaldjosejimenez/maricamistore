@@ -1,0 +1,75 @@
+Refactor the Order and Order Items management system based on the following functional specifications. Ensure you update the UI components, backend models, database schemas, and calculation logic accordingly.
+
+### 1. General UI & Structural Changes
+- **Item Form:** Since there are too many fields, replace any inline item addition with a dedicated Form/Modal for adding and editing order items.
+- **Order Editing Mode:** Remove the separate edit dialog for the Order. Editing must happen directly in-place within the order summary screen.
+- **State-based Editability:** The order screen should remain in "edit mode" constantly as long as the order status is `Pending`. 
+- **UI Warning:** Display a prominent label/legend saying: "Presionar guardar para recalcular si hay algo pendiente de guardar" (Press save to recalculate if there are pending unsaved changes).
+- **Model Cleanup:** Completely remove the `RequestedAt` field from the Order model/schema.
+
+---
+
+### 2. Order Item Fields & Logic Updates (Grid / Form / Query)
+Apply the following rules to the Order Items:
+
+* **CustomerId:** Keep as-is, but implement a searchable Combobox/Dropdown (search-as-you-type). *Must be included in the Query view.*
+* **ProductDescription:** Keep as-is. *Must be included in the Query view.*
+* **ProductLink:** Add a new **optional (nullable)** text field.
+* **ProductSourceCode:** Add a new **optional (nullable)** text field. *Must be included in the Query view.*
+* **ProductImage:** Add an image upload field. Convert the uploaded image to a binary format. In Query/View mode, provide a button to preview the image inside a popup/modal.
+* **ProductTypeId:** Filter the selectable ProductTypes to match ONLY the currency defined in the Order.
+* **ListPrice:** Keep as-is.
+* **ListPriceTaxWithTax (Rename from ListPriceTax):** This is an editable field. Automatically calculate it on the fly when typing the item based on the order's tax rate: `ListPriceTaxWithTax = ListPrice + TaxAmount`.
+* **ServiceFeeInLocal:** Default value is loaded automatically based on the selected `ProductType`. If `ProductType` changes, refresh this value. *Must be included in the Query view.*
+* **Total:** Visual/calculated field only (Include in the model as an unmapped/computed property, do not persist in DB). Formula: `(ListPriceTaxWithTax converted using ExchangeRate) + ServiceFeeInLocal`. *Must be included in the Query view.*
+* **AgreedPriceInLocal:** - Default value matches `Total`.
+    - It is manually editable.
+    - If `ListPrice` changes, update this field.
+    - If `ServiceFeeInLocal` changes, update this field.
+    - If the Order's `ExchangeRate` changes, recalculate this field for ALL items in the order.
+    - *Must be included in the Query view.*
+* **RealPrice:** Default value matches `ListPrice`. It is manually editable. *Must be included in the Query view.*
+* **EstimateShipping:** Default value is loaded automatically based on `ProductType`. It is manually editable. *Must be included in the Query view.*
+
+---
+
+### 3. Order Level UI & Mutation Behavior
+
+#### A. When Adding a New Order (Creation Mode)
+Show **ONLY** the following fields. Remove/Hide all other fields from the initial creation screen:
+- `SupplierId` (Keep as-is)
+- `NameOfOrder` (Keep as-is)
+- `ExchangeRate` (Keep as-is)
+- `TaxPercentage` (Keep as-is)
+
+#### B. When Editing an Order (Pending State In-Place Summary)
+Define field behavior as follows:
+- **Non-Editable fields:** `SupplierId`, `NameOfOrder`, `ShippingAmountToCR`, `TotalWithoutTaxes`, `TaxesAmount`, `TotalToPayToSupplier`, `TotalOfTheOrder`, `EstimatedProfitInLocal`.
+- **Editable fields:** `ExchangeRate`, `TaxPercentage`, `ShippingAmountIntern`, `DiscountAmount`.
+
+---
+
+### 4. Calculation Trigger Logic
+
+#### Trigger Scenario A: When the Order is Saved (due to changes in `TaxPercentage` or `ExchangeRate`)
+- **Recalculate Item-level fields:** `ListPriceTaxWithTax` and `ServiceFeeInLocal`. 
+- *(Note: Do NOT recalculate `AgreedPriceInLocal` under this specific trigger).*
+- **Recalculate Order-level fields:** Run the Order Calculation Suite (defined below).
+
+#### Trigger Scenario B: When an Item is Added, Edited, or Deleted
+- Automatically run the Order Calculation Suite (defined below).
+
+---
+
+### 5. Order Calculation Suite (Formulas)
+Whenever an order-level recalculation is triggered, update the fields sequentially using these formulas:
+
+1.  **TotalAgreedPriceInLocal (NEW FIELD - Add to Order Model and DB Schema):** Sum of all items' `AgreedPriceInLocal`.
+2.  **ShippingAmountToCR:** Sum of all items' `EstimateShipping`.
+3.  **TotalWithoutTaxes:** Sum of all items' `RealPrice`.
+4.  **TaxesAmount:** `(TotalWithoutTaxes - DiscountAmount) * TaxPercentage`.
+5.  **TotalToPayToSupplier:** `ShippingAmountIntern + TotalWithoutTaxes + TaxesAmount - DiscountAmount`.
+6.  **TotalOfTheOrder:** `TotalToPayToSupplier + ShippingAmountToCR`.
+7.  **EstimatedProfitInLocal:** `TotalAgreedPriceInLocal - (TotalOfTheOrder * ExchangeRate)`.
+
+Review the existing implementation, apply the DB migrations where necessary for new/renamed fields, and refactor both frontend components and backend handlers to ensure atomic updates.

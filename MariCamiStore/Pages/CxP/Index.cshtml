@@ -1,0 +1,234 @@
+@page
+@using MariCamiStore.Model
+@model MariCamiStore.Pages.CxP.IndexModel
+@{
+    var currencies = (ViewData["Currencies"] as List<Currency>) ?? [];
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6"><h1>Cuentas por Pagar</h1></div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+
+    <!-- Init section (shown when no period exists) -->
+    <div id="cxp-init-section" style="display:none;">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card card-warning">
+                    <div class="card-header"><h3 class="card-title">Inicializar primer período</h3></div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Mes <span class="text-danger">*</span></label>
+                            <input id="init-month" type="number" min="1" max="12" class="form-control" placeholder="1–12" />
+                        </div>
+                        <div class="form-group">
+                            <label>Año <span class="text-danger">*</span></label>
+                            <input id="init-year" type="number" min="2020" class="form-control" placeholder="2026" />
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Cambio inicial <span class="text-danger">*</span></label>
+                            <input id="init-tc" type="number" step="0.01" min="0.01" class="form-control" placeholder="530.00" value="@ViewData["InitExchangeRate"]" />
+                        </div>
+                        <div id="init-error" class="alert alert-danger" style="display:none;"></div>
+                        <button id="btn-init-period" class="btn btn-warning btn-block">
+                            <i class="fas fa-play"></i> Inicializar período
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CxP Panel (shown when period exists) -->
+    <div id="cxp-panel" style="display:none;">
+
+        <!-- Exchange rate warning -->
+        <div id="tc-warning" class="alert alert-warning" style="display:none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            Tipo de cambio es 0 — los indicadores de conversión muestran 0.
+        </div>
+
+        <!-- Period header card -->
+        <div class="card card-info">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0" id="period-title">Control del Mes</h3>
+                <div>
+                    <button id="btn-close-period" class="btn btn-danger btn-sm ml-2">
+                        <i class="fas fa-lock"></i> Cerrar Mes
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Indicators row -->
+                <div class="row">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="info-box bg-light">
+                            <div class="info-box-content">
+                                <span class="info-box-text">Por pagar en Colones</span>
+                                <span class="info-box-number" id="por-pagar-colones">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="info-box bg-light">
+                            <div class="info-box-content">
+                                <span class="info-box-text">Saldos por Cobrar</span>
+                                <span class="info-box-number" id="saldos-cobrar">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="info-box bg-light">
+                            <div class="info-box-content">
+                                <span class="info-box-text">Deuda a Pagar</span>
+                                <span class="info-box-number" id="deuda-pagar">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="info-box bg-light">
+                            <div class="info-box-content">
+                                <span class="info-box-text">Pendiente de Recoger</span>
+                                <span class="info-box-number" id="pendiente-recoger">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="info-box bg-light">
+                            <div class="info-box-content">
+                                <span class="info-box-text">Shipping CR Pendientes</span>
+                                <span class="info-box-number" id="shipping-pendientes">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="por-pagar-monedas-container" class="col-md-9">
+                        <!-- Per-currency "Por pagar" badges populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Posición (highlighted) -->
+                <div class="row mt-2">
+                    <div class="col-12 text-center">
+                        <span class="text-muted">Posición</span>
+                        <h3 class="font-weight-bold" id="posicion-value">—</h3>
+                    </div>
+                </div>
+
+                <hr />
+
+                <!-- Editable fields -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Tipo de Cambio</label>
+                            <input id="tc-input" type="number" step="0.01" min="0" class="form-control form-control-sm" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Pagos Realizados (₡)</label>
+                            <input id="pagos-input" type="number" step="0.01" min="0" class="form-control form-control-sm" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>En Cuenta (₡)</label>
+                            <input id="en-cuenta-input" type="number" step="0.01" min="0" class="form-control form-control-sm" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div id="panel-error" class="alert alert-danger" style="display:none;"></div>
+                        <button id="btn-save-fields" class="btn btn-primary btn-sm">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entries section -->
+        <div class="row mb-2">
+            <div class="col-12 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Entradas del Período</h5>
+                <button id="btn-add-entry" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus"></i> Agregar entrada
+                </button>
+            </div>
+        </div>
+
+        <div id="cxp-tables-container">
+            <p class="text-muted">Cargando entradas...</p>
+        </div>
+    </div>
+
+</section>
+
+<!-- Modal: Add Entry -->
+<div class="modal fade" id="modal-add-entry" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Entrada Manual</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Referencia <span class="text-danger">*</span></label>
+                    <input id="entry-reference" type="text" class="form-control" maxlength="500" />
+                </div>
+                <div class="form-group">
+                    <label>Moneda <span class="text-danger">*</span></label>
+                    <select id="entry-currency" class="form-control">
+                        <option value="">-- Seleccione --</option>
+                        @foreach (var c in currencies)
+                        {
+                            <option value="@c.Id">@c.Name (@c.Sign)</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Monto <span class="text-danger">*</span></label>
+                    <input id="entry-amount" type="number" step="0.01" min="0.01" class="form-control" />
+                </div>
+                <div id="entry-error" class="alert alert-danger" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button id="btn-confirm-add-entry" type="button" class="btn btn-success">Agregar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Close Period -->
+<div class="modal fade" id="modal-close-period" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cerrar Mes</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>¿Confirma el cierre del mes actual?</p>
+                <p class="text-muted small">El período quedará bloqueado y se creará el nuevo período con el saldo anterior.</p>
+                <div id="close-error" class="alert alert-danger" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button id="btn-confirm-close" type="button" class="btn btn-danger">Confirmar cierre</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>var localCurrencySign = @Html.Raw(Json.Serialize(ViewData["LocalCurrencySign"]));</script>
+<script src="~/js/pages/cxp/index.js" asp-append-version="true"></script>

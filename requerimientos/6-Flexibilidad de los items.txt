@@ -1,0 +1,44 @@
+# Contexto del Requerimiento: Flexibilidad en Ítems de Órdenes Activas
+
+Necesito diseñar e implementar la posibilidad de realizar modificaciones en los ítems de las órdenes de compra cuando una orden ya se encuentra en estado **Activa**. El sistema debe ser flexible para reaccionar a cambios de clientes y precios, garantizando que el control de transacciones y saldos se actualice correctamente por debajo.
+
+---
+
+## Escenarios de Negocio (Casos de Uso)
+
+1. **Compra de Inventario Especulativo (Sin Cliente Asignado):**
+   * Se compran productos con alto potencial pero que aún no tienen un cliente final asignado.
+   * **Requerimiento:** El sistema debe registrar estos productos y reflejar un saldo en la consulta de saldos para visualizar el "potencial por cobrar" pendiente.
+
+2. **Reasignación de Producto por Rechazo o Cambio de Cliente:**
+   * Un producto asignado a un Cliente "A" es rechazado por este, incluso después de haber realizado uno o varios abonos.
+   * **Requerimiento:** Se debe poder buscar y asignar un Cliente "B" (nuevo) a ese producto. Esta reasignación puede implicar un cambio en el precio de venta (al alza o a la baja). Los saldos de la orden y la cuenta del cliente deben reflejar este cambio de precio, manteniendo el historial del abono del cliente anterior.
+
+3. **Cambio de Producto por Preferencia (Sabor, Aroma, Diseño):**
+   * Un cliente elige un producto y se genera la orden. Posteriormente, decide cambiarlo por un artículo similar pero con características distintas (ej. diferente sabor, aroma o diseño).
+   * **Requerimiento:** Permitir la sustitución del ítem dentro de la orden activa.
+
+---
+
+## Restricciones y Reglas de Negocio Inmutables
+* **Costo de Proveedor Invariable:** El pago original al proveedor o el costo total de la orden de compra **no puede cambiar** bajo ninguna circunstancia en este flujo. Si ocurriera un caso extremo, se gestionará de forma manual en la base de datos.
+
+---
+
+## Propuesta de Solución Conceptual (Basada en Modelo Previo en Excel)
+Para resolver la falta de cliente inicial y los cambios de asignación, se propone la siguiente lógica:
+1. **Cliente Genérico:** Crear un cliente por defecto en el sistema llamado `"Sin Cliente"`.
+2. **Flujo de Reasignación y Ajuste:** Al vender o reasignar un producto, el flujo operativo debe ser:
+   * Cambiar el cliente genérico (o el cliente anterior) por el **Cliente Real**.
+   * Ajustar el **Precio de Venta** si aplica.
+   * Recalcular la **Ganancia Estimada**.
+   * Actualizar el **Control de Saldos**, procesando el cambio de cliente y el impacto financiero de la fluctuación del precio (aumento o reducción del valor negociado).
+
+---
+
+## Tarea Solicitada
+Analiza este requerimiento y los escenarios planteados. Por favor, proponme:
+1. Las **alternativas de arquitectura o diseño de datos** que consideres más robustas para resolver esto (evaluando si la idea del cliente genérico `"Sin Cliente"` es la mejor opción o si sugieres manejar la nulidad/ausencia de cliente a nivel de modelo).
+2. Cómo debería comportarse el sistema por debajo a nivel de **transacciones, cuentas por cobrar y saldos** para que la contabilidad e historial queden perfectamente cuadrados, especialmente en el escenario 2 (donde ya existen abonos previos).
+
+Espero tus sugerencias de diseño para tomar la decisión final de implementación.

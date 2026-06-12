@@ -1,0 +1,24 @@
+@page
+@model MariCamiStore.Pages.ProductTypes.IndexModel
+@{
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6"><h1>Tipos de Producto</h1></div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="card">
+        <div class="card-header"><h3 class="card-title">Lista de Tipos de Producto</h3></div>
+        <div class="card-body">
+            <div id="jsGrid"></div>
+        </div>
+    </div>
+</section>
+
+<script>var localCurrencySign = @Html.Raw(Json.Serialize(ViewData["LocalCurrencySign"]));</script>
+<script src="/js/pages/product-types/index.js"></script>

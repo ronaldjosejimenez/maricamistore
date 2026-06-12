@@ -1,0 +1,1 @@
+﻿Add-Migration InitialMigration-4 -OutputDir "Infrastructure\Persistance\Migrations"

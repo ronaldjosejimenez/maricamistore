@@ -1,0 +1,328 @@
+@page
+@model MariCamiStore.Pages.Orders.ItemsModel
+@{
+    var order = Model.Order!;
+    var isPending = order.Status == "Pending";
+}
+
+<link rel="stylesheet" href="/plugins/select2/css/select2.min.css" />
+<link rel="stylesheet" href="/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css" />
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Items: @order.NameOfOrder</h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <a href="/Orders" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+
+    <!-- T024: Dirty state warning -->
+    <div id="order-dirty-warning" class="alert alert-warning mx-3" style="display:none;">
+        Presionar guardar para recalcular si hay algo pendiente de guardar
+    </div>
+
+    <!-- Order Header Summary -->
+    <div class="card card-info">
+        <div class="card-header"><h3 class="card-title">Resumen de la Orden</h3>
+            @if (isPending)
+            {
+                <div class="card-tools">
+                    <button id="btn-save-order" type="button" class="btn btn-sm btn-warning">
+                        <i class="fas fa-save"></i> Guardar Orden
+                    </button>
+                </div>
+            }
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-2"><label>Estado</label><p id="h-status" class="font-weight-bold">@MariCamiStore.Model.OrderStatus.FromKey(order.Status).Name</p></div>
+
+                <!-- T023: Editable when Pending, read-only otherwise -->
+                <div class="col-md-2">
+                    <label>T.C.</label>
+                    @if (isPending)
+                    {
+                        <input id="order-exchange-rate" type="number" step="0.01" class="form-control form-control-sm" value="@order.ExchangeRate" />
+                    }
+                    else
+                    {
+                        <p id="h-exchange">@order.ExchangeRate</p>
+                    }
+                </div>
+                <div class="col-md-2">
+                    <label>Impuesto %</label>
+                    @if (isPending)
+                    {
+                        <input id="order-tax" type="number" step="0.01" class="form-control form-control-sm" value="@order.TaxPercentage" />
+                    }
+                    else
+                    {
+                        <p id="h-tax">@order.TaxPercentage</p>
+                    }
+                </div>
+                <div class="col-md-2">
+                    <label>Envío Intern.</label>
+                    @if (isPending)
+                    {
+                        <input id="order-shipping-intern" type="number" step="0.01" class="form-control form-control-sm" value="@order.ShippingAmountIntern" />
+                    }
+                    else
+                    {
+                        <p id="h-ship-intern">@order.ShippingAmountIntern</p>
+                    }
+                </div>
+                <div class="col-md-2">
+                    <label>Descuento</label>
+                    @if (isPending)
+                    {
+                        <input id="order-discount" type="number" step="0.01" class="form-control form-control-sm" value="@order.DiscountAmount" />
+                    }
+                    else
+                    {
+                        <p id="h-discount">@order.DiscountAmount</p>
+                    }
+                </div>
+            </div>
+            <hr />
+            <!-- T025: TotalAgreedPriceInLocal added -->
+            <div class="row">
+                <div class="col-md-2"><label>Precio Acordado Total</label><p id="order-total-agreed" class="font-weight-bold text-info">@order.TotalAgreedPriceInLocal</p></div>
+                <div class="col-md-2"><label>Subtotal</label><p id="h-subtotal">@order.TotalWithoutTaxes</p></div>
+                <div class="col-md-2"><label>Impuestos</label><p id="h-taxes">@order.TaxesAmount</p></div>
+                <div class="col-md-2"><label>Envío a CR</label><p id="h-ship-cr">@order.ShippingAmountToCR</p></div>
+                <div class="col-md-2"><label>Total a Prov.</label><p id="h-total-supplier">@order.TotalToPayToSupplier</p></div>
+                <div class="col-md-2"><label>Total Orden</label><p id="h-total" class="font-weight-bold text-primary">@order.TotalOfTheOrder</p></div>
+            </div>
+            <div class="row">
+                <div class="col-md-2"><label>Ganancia Est.</label><p id="h-profit" class="font-weight-bold text-success">@order.EstimatedProfitInLocal</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Grid -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Artículos <span id="item-count-badge" class="badge badge-primary ml-2">0</span></h3>
+            @if (isPending)
+            {
+                <div class="card-tools">
+                    <button id="btn-add-item" type="button" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Agregar Ítem
+                    </button>
+                </div>
+            }
+        </div>
+        <div class="card-body">
+            @if (!isPending)
+            {
+                <div class="alert alert-info">La orden no está en estado Pendiente — solo lectura.</div>
+            }
+            <div id="items-table-container"><div class="text-center text-muted py-3">Cargando...</div></div>
+        </div>
+    </div>
+
+    <!-- Status History -->
+    <div class="card card-secondary collapsed-card">
+        <div class="card-header">
+            <h3 class="card-title">Historial de Estado</h3>
+            <div class="card-tools"><button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i></button></div>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm" id="history-table">
+                <thead><tr><th>Fecha</th><th>De</th><th>A</th><th>Notas</th><th>Justificación</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- T021: Item Modal -->
+<div class="modal fade" id="itemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="item-modal-title">Ítem de Orden</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="item-id" />
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Cliente <span class="text-danger">*</span></label>
+                            <select id="item-customer" class="form-control select2" style="width:100%;"></select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Tipo de Producto <span class="text-danger">*</span></label>
+                            <select id="item-product-type" class="form-control"></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Descripción del Producto <span class="text-danger">*</span></label>
+                            <input id="item-product-description" type="text" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Link del Producto</label>
+                            <input id="item-product-link" type="text" class="form-control" placeholder="https://..." />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Código Fuente</label>
+                            <input id="item-product-source-code" type="text" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Imagen del Producto</label>
+                            <input id="item-product-image" type="file" accept="image/*" class="form-control-file" />
+                            <small class="text-muted">Máximo 2 MB. JPEG, PNG, GIF.</small>
+                            <div id="item-image-error" class="text-danger mt-1" style="display:none;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <img id="item-product-image-preview" src="" alt="Vista previa" style="display:none; max-height:100px; max-width:100%;" class="mt-2 img-thumbnail" />
+                    </div>
+                </div>
+                <hr />
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Precio Lista</label>
+                            <input id="item-list-price" type="number" step="0.01" class="form-control" value="0" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Precio + Imp.</label>
+                            <input id="item-list-price-tax-with-tax" type="number" step="0.01" class="form-control" value="0" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Precio Real</label>
+                            <input id="item-real-price" type="number" step="0.01" class="form-control" value="0" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Total (calculado)</label>
+                            <input id="item-total" type="number" step="0.01" class="form-control" value="0" readonly />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Tarifa Servicio</label>
+                            <input id="item-service-fee-in-local" type="number" step="0.01" class="form-control" value="0" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Envío Est.</label>
+                            <input id="item-estimate-shipping" type="number" step="0.01" class="form-control" value="0" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Precio Acordado</label>
+                            <input id="item-agreed-price-in-local" type="number" step="0.01" class="form-control" value="0" />
+                        </div>
+                    </div>
+                </div>
+                <div id="item-modal-error" class="alert alert-danger" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button id="btn-save-item" type="button" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- T022: Image Preview Modal -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Vista previa de imagen</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="preview-img" src="" alt="Imagen del producto" style="max-width:100%;" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Reasignar ítem -->
+<div class="modal fade" id="modalReasignar" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reasignar Ítem</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="reasignar-item-id" />
+                <div class="form-group">
+                    <label>Cliente</label>
+                    <select id="reasignar-customer" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>Precio acordado (local)</label>
+                    <input type="number" id="reasignar-precio" class="form-control" step="0.01" min="0" />
+                    <div id="reasignar-precio-warning" class="text-warning mt-1" style="display:none;">
+                        El precio es cero. ¿Confirma que desea continuar?
+                    </div>
+                </div>
+                <div id="reasignar-error" class="text-danger mt-1" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" id="btn-confirmar-reasignar" class="btn btn-warning">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var orderId = '@order.Id';
+    var isPending = @(isPending ? "true" : "false");
+    var orderStatus = '@order.Status';
+    var exchangeRate = @order.ExchangeRate;
+    var taxPercentage = @order.TaxPercentage;
+    var shippingAmountIntern = @order.ShippingAmountIntern;
+    var discountAmount = @order.DiscountAmount;
+    var orderCurrencyId = '@order.CurrencyId';
+    var localCurrencySign = @Html.Raw(Json.Serialize(ViewData["LocalCurrencySign"]));
+    var orderCurrencySign = @Html.Raw(Json.Serialize(ViewData["OrderCurrencySign"]));
+</script>
+<script src="/plugins/select2/js/select2.full.min.js"></script>
+<script src="/js/pages/orders/items.js"></script>

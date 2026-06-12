@@ -1,0 +1,70 @@
+1.1 Necesito Resumen de total del precio acordado por cliente POdria ser el grid agrupado o otra seccion
+
+1.2 Ordenamiento por defecto por Cliente y por CreatedAt
+
+1.3 Necesito ver la cantidad de items agregados
+
+1.4 Cuando estoy agregando un item, por defecto que el precio real se el mism que el de lista mientras digiot el de lista.
+
+1.5 cuando se pasa a delivering o delivered hay a activar un checl en los order item para marcar que en efecto el produto se recibió uno por uno. cuando esta marcado cambiar de color la linea, para eso se necesita un campo nuevo en el item
+
+
+
+2. En el tipo de producto el envió estimado debe aceptar decimales
+
+
+
+3. Quiero unificar la pantalla de Cuentas por Cobrar (Saldos) y Registro de Pago. Ademas quiero un filtro por cliente 
+
+
+
+4. Modifciar el model transaction para el campo sourceId permita null para cuando registro manual algo.
+
+4.1. Necesito una pantalla también poder ingresar Transaciones manuales, donde selección el mont, el cliente, el tipo
+
+4.2. Necesito una pantalla donde pueda consultar las transaciones
+
+Columnas:
+
+- La orden por medio de SourceId si no es null or empty
+
+- El nombre del cliente
+
+- Tipo de transacción
+
+- Descripción
+
+- Monto
+
+- Fecha
+
+
+
+Filtros
+
+- Rango de fechas
+
+- Clinete, 
+
+- Tipo
+
+
+
+Ademas un sumatoria del monto
+
+
+
+
+
+5. Revisar la pantalla de saldos que no estan mostrando los saldos adecuadamente: recordar la formula por cliente: Sumar los tipo cargo y restar los tipo Pago y Void
+
+
+
+6. hacer el tamaño del url del link mas grande en los item de las ordenes
+
+
+
+7. Agregar un campo nuevo para registrar el campo signo del catalogo de monedas, actualizar la seed data de la moneda para agregar valor, reinicertar los valores
+
+7.1 formatear los montos en todas las pantallas donde salen montos y utilizar el signo para saber en que moneda esta cada campo 
+

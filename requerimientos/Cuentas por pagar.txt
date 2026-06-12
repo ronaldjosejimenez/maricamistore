@@ -1,0 +1,52 @@
+# Especificación de Requerimientos: Módulo de Cuentas por Pagar (CxP)
+
+## 1. Descripción General del Sistema
+Se requiere un sistema para el control de cuentas por pagar (CxP) con componentes automáticos y manuales. El control se maneja por "Mes de Transacción" (no mes natural). Al cierre de cada mes, el saldo pendiente se arrastra al mes siguiente como un registro automático de "Saldo anterior" en moneda local.
+
+
+No branches no commit
+---
+
+## 2. Gestión de Períodos (Control del Mes)
+El sistema no se rige por el calendario natural, sino por un proceso de cierre explícito.
+* **Definición de Mes Actual:** Es el mes que permanece abierto. Si el calendario real es 4 de mayo pero no se ha realizado el cierre de abril, el "Mes Actual" para el sistema sigue siendo abril.
+* **Tabla de Control de Período:** Debe almacenar `TransactionMonth`, `TransactionYear` y los campos de control financiero del mes detallados en la Sección 5.
+* **Proceso de Cierre:** Al ejecutar el cierre del mes, el valor del campo **"Deuda a pagar"** se debe registrar automáticamente en el nuevo mes que inicia, bajo el concepto de **"Saldo anterior"** (en moneda local).
+
+---
+
+## 3. Registro de Cuentas por Pagar
+
+### 3.1. Registros Manuales (Mantenimiento)
+* Permitir la creación libre de registros de cuentas por pagar en cualquier momento del mes.
+* **Campos requeridos:** Texto de referencia, selección de moneda (basado en el catálogo existente) y monto en la moneda seleccionada.
+
+### 3.2. Registros Automáticos (Flujo de Órdenes)
+* **Evento 1 (Orden Activa):** Cuando una orden cambia al estado **"Activo"**, el monto a pagar al proveedor se debe registrar automáticamente como una cuenta por pagar en la moneda original de la orden.
+* **Evento 2 (Orden Entregada / Delivered):** Cuando la orden cambia al estado **"Delivered"**, se debe registrar automáticamente el costo de **Shipping a CR** como una cuenta por pagar.
+    * *Nota de diseño:* Dado que el monto real del envío puede variar respecto al estimado, se requiere un campo adicional en la orden (editable y que no afecte otros cálculos previos). Por defecto, tendrá el valor del shipping estimado, pero debe permitir su modificación al momento de marcar la orden como "Delivered" para asentar el monto real en las cuentas por pagar.
+
+---
+
+## 4. Pantalla para manejar el cierre y reportes
+* Se deben presentar tablas separadas por cada tipo de moneda para visualizar las cuentas por pagar del mes actual.
+* Cada tabla debe incluir la sumatoria total en su respectiva moneda.
+
+---
+
+## 5. Campos de Control y Fórmulas Financieras (Pantalla de Control del Mes)
+
+El sistema debe calcular y mostrar los siguientes indicadores para el período abierto:
+
+* **Tipo de Cambio:** Recuperado de la configuración general. Debe ser editable manualmente durante el mes para ajustar las conversiones si es necesario. Se utilizará para consolidar los montos a la moneda local.
+* **Por pagar en {Nombre de la Moneda} (Calculado):** Un saldo independiente por cada moneda que registre transacciones en el mes.
+* **Por pagar en Colones (Calculado):** Sumatoria de todos los saldos por pagar convertidos a moneda local utilizando el tipo de cambio configurado. Si el origen ya son Colones, se suma directamente sin conversión.
+* **Saldos por Cobrar (Calculado):** Sumatoria de todos los saldos de clientes según la consulta de saldos tradicional. Se asume que todas las transacciones de tipo *payment* son en colones, por lo que no requieren conversión.
+* **Pagos Realizados (Digitado):** Monto manual ingresado en colones para registrar la porción de la deuda que ya fue cancelada.
+* **Deuda a Pagar (Calculado):** $$\text{Deuda a Pagar} = \text{Por pagar en Colones} - \text{Pagos Realizados}$$
+* **En Cuenta (Digitado):** Monto manual ingresado en colones.
+* **Pendiente de Recoger (Calculado):** $$\text{Pendiente de Recoger} = \text{Deuda a Pagar} - \text{En Cuenta}$$
+    *(Nota: Este resultado puede ser negativo).*
+* **Shipping a CR Pendientes de Aplicar (Calculado):** Sumatoria de los montos de "Shipping a CR" de todas las órdenes en estado **"Activa"**, convertidos a colones.
+* **Posición (Calculado - Mostrar en negrita y fuente más grande):**
+    $$\text{Posición} = \text{Saldos por Cobrar} + \text{En Cuenta} - \text{Deuda a Pagar} - \text{Shipping a CR Pendientes de Aplicar}$$

@@ -1,0 +1,290 @@
+﻿@page
+@model MariCamiStore.Pages.SheinCalculator.IndexModel
+@{
+    ViewData["Title"] = "SheIn Calculator";
+}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Calculadora de precios de SHEIN</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item active">Calculadora de precios de SHEIN</li>
+                </ol>
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- left column -->
+            <div class="col-md-6">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Calculadora</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form role="form">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="CustomerName">Nombre del cliente</label>
+                                <input type="text" class="form-control" id="CustomerName" name="CustomerName" placeholder="Nombre del cliente" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="ItemDescription">Código o descripcion de la prenda</label>
+                                <input type="text" class="form-control" id="ItemDescription" name="ItemDescription" placeholder="Código o descripcion de la prenda" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="ListPrice">Precio de lista</label>
+                                <input type="number" class="form-control" id="ListPrice" name="ListPrice" placeholder="Precio de lista">
+                            </div>
+                            <div class="form-group">
+                                <label for="Vat">Impuesto</label>
+                                <input type="number" class="form-control" id="Vat" name="Vat" placeholder="Impuesto" />
+                                <label>%</label>
+                            </div>
+                            <div class="form-group">
+                                <label for="ExchangeRate">Tipo de cambio</label>
+                                <input type="number" class="form-control" id="ExchangeRate" name="ExchangeRate" placeholder="Tipo de cambio" />
+                            </div>
+                            <div class="form-group">
+                                <label for="ServiceCost">Costo servicio</label>
+                                <input type="number" class="form-control" id="ServiceCost" name="ServiceCost" placeholder="Costo servicio" />
+                            </div>
+                            <div class="form-group">
+                                <label>Precio con impuesto:</label>
+                                <label id="PriceWithVAT" name="PriceWithVAT">0.0</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Precio en colones:</label>
+                                <label id="PriceCOL" name="PriceCOL">0.0</label>
+                            </div>
+                            <div class="form-group">
+                                <label>Total:</label>
+                                <label class="bg-success color-palette" id="Total" name="Total">0.0</label>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="button" id="btnCalculate" name="btnCalculate" class="btn btn-primary">Calcular</button>
+                            <button type="button" id="btnClean" name="btnClean" class="btn btn-primary">Limpiar</button>
+                            <button type="button" id="btnAdd" name="btnAdd" class="btn btn-primary">Agregar a cuenta</button>
+                            <button type="button" id="btnRefresh" name="btnRefresh" class="btn btn-primary">Nueva cuenta</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+
+            </div>
+            <!--/.col (left) -->
+        </div>
+        <!-- /.row -->
+    </div><!-- /.container-fluid -->
+</section>
+<!-- /.content -->
+<!-- Main content GRID -->
+<section class="content">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><label id="TitleOfAccount" name="TitleOfAccount"></label></h3>
+        </div>
+        <!-- /.card-header -->
+        <div class="card-body">
+            <div id="jsGrid1"></div>
+        </div>
+        <!-- /.card-body -->
+    </div>
+    <!-- /.card -->
+</section>
+
+<script type="text/javascript">
+
+    var listOfAccount = {
+        items: [],
+        total: 0,
+        nextId: 1,
+    };
+
+    var deafultValues = {
+        exchangeRateValue: 530,
+        serviceCostValue: 3000,
+        listPrice: 0,
+        vat: 7,
+        priceWithVAT: 0,
+        priceCOL: 0,
+        total: 0,
+        customerName: "",
+        itemDescription: "",
+        titleOfAccount: "Cuenta del cliente:",
+    };
+
+    $(document).ready(function () {
+        LoadFields();
+    });
+
+    function LoadFields() {
+
+        $("#CustomerName").val(deafultValues.customerName);
+        $("#ItemDescription").val(deafultValues.itemDescription);
+        $("#ListPrice").val(deafultValues.listPrice.toFixed(2));
+        var vatValue = getUrlParameter("vat");
+        if (vatValue) {
+            $("#Vat").val(Number(vatValue).toFixed(2));
+        } else {
+            $("#Vat").val(deafultValues.vat.toFixed(2));
+        }
+
+        var exchangeRateValue = getUrlParameter("exchangeRate");
+        if (exchangeRateValue) {
+            $("#ExchangeRate").val(Number(exchangeRateValue).toFixed(2));
+        } else {
+            $("#ExchangeRate").val(deafultValues.exchangeRateValue.toFixed(2));
+        }
+
+        var serviceCostValue = getUrlParameter("serviceCost");
+        if (serviceCostValue) {
+            $("#ServiceCost").val(Number(serviceCostValue).toFixed(2));
+        } else {
+            $("#ServiceCost").val(deafultValues.serviceCostValue.toFixed(2));
+        }
+
+        $("#PriceWithVAT").text(deafultValues.priceWithVAT.toFixed(2));
+        $("#PriceCOL").text(deafultValues.priceCOL.toFixed(2));
+        $("#Total").text(deafultValues.total.toFixed(2));
+        $("#TitleOfAccount").text(deafultValues.titleOfAccount);
+    }
+
+    $("#btnClean").on("click", function () {
+        LoadFields();
+    });
+
+    $("#btnAdd").on("click", function () {
+        Calculate();
+        var customerName = $("#CustomerName").val();
+        if (!customerName) {
+            customerName = "Sin nombre de cliente";
+        }
+
+        var itemDescription = $("#ItemDescription").val();
+        if (!itemDescription) {
+            itemDescription = "Prenda" + listOfAccount.nextId;
+        }
+
+        listOfAccount.items.push(
+            {
+                id: listOfAccount.nextId,
+                exchangeRateValue: Number($("#ExchangeRate").val()),
+                serviceCostValue: Number($("#ServiceCost").val()),
+                listPrice: Number($("#ListPrice").val()),
+                vat: Number($("#Vat").val()),
+                priceWithVAT: Number($("#PriceWithVAT").text()),
+                priceCOL: Number($("#PriceCOL").text()),
+                total: Number($("#Total").text()),
+                customerName: customerName,
+                itemDescription: itemDescription,
+            });
+
+        listOfAccount.nextId++;
+        listOfAccount.total += Number($("#Total").text());
+        $("#TitleOfAccount").text(deafultValues.titleOfAccount + " " + customerName + ". Total: " + listOfAccount.total.toFixed(2));
+        RefreshGrid();
+    });
+
+    $("#btnCalculate").on("click", function () {
+        Calculate();
+    });
+
+    $("#btnRefresh").on("click", function () {
+        location.reload();
+    });
+
+    function Calculate() {
+        if (!Validate()) {
+            return;
+        }
+
+        var listPrice = Number($("#ListPrice").val());
+        var vat = Number($("#Vat").val());
+        var exchangeRate = Number($("#ExchangeRate").val());
+        var serviceCost = Number($("#ServiceCost").val());
+        var priceWithVAT = listPrice * (1 + (vat / 100));
+        var priceCOL = priceWithVAT * exchangeRate;
+        var total = priceCOL + serviceCost
+        $("#PriceWithVAT").text(priceWithVAT.toFixed(2));
+        $("#PriceCOL").text(priceCOL.toFixed(2));
+        $("#Total").text(total.toFixed(2));
+    }
+
+    function Validate() {
+        var exchangeRate = Number($("#ExchangeRate").val());
+        if (!exchangeRate || exchangeRate <= 0) {
+            alert("Digita el tipo de cambio.");
+            return false;
+        }
+
+        var serviceCost = Number($("#ServiceCost").val());
+        if (!serviceCost || serviceCost <= 0) {
+            alert("Digita el Costo servicio.");
+            return false;
+        }
+
+        var listPrice = Number($("#ListPrice").val());
+        if (!listPrice || listPrice <= 0) {
+            alert("Digita el Precio de lista.");
+            return false;
+        }
+
+        var vat = Number($("#Vat").val());
+        if (!vat || vat <= 0) {
+            alert("Digita el impuesto.");
+            return false;
+        }
+
+        return true;
+    }
+
+    function getUrlParameter(sParam) {
+        var sPageURL = window.location.search.substring(1),
+            sURLVariables = sPageURL.split('&'),
+            sParameterName,
+            i;
+
+        for (i = 0; i < sURLVariables.length; i++) {
+            sParameterName = sURLVariables[i].split('=');
+
+            if (sParameterName[0] === sParam) {
+                return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+            }
+        }
+
+        return false;
+    }
+
+    function RefreshGrid() {
+        $("#jsGrid1").jsGrid({
+            height: "100%",
+            width: "100%",
+
+            sorting: true,
+            paging: true,
+
+            data: listOfAccount.items,
+
+            fields: [
+                { name: "customerName", title: "Cliente", type: "text", width: 400, textField: "customerName" },
+                { name: "itemDescription", title: "Descripción", type: "text", width: 400, textField: "itemDescription" },
+                { name: "total", Title: "Monto", type: "number", width: 50, textField: "total" },
+            ]
+        });
+    };
+</script>

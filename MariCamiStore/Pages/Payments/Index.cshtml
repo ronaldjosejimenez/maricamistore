@@ -1,0 +1,71 @@
+@page
+@model MariCamiStore.Pages.Payments.IndexModel
+@{
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6"><h1>Registro de Pagos</h1></div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Registrar Pago</h3></div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <select id="payment-customer" class="form-control">
+                            <option value="">-- Seleccione cliente --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Monto</label>
+                        <input id="payment-amount" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                    </div>
+                    <div id="payment-error" class="text-danger" style="display:none;"></div>
+                    <button id="btn-register-payment" class="btn btn-primary">Registrar Pago</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card" id="balance-card" style="display:none;">
+                <div class="card-header"><h3 class="card-title">Saldo del Cliente</h3></div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr><td>Saldo Global</td><td id="balance-global" class="font-weight-bold text-danger"></td></tr>
+                            <tr><td>Saldo Esta Org.</td><td id="balance-org" class="font-weight-bold"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content mt-3">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">Saldos de Clientes</h3>
+                    <input type="text" id="saldos-filter" class="form-control form-control-sm w-25"
+                           placeholder="Filtrar por cliente..." />
+                </div>
+                <div class="card-body p-0">
+                    <div id="saldos-table-container">
+                        <p class="p-3 text-muted">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>var localCurrencySign = @Html.Raw(Json.Serialize(ViewData["LocalCurrencySign"]));</script>
+<script src="/js/pages/payments/index.js"></script>
