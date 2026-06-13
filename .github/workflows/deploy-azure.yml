@@ -1,4 +1,4 @@
-name: Build and Deploy to Azure Container Apps
+name: Build and Deploy to Azure App Service
 
 on:
   push:
@@ -6,45 +6,32 @@ on:
       - main
   workflow_dispatch:
 
-env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/maricamisore
-
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
-    outputs:
-      image_tag: ${{ steps.set_tag.outputs.image_tag }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          dotnet-version: '10.x'
 
-      - name: Build and push Docker image
-        id: set_tag
-        run: |
-          IMAGE_TAG=${{ env.IMAGE_NAME }}:${{ github.sha }}
-          IMAGE_LATEST=${{ env.IMAGE_NAME }}:latest
+      - name: Build
+        run: dotnet build MariCamiStore/MariCamiStore.csproj --configuration Release
 
-          docker build \
-            --file MariCamiStore/Dockerfile \
-            --tag $IMAGE_TAG \
-            --tag $IMAGE_LATEST \
-            .
+      - name: Publish
+        run: dotnet publish MariCamiStore/MariCamiStore.csproj --configuration Release --output ${{ env.DOTNET_ROOT }}/myapp
 
-          docker push $IMAGE_TAG
-          docker push $IMAGE_LATEST
-
-          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-app
+          path: ${{ env.DOTNET_ROOT }}/myapp
 
   deploy:
     runs-on: ubuntu-latest
@@ -54,6 +41,11 @@ jobs:
       contents: read
 
     steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-app
+
       - name: Log in to Azure
         uses: azure/login@v2
         with:
@@ -61,35 +53,9 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_72CE75462F534C13BF6071F3411225E3 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_28D600E5948E423598E0C2A278A4C915 }}
 
-      - name: Configure registry credentials
-        run: |
-          az containerapp registry set \
-            --name "${{ vars.CONTAINER_APP_NAME }}" \
-            --resource-group "${{ vars.RESOURCE_GROUP }}" \
-            --server ghcr.io \
-            --username "${{ github.actor }}" \
-            --password "${{ secrets.GHCR_TOKEN }}"
-
-      - name: Update container image
-        run: |
-          az containerapp update \
-            --name "${{ vars.CONTAINER_APP_NAME }}" \
-            --resource-group "${{ vars.RESOURCE_GROUP }}" \
-            --image "${{ needs.build.outputs.image_tag }}"
-
-      - name: Set connection string as Container App secret
-        run: |
-          az containerapp secret set \
-            --name "${{ vars.CONTAINER_APP_NAME }}" \
-            --resource-group "${{ vars.RESOURCE_GROUP }}" \
-            --secrets "db-connection=${{ secrets.DB_CONNECTION_STRING }}"
-
-      - name: Set environment variables
-        run: |
-          az containerapp update \
-            --name "${{ vars.CONTAINER_APP_NAME }}" \
-            --resource-group "${{ vars.RESOURCE_GROUP }}" \
-            --set-env-vars \
-              "ASPNETCORE_ENVIRONMENT=Production" \
-              "ASPNETCORE_URLS=http://+:8080" \
-              "ConnectionString=secretref:db-connection"
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'maricamistoreweb'
+          slot-name: 'Production'
+          package: .
