@@ -81,13 +81,13 @@ brainstorm/09-cuentas-por-pagar.md, specs/009-cuentas-por-pagar/spec.md  [MODIFY
 
 ### D3 — OrderPackageService (atomic operations)
 New scoped service injecting `MariCamiStoreContext` and `ICxPService` (only `GetOpenPeriodAsync`).
-- `GetByOrderAsync(orderId)` → `OrderPackagesDto { EstimatedShipping, TotalPackages, Pending = max(0, est − total), CanManage, List<OrderPackageDto> Packages }` (packages ordered by DeliveryDate, CreatedAt).
+- `GetByOrderAsync(orderId)` → `OrderPackagesDto?` (null when the order is not found / not in the current organization) `{ EstimatedShipping, TotalPackages, Pending = max(0, est − total), CanManage, List<OrderPackageDto> Packages }` (packages ordered by DeliveryDate, CreatedAt).
 - `AddAsync(orderId, deliveryDate, amount, description)`:
   1. load order (query filter applies); not found → error.
   2. status ∉ {Active, Delivering} → `"Solo se pueden agregar paquetes en órdenes Activas o Entregando."`.
-  3. amount ≤ 0 → `"El monto debe ser mayor a cero."`; description trimmed, empty → null, > 500 → error.
+  3. deliveryDate missing (default) → `"La fecha de entrega es requerida."`; amount rounded to 2 decimals **before** the check, ≤ 0 → `"El monto debe ser mayor a cero."`; description trimmed, empty → null, > 500 → error.
   4. open period null → `"No hay un período CxP abierto."`.
-  5. `context.OrderPackages.Add(pkg)` (CurrencyId = order.CurrencyId, Amount rounded 2) + `context.CxPEntries.Add(entry{ Type=AutoPaquete, Amount, CurrencyId, OrderId, OrderPackageId=pkg.Id, Reference=BuildReference(order.NameOfOrder, desc) })` → **one** `SaveChangesAsync` (EF wraps it in a transaction → atomic, FR-009).
+  5. `context.OrderPackages.Add(pkg)` (CurrencyId = order.CurrencyId, DeliveryDate = deliveryDate.Date stored as SQL `date`, Amount already rounded) + `context.CxPEntries.Add(entry{ Type=AutoPaquete, Amount, CurrencyId, OrderId, OrderPackageId=pkg.Id, Reference=BuildReference(order.NameOfOrder, desc) })` → **one** `SaveChangesAsync` (EF wraps it in a transaction → atomic, FR-009).
 - `DeleteAsync(packageId)`: load package + order; status check → `"Solo se pueden eliminar paquetes en órdenes Activas o Entregando."`; open period check; add `ReversoPaquete` entry (Amount = −pkg.Amount, no OrderPackageId, Reference = "Reverso: " + BuildReference(...)); remove package; one `SaveChangesAsync`. The existing AutoPaquete entry's FK becomes NULL via SetNull (FR-009a) and is otherwise untouched (FR-007).
 - `BuildReference(name, desc)` = `string.IsNullOrWhiteSpace(desc) ? name : $"{name} - {desc}"`, truncated to 500 (CxPEntry.Reference max).
 
