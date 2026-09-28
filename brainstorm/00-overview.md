@@ -16,7 +16,7 @@ Last updated: 2026-09-28
 | 08 | 2026-06-08 | signo-moneda | spec-created | specs/008-currency-sign |
 | 09 | 2026-06-10 | cuentas-por-pagar | active | - |
 | 10 | 2026-06-11 | flexibilidad-items-activos | active | - |
-| 11 | 2026-09-28 | mejoras-saldos-ordenes-talla | active | - |
+| 11 | 2026-09-28 | mejoras-saldos-ordenes-talla | spec-created | specs/011-mejoras-saldos-ordenes-talla |
 
 ## Open Threads
 
@@ -26,10 +26,6 @@ Last updated: 2026-09-28
 - ¿"Sin Cliente" debe aparecer en el dropdown del modal de *creación* de ítem (Pending) o solo en reasignación? (from #10)
 - ¿El modal "Reasignar" debe validar precio = 0 con confirmación explícita? (from #10)
 - ¿Los totales recalculados (TotalAgreedPriceInLocal, EstimatedProfitInLocal) se persisten inmediatamente o al siguiente guardado manual? (from #10)
-- ¿Qué hacer si `statuses` en la URL trae valores inválidos o desconocidos? (from #11)
-- ¿`?statuses=` vacío explícito restaura "ninguno marcado" o los estados por defecto? (from #11)
-- ¿La talla debe recortar espacios en blanco al guardar? (from #11)
-- ¿Otros puntos de creación/edición de ítems (p. ej. reasignación de 010) deben mostrar o preservar la talla? (from #11)
 
 ## Parked Ideas
 
