@@ -8,7 +8,8 @@ metadata:
 # Brainstorm: Ajustes Visuales de la Pantalla CxP
 
 **Date:** 2026-09-28
-**Status:** active
+**Status:** spec-created
+**Spec:** specs/012-ajustes-visuales-cxp
 
 ## Problem Framing
 
@@ -59,5 +60,12 @@ Enfoque **B**. Deuda a Pagar va en **rojo** (`bg-danger`) y Pendiente de Recoger
 - Cambios en "Posición" o en los campos editables.
 
 ## Open Questions
-- ¿Qué muestra el texto junto a "Entradas del Período" cuando el período no tiene entradas o el Tipo de Cambio es 0? (sugerencia: el mismo valor del indicador, ₡0).
-- ¿Íconos concretos para Deuda a Pagar y Pendiente de Recoger? (a criterio en la implementación, Font Awesome ya disponible).
+_(todas resueltas en la spec 012)_
+- Sin entradas o con Tipo de Cambio 0: el texto junto a "Entradas del Período" muestra el mismo valor que el indicador del panel (₡0,00).
+- Íconos: `fa-file-invoice-dollar` (Deuda a Pagar) y `fa-hand-holding-usd` (Pendiente de Recoger).
+
+## Cierre (2026-09-28)
+- Implementado en `specs/012-ajustes-visuales-cxp`: PR #13 (→ develop) y PR #14 (→ main), desplegado a producción con éxito.
+- Probado manualmente por el usuario antes del merge.
+- Decisiones de la spec: el color cubre el recuadro completo, las columnas se apilan por debajo de 768 px y el texto junto a Entradas sigue visible con el período cerrado.
+- Observación: entre 768 y 991 px los títulos largos pueden cortarse con "…" (aceptado).
