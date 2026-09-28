@@ -100,13 +100,13 @@ MariCamiStore/
 
 ### D3 — Stale responses (FR-013)
 
-- `orders/index.js` keeps the last `jqXHR`; before issuing a new load it calls `abort()` on the pending one. jsGrid `loadData` returns the new promise; the aborted request never updates the grid.
+- `orders/index.js` keeps the last `jqXHR`; at the start of every load (including the empty-selection short-circuit) it calls `abort()` on the pending one; jsGrid `onError` ignores aborted requests. jsGrid `loadData` returns the new promise; the aborted request never updates the grid.
 
 ### D4 — Carrying selection to Items and back (FR-010/011)
 
 - Items link: `/Orders/Items?orderId={id}&statuses={encodeURIComponent(current)}`.
 - `ItemsModel.OnGetAsync(Guid orderId, string? statuses)` stores `statuses` in `ViewData["ReturnStatuses"]`.
-- "Volver": `<a asp-page="/Orders/Index" asp-route-statuses="@ViewData["ReturnStatuses"]">` — when null, tag helper omits the parameter → defaults (menu behavior).
+- "Volver": href built manually — `ViewData["ReturnStatuses"] is string rs ? "/Orders?statuses=" + Uri.EscapeDataString(rs) : "/Orders"` (manual build keeps an explicit empty `statuses=`, which a tag helper could drop). When null → `/Orders` → defaults (menu behavior).
 
 ### D5 — Saldos total (FR-001..005a)
 

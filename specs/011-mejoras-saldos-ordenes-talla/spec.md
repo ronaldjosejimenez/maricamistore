@@ -120,7 +120,7 @@ Al crear o editar un ítem de una orden, el usuario puede escribir la talla de l
 - **FR-007**: Al entrar a Órdenes sin selección heredada, solo Pendiente y Activa MUST estar marcadas.
 - **FR-008**: Marcar o desmarcar una casilla MUST recargar automáticamente la lista de órdenes, mostrando únicamente órdenes cuyo estado está marcado.
 - **FR-009**: Si no hay ninguna casilla marcada, la lista MUST quedar vacía.
-- **FR-010**: El enlace "Ver ítems" de cada orden en la lista MUST llevar consigo la selección de estados vigente, y el botón "Volver" de la pantalla de ítems MUST regresar a Órdenes restaurando exactamente esa selección.
+- **FR-010**: El botón "Items" de cada orden en la lista MUST llevar consigo la selección de estados vigente, y el botón "Volver" de la pantalla de ítems MUST regresar a Órdenes restaurando exactamente esa selección.
 - **FR-011**: Entrar a Órdenes por cualquier vía distinta de "Volver" (menú, dirección sin selección) MUST usar la selección por defecto (Pendiente y Activa).
 - **FR-012**: Valores de estado desconocidos en la selección heredada MUST ignorarse; si se indicaron valores pero ninguno es válido, MUST usarse la selección por defecto.
 - **FR-013**: Cuando varias recargas se solapan, la lista mostrada MUST corresponder a la selección más reciente.
