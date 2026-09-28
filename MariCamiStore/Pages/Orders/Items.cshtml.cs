@@ -32,6 +32,7 @@ public record OrderHeaderDto(
 public class ItemsModel(
     IOrderService orderService,
     ICatalogService catalogService,
+    IOrderPackageService orderPackageService,
     ICurrentOrganizationService currentOrg)
     : OrganizationPageModel(currentOrg)
 {
@@ -111,6 +112,28 @@ public class ItemsModel(
 
     public async Task<JsonResult> OnGetHistoryAsync(Guid orderId) =>
         new JsonResult(await orderService.GetOrderStatusHistoryAsync(orderId));
+
+    // ── Shipping packages ────────────────────────────────────────────────────
+
+    public record AddPackageRequest(Guid OrderId, DateTime DeliveryDate, decimal Amount, string? Description);
+
+    public record DeletePackageRequest(Guid PackageId);
+
+    public async Task<JsonResult> OnGetPackagesAsync(Guid orderId) =>
+        new JsonResult(await orderPackageService.GetByOrderAsync(orderId));
+
+    public async Task<JsonResult> OnPostAddPackageAsync([FromBody] AddPackageRequest request)
+    {
+        var (success, error) = await orderPackageService.AddAsync(
+            request.OrderId, request.DeliveryDate, request.Amount, request.Description);
+        return new JsonResult(new { success, error });
+    }
+
+    public async Task<JsonResult> OnPostDeletePackageAsync([FromBody] DeletePackageRequest request)
+    {
+        var (success, error) = await orderPackageService.DeleteAsync(request.PackageId);
+        return new JsonResult(new { success, error });
+    }
 
     // Trimmed size; blank means OrderItem.DefaultSize
     private static string NormalizeSize(string? size) =>

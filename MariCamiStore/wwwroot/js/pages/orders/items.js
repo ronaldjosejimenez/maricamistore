@@ -353,6 +353,105 @@ function openReasignar(item) {
     $('#modalReasignar').modal('show');
 }
 
+// ── Shipping packages ─────────────────────────────────────────────────────────
+
+function todayIso() {
+    var d = new Date();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return d.getFullYear() + '-' + m + '-' + day;
+}
+
+function loadPackages() {
+    $.get('?handler=Packages&orderId=' + orderId, function (data) {
+        if (!data) return;
+        $('#pkg-estimated').text(formatMoney(data.estimatedShipping, orderCurrencySign));
+        $('#pkg-total').text(formatMoney(data.totalPackages, orderCurrencySign));
+        $('#pkg-pending').text(formatMoney(data.pending, orderCurrencySign));
+        renderPackagesTable(data.packages || []);
+    });
+}
+
+function renderPackagesTable(packages) {
+    var $container = $('#packages-table-container').empty();
+    if (packages.length === 0) {
+        $container.append($('<div class="text-center text-muted py-3">').text('Sin paquetes registrados.'));
+        return;
+    }
+    var $table = $('<table class="table table-sm table-bordered">');
+    var $htr = $('<tr>');
+    ['Fecha de entrega', 'Descripción', 'Monto'].forEach(function (h) { $htr.append($('<th>').text(h)); });
+    if (canManagePackages) $htr.append($('<th>'));
+    $table.append($('<thead>').append($htr));
+    var $tbody = $('<tbody>');
+    packages.forEach(function (p) {
+        var $tr = $('<tr>');
+        $tr.append($('<td>').text((p.deliveryDate || '').substr(0, 10)));
+        $tr.append($('<td>').text(p.description || ''));
+        $tr.append($('<td>').text(formatMoney(p.amount, orderCurrencySign)));
+        if (canManagePackages) {
+            var $btn = $('<button type="button" class="btn btn-xs btn-danger" title="Eliminar"><i class="fas fa-trash"></i></button>')
+                .on('click', function () { deletePackage(p.id, $(this)); });
+            $tr.append($('<td>').append($btn));
+        }
+        $tbody.append($tr);
+    });
+    $container.append($table.append($tbody));
+}
+
+function addPackage() {
+    var $btn = $('#btn-add-package');
+    $('#pkg-error').hide();
+    var amount = parseFloat($('#pkg-amount').val());
+    var deliveryDate = $('#pkg-date').val();
+    if (!deliveryDate) {
+        $('#pkg-error').text('La fecha de entrega es requerida.').show();
+        return;
+    }
+    if (!(amount > 0)) {
+        $('#pkg-error').text('El monto debe ser mayor a cero.').show();
+        return;
+    }
+    $btn.prop('disabled', true);
+    ajaxPost('AddPackage', {
+        orderId: orderId,
+        deliveryDate: deliveryDate,
+        amount: amount,
+        description: $('#pkg-description').val()
+    }, function (r) {
+        $btn.prop('disabled', false);
+        if (r && r.success) {
+            $('#pkg-amount').val('');
+            $('#pkg-description').val('');
+            $('#pkg-date').val(todayIso());
+            loadPackages();
+        } else {
+            $('#pkg-error').text((r && r.error) || 'Error al agregar el paquete.').show();
+        }
+    }, function (msg) {
+        $btn.prop('disabled', false);
+        $('#pkg-error').text(msg).show();
+    });
+}
+
+function deletePackage(packageId, $btn) {
+    if (!confirm('¿Eliminar este paquete? Se registrará un reverso en CxP.')) return;
+    $('#pkg-error').hide();
+    $btn.prop('disabled', true);
+    ajaxPost('DeletePackage', { packageId: packageId }, function (r) {
+        if (r && r.success) {
+            loadPackages();
+        } else {
+            $btn.prop('disabled', false);
+            var msg = (r && r.error) || 'Error al eliminar el paquete.';
+            if ($('#pkg-error').length) $('#pkg-error').text(msg).show(); else alert(msg);
+        }
+    }, function (msg) {
+        $btn.prop('disabled', false);
+        if ($('#pkg-error').length) $('#pkg-error').text(msg).show(); else alert(msg);
+    });
+}
+
 // ── Initialization ────────────────────────────────────────────────────────────
 
 $(function () {
@@ -586,6 +685,13 @@ $(function () {
     });
 
     loadItems();
+
+    // Shipping packages (card only rendered when the order is not Pending)
+    if ($('#packages-table-container').length) {
+        $('#pkg-date').val(todayIso());
+        $('#btn-add-package').on('click', addPackage);
+        loadPackages();
+    }
 
     // Load status history
     $.get('?handler=History&orderId=' + orderId, function (data) {

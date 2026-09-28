@@ -15,6 +15,7 @@ namespace MariCamiStore.Extensions
             services.AddTransient<ISalesService, SalesService>();
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ICxPService, CxPService>();
+            services.AddScoped<IOrderPackageService, OrderPackageService>();
 
             return services;
         }
