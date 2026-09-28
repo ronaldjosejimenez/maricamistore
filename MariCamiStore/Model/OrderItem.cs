@@ -27,6 +27,16 @@ public class OrderItem
     /// <value>The product source code.</value>
     public string ProductSourceCode { get; set; } = string.Empty;
 
+    /// <summary>The size used when none is provided.</summary>
+    public const string DefaultSize = "N/A";
+
+    /// <summary>The maximum length of <see cref="Size"/>.</summary>
+    public const int SizeMaxLength = 20;
+
+    /// <summary>Gets or sets the size (talla) of the garment.</summary>
+    /// <value>The size.</value>
+    public string Size { get; set; } = DefaultSize;
+
     /// <summary>Gets or sets the image.</summary>
     /// <value>The image.</value>
     public byte[]? ProductImage { get; set; }

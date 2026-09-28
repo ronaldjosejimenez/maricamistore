@@ -7,14 +7,17 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6"><h1>Órdenes</h1></div>
-            <div class="col-sm-6 text-right">
-                <select id="statusFilter" class="form-control d-inline-block" style="width:auto;">
-                    <option value="Pending,Active">Pendientes y Activas</option>
-                    <option value="Delivering,Delivered">En Entrega</option>
-                    <option value="Completed">Completadas</option>
-                    <option value="Voided">Anuladas</option>
-                    <option value="">Todas</option>
-                </select>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <span class="mr-2">Estados:</span>
+                @foreach (var s in MariCamiStore.Model.OrderStatus.List())
+                {
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input status-filter" type="checkbox" id="status-@s.Key" value="@s.Key" @(Model.SelectedStatuses.Contains(s.Key) ? "checked" : "") />
+                        <label class="form-check-label" for="status-@s.Key">@s.Name</label>
+                    </div>
+                }
             </div>
         </div>
     </div>
