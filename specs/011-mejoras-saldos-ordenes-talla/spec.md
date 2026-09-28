@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-28
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: Brainstorm `brainstorm/11-mejoras-saldos-ordenes-talla.md`: total neto en la tabla "Saldos de Clientes" (pantalla de Pagos), reemplazo del combo de filtro de estados en Órdenes por una lista de casillas con recuerdo de selección al usar "Volver", y nuevo dato "Talla" en los ítems de orden.
 

@@ -8,7 +8,8 @@ metadata:
 # Brainstorm: Total de Saldos, Filtro de Estados en Órdenes y Talla en Ítems
 
 **Date:** 2026-09-28
-**Status:** active
+**Status:** spec-created
+**Spec:** specs/011-mejoras-saldos-ordenes-talla
 
 ## Problem Framing
 
@@ -70,7 +71,15 @@ Se implementan las tres mejoras en un solo feature. Para recordar el filtro al u
 - Mostrar la talla en la tabla de ítems, reportes u otras pantallas.
 
 ## Open Questions
-- ¿Qué pasa si `statuses` en la URL trae valores inválidos o desconocidos? (sugerencia: ignorarlos; si no queda ninguno válido, usar los estados por defecto).
-- ¿El parámetro `statuses` vacío explícito (`?statuses=`) debe restaurar "ninguno marcado" (lista vacía) o los estados por defecto?
-- ¿La talla debe recortar espacios en blanco al guardar?
-- ¿Hay otros puntos de creación/edición de ítems (p. ej. reasignación de la feature 010) donde deba aparecer o preservarse la talla?
+_(todas resueltas en la spec 011)_
+- Estados inválidos en la URL: se ignoran; si no queda ninguno válido, se usan los estados por defecto.
+- `?statuses=` vacío explícito: se respeta como "ninguno marcado" (lista vacía).
+- La talla se recorta (trim) al guardar.
+- La reasignación (feature 010) conserva la talla; no hay otros puntos de creación de ítems.
+
+## Cierre (2026-09-28)
+- Implementado en `specs/011-mejoras-saldos-ordenes-talla` (merge a develop; release en PR #10 develop → main).
+- Cambio posterior a pedido del usuario: la talla por defecto es **"N/A"** (no vacío); vacío o solo espacios se guarda como "N/A".
+- Regla adicional fuera de este brainstorm (PR #9): una orden **Completada ya no se puede anular**.
+- Scripts manuales para completar la talla de ítems existentes: `backfill-talla.sql` (sufijo " - TALLA") y `backfill-talla-2.sql` (frases "cambio a X" y "Talla X" sin separador).
+- Despliegue: requiere aplicar la migración `AddOrderItemSize` en la base de Azure antes del merge a main.
