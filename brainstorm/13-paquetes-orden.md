@@ -8,7 +8,8 @@ metadata:
 # Brainstorm: Paquetes de Envío por Orden (OrderPackage)
 
 **Date:** 2026-09-28
-**Status:** active
+**Status:** spec-created
+**Spec:** specs/013-paquetes-orden
 
 ## Problem Framing
 
@@ -104,6 +105,17 @@ Nueva entidad **OrderPackage**. Cada paquete registrado crea una entrada CxP **A
 - Autenticación o permisos por usuario (pendiente aparte).
 
 ## Open Questions
-- ¿Se valida algo al pasar de Entregando a Entregada, por ejemplo avisar si el pendiente de shipping de la orden no es 0? (sugerencia: sin validación en esta versión).
-- ¿Hace falta permitir montos negativos en entradas manuales de CxP por coherencia con ReversoPaquete? (sugerencia: no; solo las automáticas).
-- ¿Cómo se muestran los montos negativos (ReversoPaquete) en la tabla de entradas CxP? (sugerencia: con signo "−" y texto en rojo).
+_(todas resueltas en la spec 013)_
+- Entregando → Entregada: sin validación de paquetes en esta versión.
+- Entradas manuales de CxP: siguen aceptando solo montos positivos; solo Reverso Paquete puede ser negativo.
+- Montos negativos en la tabla CxP: con "−" y en rojo; restan del total de su moneda.
+
+## Cierre (2026-09-28)
+- Implementado en `specs/013-paquetes-orden`: PR #21 (→ develop) y PR #22 (→ main). Desplegado a producción con éxito y verificado por el usuario.
+- Migraciones aplicadas manualmente en Azure antes del despliegue: `AddOrderPackages` y `AddOrderPackageTrackingNumber`.
+- Decisiones tomadas durante el proceso:
+  - FK OrderPackages → Orders en **Restrict**, para evitar rutas de cascada múltiples en SQL Server.
+  - Las entradas Auto-Paquete y Reverso Paquete se pueden borrar desde CxP como cualquier otra; el paquete no se modifica.
+  - Validación en el servidor de la fecha requerida y del monto redondeado a 2 decimales.
+- Cambio posterior a pedido del usuario: campo opcional **"Número de tracking"** (`TrackingNumber`, máx. 100), en una migración separada.
+- La regla de shipping del requerimiento 009 queda descartada y documentada en `brainstorm/09-cuentas-por-pagar.md` y `specs/009-cuentas-por-pagar/spec.md`.
