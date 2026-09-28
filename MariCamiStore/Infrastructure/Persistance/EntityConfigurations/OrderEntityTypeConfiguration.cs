@@ -81,10 +81,5 @@ public class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
 
         builder.Property(o => o.CurrencyId)
             .IsRequired();
-
-        builder.Property(o => o.ActualShippingAmountToCR)
-            .IsRequired()
-            .HasColumnType("decimal(18,2)")
-            .HasDefaultValue(0m);
     }
 }

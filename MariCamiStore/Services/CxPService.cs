@@ -93,7 +93,7 @@ public class CxPService(
             CurrencyId = localCurrencyId,
             Amount = deudaAPagar,
             Reference = "Saldo anterior",
-            Type = "SaldoAnterior",
+            Type = CxPEntryType.SaldoAnterior,
             OrderId = null,
             CreatedAt = DateTime.UtcNow
         };
@@ -241,7 +241,7 @@ public class CxPService(
             CurrencyId = req.CurrencyId,
             Amount = req.Amount,
             Reference = req.Reference.Trim(),
-            Type = "Manual",
+            Type = CxPEntryType.Manual,
             OrderId = null,
             CreatedAt = DateTime.UtcNow
         };

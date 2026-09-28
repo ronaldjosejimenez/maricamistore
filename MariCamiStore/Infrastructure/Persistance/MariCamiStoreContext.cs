@@ -57,6 +57,10 @@ public class MariCamiStoreContext(
     public DbSet<PeriodControl> PeriodControls { get; set; }
     public DbSet<CxPEntry> CxPEntries { get; set; }
 
+    /// <summary>Gets or sets the order packages.</summary>
+    /// <value>The order packages.</value>
+    public DbSet<OrderPackage> OrderPackages { get; set; }
+
     /// <summary>Override this method to further configure the model that was discovered by convention from the entity types
     /// exposed in <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1" /> properties on your derived context. The resulting model may be cached
     /// and re-used for subsequent instances of your derived context.</summary>
@@ -85,6 +89,7 @@ public class MariCamiStoreContext(
         builder.ApplyConfiguration(new OrderStatusHistoryEntityTypeConfiguration());
         builder.ApplyConfiguration(new PeriodControlEntityTypeConfiguration());
         builder.ApplyConfiguration(new CxPEntryEntityTypeConfiguration());
+        builder.ApplyConfiguration(new OrderPackageEntityTypeConfiguration());
 
         // Capture the service reference (not value) so EF re-evaluates per DbContext instance
         builder.Entity<Configuration>().HasQueryFilter(c => c.OrganizationId == currentOrganizationService.OrganizationId);
@@ -92,5 +97,6 @@ public class MariCamiStoreContext(
         builder.Entity<OrderItem>().HasQueryFilter(oi => oi.Order.OrganizationId == currentOrganizationService.OrganizationId);
         builder.Entity<Transaction>().HasQueryFilter(t => t.OrganizationId == currentOrganizationService.OrganizationId);
         builder.Entity<PeriodControl>().HasQueryFilter(p => p.OrganizationId == currentOrganizationService.OrganizationId);
+        builder.Entity<OrderPackage>().HasQueryFilter(p => p.Order.OrganizationId == currentOrganizationService.OrganizationId);
     }
 }
