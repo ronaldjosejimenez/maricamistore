@@ -36,6 +36,11 @@ public class OrderItemEntityTypeConfiguration : IEntityTypeConfiguration<OrderIt
             .IsRequired()
             .HasMaxLength(50);
 
+        builder.Property(oi => oi.Size)
+            .IsRequired()
+            .HasMaxLength(20)
+            .HasDefaultValue(string.Empty);
+
         builder.Property(oi => oi.ProductImage);
 
         builder.Property(o => o.ProductTypeId)

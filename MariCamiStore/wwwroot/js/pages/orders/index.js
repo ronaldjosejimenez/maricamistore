@@ -17,14 +17,27 @@ function ajaxPost(handler, data, done, fail) {
 }
 
 var grid;
+var pendingLoad = null;
+
+// Comma-separated keys of the checked status checkboxes
+function getSelectedStatuses() {
+    return $('.status-filter:checked').map(function () { return this.value; }).get().join(',');
+}
+
+function loadOrders() {
+    // Abort any in-flight request so a stale response never overwrites the grid
+    if (pendingLoad) {
+        pendingLoad.abort();
+        pendingLoad = null;
+    }
+    var sel = getSelectedStatuses();
+    if (!sel) return [];
+    pendingLoad = $.get('?handler=Load&statuses=' + encodeURIComponent(sel));
+    return pendingLoad;
+}
 
 function loadGrid() {
-    var filter = $('#statusFilter').val();
-
     if (grid) {
-        $('#jsGrid').jsGrid('option', 'controller', {
-            loadData: function () { return $.get('?handler=Load&statusFilter=' + encodeURIComponent(filter)); }
-        });
         $('#jsGrid').jsGrid('loadData');
         return;
     }
@@ -34,7 +47,13 @@ function loadGrid() {
         sorting: true, paging: true, pageSize: 20, autoload: true,
 
         controller: {
-            loadData: function () { return $.get('?handler=Load&statusFilter=' + encodeURIComponent(filter)); }
+            loadData: loadOrders
+        },
+
+        onError: function (args) {
+            // Aborted (superseded) loads are expected; ignore them
+            var xhr = args.args && args.args[0];
+            if (xhr && xhr.statusText === 'abort') return;
         },
 
         fields: [
@@ -59,7 +78,7 @@ function loadGrid() {
                     }
                     // Items link
                     $('<a class="btn btn-xs btn-secondary mr-1">Items</a>')
-                        .attr('href', '/Orders/Items?orderId=' + item.id).appendTo(btns);
+                        .attr('href', '/Orders/Items?orderId=' + item.id + '&statuses=' + encodeURIComponent(getSelectedStatuses())).appendTo(btns);
                     // Transition buttons
                     (item.nextStatuses || []).forEach(function (s) {
                         var labels = { Active: 'Activar', Delivering: 'Enviar', Delivered: 'Entregada', Completed: 'Completar', Voided: 'Anular' };
@@ -215,6 +234,6 @@ $(function () {
         currencyItems.forEach(function (c) { sel.append($('<option>').val(c.id).text(c.abbreviation || c.name)); });
     });
 
-    $('#statusFilter').on('change', loadGrid);
+    $(document).on('change', '.status-filter', loadGrid);
     loadGrid();
 });

@@ -27,6 +27,10 @@ public class OrderItem
     /// <value>The product source code.</value>
     public string ProductSourceCode { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the size (talla) of the garment.</summary>
+    /// <value>The size.</value>
+    public string Size { get; set; } = string.Empty;
+
     /// <summary>Gets or sets the image.</summary>
     /// <value>The image.</value>
     public byte[]? ProductImage { get; set; }

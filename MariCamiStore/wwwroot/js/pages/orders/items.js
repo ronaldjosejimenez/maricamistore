@@ -113,6 +113,7 @@ function openAddItem() {
     $('#item-product-description').val('');
     $('#item-product-link').val('');
     $('#item-product-source-code').val('');
+    $('#item-size').val('');
     $('#item-product-image').val('');
     $('#item-product-image-preview').hide();
     $('#item-image-error').hide();
@@ -156,6 +157,7 @@ function openEditItem(item) {
     $('#item-product-description').val(item.productDescription);
     $('#item-product-link').val(item.productLink || '');
     $('#item-product-source-code').val(item.productSourceCode || '');
+    $('#item-size').val(item.size || '');
     $('#item-product-image').val('');
     if (item.hasImage) {
         $('#item-product-image-preview').attr('src', '?handler=ItemImage&itemId=' + item.id + '&orderId=' + orderId).show();
@@ -442,6 +444,7 @@ $(function () {
             productDescription: $('#item-product-description').val(),
             productLink: $('#item-product-link').val() || null,
             productSourceCode: $('#item-product-source-code').val() || null,
+            size: $('#item-size').val() || '',
             productImageBase64: selectedImageBase64 !== null ? selectedImageBase64 : (id ? null : null),
             productTypeId: $('#item-product-type').val() || '00000000-0000-0000-0000-000000000000',
             listPrice: parseFloat($('#item-list-price').val()) || 0,

@@ -27,6 +27,37 @@ public class OrderStatus : Enumeration
     /// <returns>An enumerator that allows foreach to be used to process the matched items.</returns>
     public static IEnumerable<OrderStatus> List() => new[] { Pending, Active, Delivering, Delivered, Completed, Voided };
 
+    /// <summary>Gets the status keys selected by default in the orders filter.</summary>
+    public static IReadOnlyList<string> DefaultFilterKeys => new[] { Pending.Key, Active.Key };
+
+    /// <summary>Parses a comma-separated list of status keys used to filter orders.</summary>
+    /// <param name="raw">The raw comma-separated keys.</param>
+    /// <param name="present">Whether the parameter was present in the request.</param>
+    /// <returns>
+    /// The default keys when the parameter is absent or contains no valid keys; an empty list when it is
+    /// present but empty; otherwise the valid keys, de-duplicated and ordered as <see cref="List"/>.
+    /// </returns>
+    public static IReadOnlyList<string> ParseFilter(string? raw, bool present)
+    {
+        if (!present)
+        {
+            return DefaultFilterKeys;
+        }
+
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return Array.Empty<string>();
+        }
+
+        var requested = raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var valid = List()
+            .Select(s => s.Key)
+            .Where(k => requested.Contains(k, StringComparer.Ordinal))
+            .ToList();
+
+        return valid.Count > 0 ? valid : DefaultFilterKeys;
+    }
+
     /// <summary>Constructor.</summary>
     /// <param name="key">The key.</param>
     /// <param name="name">The name.</param>

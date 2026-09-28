@@ -12,6 +12,7 @@ public record OrderItemDto(
     string ProductDescription,
     string? ProductLink,
     string? ProductSourceCode,
+    string? Size,
     string? ProductImageBase64,
     Guid ProductTypeId,
     decimal ListPrice,
@@ -36,10 +37,12 @@ public class ItemsModel(
 {
     public Order? Order { get; private set; }
 
-    public async Task<IActionResult> OnGetAsync(Guid orderId)
+    public async Task<IActionResult> OnGetAsync(Guid orderId, string? statuses)
     {
         var guard = CheckOrganization();
         if (guard != null) return guard;
+        // Status selection of the Orders page, echoed back in the "Volver" link
+        ViewData["ReturnStatuses"] = Request.Query.ContainsKey("statuses") ? (statuses ?? string.Empty) : null;
         Order = await orderService.GetOrderAsync(orderId);
         if (Order == null) return NotFound();
 
@@ -112,6 +115,10 @@ public class ItemsModel(
     // T012: insert with DTO supporting image as base64
     public async Task<JsonResult> OnPostInsertAsync([FromBody] OrderItemDto dto)
     {
+        var size = (dto.Size ?? string.Empty).Trim();
+        if (size.Length > 20)
+            return new JsonResult(new { error = "La talla no puede superar 20 caracteres." });
+
         byte[]? imageBytes = null;
         if (!string.IsNullOrEmpty(dto.ProductImageBase64))
         {
@@ -127,6 +134,7 @@ public class ItemsModel(
             ProductDescription = dto.ProductDescription,
             ProductLink = dto.ProductLink ?? string.Empty,
             ProductSourceCode = dto.ProductSourceCode ?? string.Empty,
+            Size = size,
             ProductImage = imageBytes,
             ProductTypeId = dto.ProductTypeId,
             ListPrice = dto.ListPrice,
@@ -145,6 +153,7 @@ public class ItemsModel(
             created.ProductDescription,
             created.ProductLink,
             created.ProductSourceCode,
+            created.Size,
             HasImage = created.ProductImage != null,
             created.ProductTypeId,
             created.ListPrice,
@@ -159,6 +168,10 @@ public class ItemsModel(
     // T013: update with DTO; null image = preserve; "" = clear
     public async Task<JsonResult> OnPostUpdateAsync([FromBody] OrderItemDto dto)
     {
+        var size = (dto.Size ?? string.Empty).Trim();
+        if (size.Length > 20)
+            return new JsonResult(new { error = "La talla no puede superar 20 caracteres." });
+
         var existing = (await orderService.GetOrderItemsAsync(dto.OrderId))
             .FirstOrDefault(i => i.Id == dto.Id);
         if (existing == null)
@@ -180,6 +193,7 @@ public class ItemsModel(
         existing.ProductDescription = dto.ProductDescription;
         existing.ProductLink = dto.ProductLink ?? string.Empty;
         existing.ProductSourceCode = dto.ProductSourceCode ?? string.Empty;
+        existing.Size = size;
         existing.ProductImage = imageBytes;
         existing.ProductTypeId = dto.ProductTypeId;
         existing.ListPrice = dto.ListPrice;
@@ -198,6 +212,7 @@ public class ItemsModel(
             updated.ProductDescription,
             updated.ProductLink,
             updated.ProductSourceCode,
+            updated.Size,
             HasImage = updated.ProductImage != null,
             updated.ProductTypeId,
             updated.ListPrice,
