@@ -40,6 +40,9 @@ public class OrderPackageService(
             return (false, "Orden no encontrada.");
         if (!CanManage(order.Status))
             return (false, "Solo se pueden agregar paquetes en órdenes Activas o Entregando.");
+        if (deliveryDate == default)
+            return (false, "La fecha de entrega es requerida.");
+        amount = Math.Round(amount, 2);
         if (amount <= 0)
             return (false, "El monto debe ser mayor a cero.");
 
@@ -57,7 +60,7 @@ public class OrderPackageService(
             Id = Guid.NewGuid(),
             OrderId = order.Id,
             DeliveryDate = deliveryDate.Date,
-            Amount = Math.Round(amount, 2),
+            Amount = amount,
             CurrencyId = order.CurrencyId,
             Description = desc,
             CreatedAt = now
