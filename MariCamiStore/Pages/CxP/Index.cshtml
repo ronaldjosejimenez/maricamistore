@@ -66,50 +66,49 @@
             <div class="card-body">
                 <!-- Indicators row -->
                 <div class="row">
-                    <div class="col-md-3 col-sm-6">
-                        <div class="info-box bg-light">
-                            <div class="info-box-content">
-                                <span class="info-box-text">Por pagar en Colones</span>
-                                <span class="info-box-number" id="por-pagar-colones">—</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <div class="info-box bg-light">
-                            <div class="info-box-content">
-                                <span class="info-box-text">Saldos por Cobrar</span>
-                                <span class="info-box-number" id="saldos-cobrar">—</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <div class="info-box bg-light">
+                    <!-- Column 1: highlighted indicators -->
+                    <div class="col-md-4">
+                        <div class="info-box bg-danger">
+                            <span class="info-box-icon"><i class="fas fa-file-invoice-dollar"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">Deuda a Pagar</span>
-                                <span class="info-box-number" id="deuda-pagar">—</span>
+                                <span class="info-box-number font-weight-bold" id="deuda-pagar">—</span>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <div class="info-box bg-light">
+                        <div class="info-box bg-warning">
+                            <span class="info-box-icon"><i class="fas fa-hand-holding-usd"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">Pendiente de Recoger</span>
-                                <span class="info-box-number" id="pendiente-recoger">—</span>
+                                <span class="info-box-number font-weight-bold" id="pendiente-recoger">—</span>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-3 col-sm-6">
+                    <!-- Column 2 -->
+                    <div class="col-md-4">
                         <div class="info-box bg-light">
                             <div class="info-box-content">
                                 <span class="info-box-text">Shipping CR Pendientes</span>
                                 <span class="info-box-number" id="shipping-pendientes">—</span>
                             </div>
                         </div>
+                        <div class="info-box bg-light">
+                            <div class="info-box-content">
+                                <span class="info-box-text">Saldos por Cobrar a Clientes</span>
+                                <span class="info-box-number" id="saldos-cobrar">—</span>
+                            </div>
+                        </div>
                     </div>
-                    <div id="por-pagar-monedas-container" class="col-md-9">
-                        <!-- Per-currency "Por pagar" badges populated by JS -->
+                    <!-- Column 3 -->
+                    <div class="col-md-4">
+                        <div class="info-box bg-light">
+                            <div class="info-box-content">
+                                <span class="info-box-text">Total por pagar colonizado</span>
+                                <span class="info-box-number" id="por-pagar-colones">—</span>
+                            </div>
+                        </div>
+                        <div id="por-pagar-monedas-container">
+                            <!-- Per-currency "Por pagar" badges populated by JS -->
+                        </div>
                     </div>
                 </div>
 
@@ -157,8 +156,8 @@
 
         <!-- Entries section -->
         <div class="row mb-2">
-            <div class="col-12 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Entradas del Período</h5>
+            <div class="col-12 d-flex flex-wrap justify-content-between align-items-center">
+                <h5 class="mb-0">Entradas del Período <small class="text-muted ml-2">Total por pagar colonizado: <span id="entradas-total-colonizado">—</span></small></h5>
                 <button id="btn-add-entry" class="btn btn-success btn-sm">
                     <i class="fas fa-plus"></i> Agregar entrada
                 </button>
