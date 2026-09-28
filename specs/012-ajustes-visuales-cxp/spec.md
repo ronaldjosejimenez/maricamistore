@@ -75,7 +75,7 @@ Junto al título "Entradas del Período" el usuario ve, en la misma línea, el t
 
 - **Sin entradas en el período**: no hay recuadros "Por pagar en {Moneda}"; la columna 3 muestra solo "Total por pagar colonizado" (₡0,00); el texto junto a Entradas muestra ₡0,00.
 - **Tipo de Cambio 0**: se mantiene el aviso amarillo existente; los indicadores convertidos (incluido el texto junto a Entradas) muestran 0 igual que hoy.
-- **Muchas monedas**: la columna 3 crece hacia abajo; las columnas 1 y 2 no se estiran de forma extraña.
+- **Muchas monedas**: la columna 3 crece hacia abajo; las columnas 1 y 2 conservan su altura natural, alineadas arriba (no se estiran para igualar la altura de la columna 3).
 - **Valores negativos** (p. ej. Pendiente de Recoger negativo porque En Cuenta supera la deuda): se muestran con el formato actual; el color de fondo del recuadro no cambia con el signo.
 - **Período cerrado**: la reorganización es igual; los controles de edición se deshabilitan/ocultan como hoy.
 - **Sin período (pantalla de inicialización)**: no cambia.
@@ -87,10 +87,10 @@ Junto al título "Entradas del Período" el usuario ve, en la misma línea, el t
 - **FR-001**: El indicador del panel que muestra la suma de todas las entradas del período convertida a colones MUST titularse "Total por pagar colonizado".
 - **FR-002**: Los recuadros dinámicos por moneda MUST mantener su título "Por pagar en {Moneda}" y su valor sin conversión.
 - **FR-003**: El indicador de la suma de saldos de clientes MUST titularse "Saldos por Cobrar a Clientes".
-- **FR-004**: El panel "Control del Mes" MUST mostrar los indicadores en tres columnas con recuadros apilados verticalmente dentro de cada columna: columna 1 = Deuda a Pagar, Pendiente de Recoger; columna 2 = Shipping CR Pendientes, Saldos por Cobrar a Clientes; columna 3 = Total por pagar colonizado seguido de los recuadros "Por pagar en {Moneda}".
-- **FR-005**: "Deuda a Pagar" MUST mostrarse con fondo rojo y "Pendiente de Recoger" con fondo amarillo, ambos con ícono y número en negrita; los demás recuadros MUST conservar el estilo neutro actual.
-- **FR-006**: En pantallas angostas las tres columnas MUST apilarse (columna 1 arriba) sin provocar desplazamiento horizontal.
-- **FR-007**: Junto al título "Entradas del Período", en la misma línea, MUST mostrarse el texto "Total por pagar colonizado: " seguido del mismo valor y formato de moneda del indicador del panel.
+- **FR-004**: El panel "Control del Mes" MUST mostrar los indicadores en tres columnas de igual ancho, con recuadros apilados verticalmente y a ancho completo dentro de cada columna: columna 1 = Deuda a Pagar, Pendiente de Recoger; columna 2 = Shipping CR Pendientes, Saldos por Cobrar a Clientes; columna 3 = Total por pagar colonizado seguido de los recuadros "Por pagar en {Moneda}".
+- **FR-005**: "Deuda a Pagar" MUST mostrarse con el recuadro completo en fondo rojo y "Pendiente de Recoger" con el recuadro completo en fondo amarillo, ambos con ícono a la izquierda y número en negrita; los demás recuadros MUST conservar el estilo neutro actual.
+- **FR-006**: En pantallas angostas (menos de 768 px de ancho) las tres columnas MUST apilarse (columna 1 arriba) sin provocar desplazamiento horizontal.
+- **FR-007**: Junto al título "Entradas del Período", en la misma línea, MUST mostrarse el texto "Total por pagar colonizado: " seguido del mismo valor y formato de moneda del indicador del panel. En pantallas angostas el texto y el botón "Agregar entrada" pueden pasar a otra línea (sin desplazamiento horizontal). El texto se mantiene visible aunque el botón "Agregar entrada" esté oculto (período cerrado).
 - **FR-008**: El valor junto a "Entradas del Período" MUST actualizarse cada vez que se actualiza el indicador del panel (carga inicial, agregar/eliminar entrada, guardar campos, cerrar mes).
 - **FR-009**: "Posición", los campos editables (Tipo de Cambio, Pagos Realizados, En Cuenta), el botón Guardar, el botón "Cerrar Mes", el aviso de Tipo de Cambio en 0, la sección de inicialización y la tabla de entradas MUST NOT cambiar de ubicación ni de comportamiento.
 - **FR-010**: Los valores de todos los indicadores MUST NOT cambiar: la funcionalidad es exclusivamente de presentación.
@@ -104,7 +104,7 @@ Junto al título "Entradas del Período" el usuario ve, en la misma línea, el t
 ### Measurable Outcomes
 
 - **SC-001**: En la pantalla no existen dos indicadores con el mismo título (0 títulos duplicados con distinto significado).
-- **SC-002**: Un usuario identifica "Deuda a Pagar" y "Pendiente de Recoger" como los valores destacados en menos de 3 segundos al abrir la pantalla.
+- **SC-002**: Los únicos recuadros de indicadores con fondo de color son "Deuda a Pagar" y "Pendiente de Recoger" (verificable a simple vista; validación manual de usuario: los identifica como destacados de inmediato).
 - **SC-003**: El valor junto a "Entradas del Período" coincide con el indicador "Total por pagar colonizado" el 100 % de las veces, incluso después de agregar/eliminar entradas o cambiar el Tipo de Cambio.
 - **SC-004**: El 100 % de los valores mostrados es idéntico al de antes del cambio para el mismo período.
 - **SC-005**: La pantalla se usa en ancho de teléfono sin desplazamiento horizontal.
