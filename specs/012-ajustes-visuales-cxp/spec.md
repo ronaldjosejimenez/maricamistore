@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-28
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: Brainstorm `brainstorm/12-ajustes-visuales-cxp.md`: renombrar indicadores confusos del panel "Control del Mes", mostrar el total colonizado junto a "Entradas del Período" y reorganizar los indicadores en 3 columnas resaltando Deuda a Pagar y Pendiente de Recoger. Solo presentación; no cambian cálculos ni datos.
 
