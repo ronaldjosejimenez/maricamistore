@@ -42,9 +42,19 @@ function renderSaldos(data) {
             '</tr>';
     }).join('');
 
+    if (filtered.length === 0) {
+        rows = '<tr><td colspan="2" class="text-muted">Ningún cliente coincide con el filtro</td></tr>';
+    }
+
+    // Net total of the visible rows (rounded to avoid floating point noise)
+    var total = Math.round(filtered.reduce(function (s, r) { return s + r.balance; }, 0) * 100) / 100;
+    var totalDisplay = (total < 0 ? '−' : '') + formatMoney(Math.abs(total), localCurrencySign);
+
     var html = '<table class="table table-sm table-bordered mb-0">' +
         '<thead><tr><th>Cliente</th><th class="text-right">Saldo</th></tr></thead>' +
-        '<tbody>' + rows + '</tbody></table>';
+        '<tbody>' + rows + '</tbody>' +
+        '<tfoot><tr class="font-weight-bold"><td>Total</td><td class="text-right">' + totalDisplay + '</td></tr></tfoot>' +
+        '</table>';
     $('#saldos-table-container').html(html);
 }
 

@@ -15,7 +15,7 @@
                 <h1>Items: @order.NameOfOrder</h1>
             </div>
             <div class="col-sm-6 text-right">
-                <a href="/Orders" class="btn btn-secondary btn-sm">
+                <a href="@(ViewData["ReturnStatuses"] is string rs ? "/Orders?statuses=" + Uri.EscapeDataString(rs) : "/Orders")" class="btn btn-secondary btn-sm">
                     <i class="fas fa-arrow-left"></i> Volver
                 </a>
             </div>
@@ -190,6 +190,12 @@
                         <div class="form-group">
                             <label>Código Fuente</label>
                             <input id="item-product-source-code" type="text" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Talla</label>
+                            <input id="item-size" type="text" class="form-control" maxlength="@MariCamiStore.Model.OrderItem.SizeMaxLength" placeholder="Ej: M, 38, 10-12 años" />
                         </div>
                     </div>
                 </div>

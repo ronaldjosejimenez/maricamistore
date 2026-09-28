@@ -9,10 +9,14 @@ namespace MariCamiStore.Pages.Orders;
 public class IndexModel(IOrderService orderService, ICatalogService catalogService, ICurrentOrganizationService currentOrg)
     : OrganizationPageModel(currentOrg)
 {
+    /// <summary>Gets the status keys initially selected in the filter checkboxes.</summary>
+    public IReadOnlyList<string> SelectedStatuses { get; private set; } = OrderStatus.DefaultFilterKeys;
+
     public async Task<IActionResult> OnGetAsync()
     {
         var guard = CheckOrganization();
         if (guard != null) return guard;
+        SelectedStatuses = OrderStatus.ParseFilter(Request.Query["statuses"], Request.Query.ContainsKey("statuses"));
         ViewData["LocalCurrencySign"] = await GetLocalCurrencySignAsync();
         return Page();
     }
@@ -25,9 +29,10 @@ public class IndexModel(IOrderService orderService, ICatalogService catalogServi
         return currency?.Sign ?? string.Empty;
     }
 
-    public async Task<JsonResult> OnGetLoadAsync(string? statusFilter = "Pending,Active")
+    public async Task<JsonResult> OnGetLoadAsync(string? statuses)
     {
-        var orders = await orderService.GetOrdersAsync(statusFilter);
+        var selected = OrderStatus.ParseFilter(statuses, Request.Query.ContainsKey("statuses"));
+        var orders = await orderService.GetOrdersAsync(selected);
         var itemCounts = await orderService.GetOrderItemCountsAsync(orders.Select(o => o.Id));
         return new JsonResult(orders.Select(o => new
         {
@@ -86,7 +91,7 @@ public class IndexModel(IOrderService orderService, ICatalogService catalogServi
         "Active"     => ["Delivering", "Voided"],
         "Delivering" => ["Delivered", "Voided"],
         "Delivered"  => ["Completed", "Voided"],
-        "Completed"  => ["Voided"],
+        "Completed"  => [], // final: a completed order cannot be voided
         _            => []
     };
 }

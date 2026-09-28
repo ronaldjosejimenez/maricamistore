@@ -10,6 +10,7 @@ public record OrderItemWithCustomerDto(
     string ProductDescription,
     string? ProductLink,
     string? ProductSourceCode,
+    string Size,
     bool HasImage,
     Guid ProductTypeId,
     decimal ListPrice,
@@ -42,7 +43,7 @@ public record TransitionOrderDto(
 
 public interface IOrderService
 {
-    Task<List<Order>> GetOrdersAsync(string? statusFilter = null);
+    Task<List<Order>> GetOrdersAsync(IReadOnlyCollection<string> statuses);
     Task<Dictionary<Guid, int>> GetOrderItemCountsAsync(IEnumerable<Guid> orderIds);
     Task<Order?> GetOrderAsync(Guid id);
     Task<Order> CreateOrderAsync(Order order);

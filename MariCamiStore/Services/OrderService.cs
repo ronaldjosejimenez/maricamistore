@@ -13,15 +13,18 @@ public class OrderService(
 {
     // ── Orders ───────────────────────────────────────────────────────────────
 
-    public async Task<List<Order>> GetOrdersAsync(string? statusFilter = null)
+    public async Task<List<Order>> GetOrdersAsync(IReadOnlyCollection<string> statuses)
     {
-        var query = context.Orders.AsQueryable();
-        if (!string.IsNullOrEmpty(statusFilter))
+        if (statuses.Count == 0)
         {
-            var statuses = statusFilter.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            query = query.Where(o => statuses.Contains(o.Status));
+            return [];
         }
-        return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
+
+        var keys = statuses.ToList();
+        return await context.Orders
+            .Where(o => keys.Contains(o.Status))
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
     }
 
     public async Task<Dictionary<Guid, int>> GetOrderItemCountsAsync(IEnumerable<Guid> orderIds)
@@ -145,7 +148,7 @@ public class OrderService(
             .Select(i => new OrderItemWithCustomerDto(
                 i.Id, i.OrderId, i.CustomerId,
                 displayNames.GetValueOrDefault(i.CustomerId, i.CustomerId.ToString()),
-                i.ProductDescription, i.ProductLink, i.ProductSourceCode,
+                i.ProductDescription, i.ProductLink, i.ProductSourceCode, i.Size,
                 i.ProductImage != null, i.ProductTypeId,
                 i.ListPrice, i.ListPriceTaxWithTax, i.RealPrice,
                 i.EstimateShipping, i.ServiceFeeInLocal, i.AgreedPriceInLocal,
@@ -327,7 +330,7 @@ public class OrderService(
             [OrderStatus.Active.Key]     = [OrderStatus.Delivering.Key, OrderStatus.Voided.Key],
             [OrderStatus.Delivering.Key] = [OrderStatus.Delivered.Key,  OrderStatus.Voided.Key],
             [OrderStatus.Delivered.Key]  = [OrderStatus.Completed.Key,  OrderStatus.Voided.Key],
-            [OrderStatus.Completed.Key]  = [OrderStatus.Voided.Key],
+            [OrderStatus.Completed.Key]  = [], // final: a completed order cannot be voided
         };
 
         if (!allowed.TryGetValue(fromStatus, out var targets) || !targets.Contains(toStatus))
