@@ -74,7 +74,7 @@ brainstorm/09-cuentas-por-pagar.md, specs/009-cuentas-por-pagar/spec.md  [MODIFY
 ## Design Decisions
 
 ### D1 — Entity
-`OrderPackage { Guid Id; Guid OrderId; DateTime DeliveryDate; decimal Amount; Guid CurrencyId; string? Description; DateTime CreatedAt; Order Order; }` (no `UpdatedAt`: immutable). Config: table `OrderPackages` in default schema; `Amount decimal(18,2)`; `DeliveryDate` `date` column type; `Description` max 500, optional; FK `OrderId` → Orders **Cascade** (orders are deletable only in Pending, when no packages exist); FK `CurrencyId` → Currencies **Restrict**; index on `OrderId`. Query filter `p => p.Order.OrganizationId == currentOrg` (same pattern as `OrderItem`).
+`OrderPackage { Guid Id; Guid OrderId; DateTime DeliveryDate; decimal Amount; Guid CurrencyId; string? Description; DateTime CreatedAt; Order Order; }` (no `UpdatedAt`: immutable). Config: table `OrderPackages` in default schema; `Amount decimal(18,2)`; `DeliveryDate` `date` column type; `Description` max 500, optional; FK `OrderId` → Orders **Restrict** (NO ACTION — avoids SQL Server error 1785 "multiple cascade paths" Orders→OrderPackages→CxPEntries vs Orders→CxPEntries; orders are deletable only in Pending, when no packages exist); FK `CurrencyId` → Currencies **Restrict**; index on `OrderId`. Query filter `p => p.Order.OrganizationId == currentOrg` (same pattern as `OrderItem`).
 
 ### D2 — CxP link and types
 `CxPEntry.OrderPackageId Guid?` → FK to `OrderPackages` with **SetNull** (deleting the package clears the link, FR-009a); index. `CxPEntryType` static class with string constants; replace the string literals `"AutoActiva"`, `"AutoDelivered"` etc. where touched. `Type` column (max 30) fits the new values.
@@ -103,7 +103,7 @@ shipping = shippingRows.Sum(r => {
     var pending = Math.Max(0m, r.ShippingAmountToCR - r.Packages);
     return r.CurrencyId == localCurrencyId ? pending : pending * period.ExchangeRate; });
 ```
-Kept inside the existing `exchangeRateWarning` branch (TC = 0 → 0, FR-013). Posición formula unchanged.
+Placed in the existing non-warning (`else`) branch; the warning branch keeps returning 0 (TC = 0 → 0, FR-013). Posición formula unchanged.
 
 ### D5 — Items page UI
 - New card "Paquetes de Envío" (`card card-info`) between "Artículos" and "Historial de Estado", rendered only when `!isPending` (server-side `@if`), FR-014.
@@ -114,7 +114,7 @@ Kept inside the existing `exchangeRateWarning` branch (TC = 0 → 0, FR-013). Po
 - Handlers in `ItemsModel`: `OnGetPackagesAsync(Guid orderId)`, `OnPostAddPackageAsync([FromBody] AddPackageRequest)`, `OnPostDeletePackageAsync([FromBody] DeletePackageRequest)` returning `{ success, error }` like existing handlers.
 
 ### D6 — CxP entries table
-`TYPE_LABELS` += `AutoPaquete: 'Auto-Paquete'`, `ReversoPaquete: 'Reverso Paquete'`. Amount cell: if `e.amount < 0` → `<span class="text-danger">−' + formatMoney(Math.abs(e.amount), sign) + '</span>'`. Subtotal likewise when negative. Delete button unchanged for all types (FR-009b).
+`TYPE_LABELS` += `AutoPaquete: 'Auto-Paquete'`, `ReversoPaquete: 'Reverso Paquete'`. Amount cell: if `e.amount < 0` → `<span class="text-danger">−' + formatMoney(Math.abs(e.amount), sign) + '</span>'`. Subtotal (`group.total`) likewise when negative; check any other `formatMoney` use on possibly negative CxP amounts in `cxp/index.js`. Delete button unchanged for all types (FR-009b).
 
 ### D7 — Retire 009 rule
 - `Order.ActualShippingAmountToCR` + its EF config removed → migration drops the column (and its default constraint; EF handles it).

@@ -24,17 +24,17 @@ Stories: US1 add package→CxP, US2 Shipping CR Pendientes, US3 delete→reversa
 - [ ] T003 Create `MariCamiStore/Model/OrderPackage.cs` per data-model.md (Id, OrderId, DeliveryDate, Amount, CurrencyId, Description nullable, CreatedAt, `Order Order` navigation), with XML doc comments; add a `public const int DescriptionMaxLength = 500;`.
 - [ ] T004 Add `public Guid? OrderPackageId { get; set; }` to `MariCamiStore/Model/CxPEntry.cs`.
 - [ ] T005 Remove `ActualShippingAmountToCR` from `MariCamiStore/Model/Order.cs` and its `builder.Property(...)` block from `MariCamiStore/Infrastructure/Persistance/EntityConfigurations/OrderEntityTypeConfiguration.cs`.
-- [ ] T006 Create `MariCamiStore/Infrastructure/Persistance/EntityConfigurations/OrderPackageEntityTypeConfiguration.cs` (plan D1): table `OrderPackages` in `MariCamiStoreContext.DEFAULT_SCHEMA`, key, `DeliveryDate` `HasColumnType("date")`, `Amount` `decimal(18,2)`, `Description` max `OrderPackage.DescriptionMaxLength` optional, `CreatedAt` required, `HasOne(p => p.Order).WithMany().HasForeignKey(p => p.OrderId).OnDelete(Cascade)`, `HasOne<Currency>().WithMany().HasForeignKey(p => p.CurrencyId).OnDelete(Restrict)`, index on OrderId.
+- [ ] T006 Create `MariCamiStore/Infrastructure/Persistance/EntityConfigurations/OrderPackageEntityTypeConfiguration.cs` (plan D1): table `OrderPackages` in `MariCamiStoreContext.DEFAULT_SCHEMA`, key, `DeliveryDate` `HasColumnType("date")`, `Amount` `decimal(18,2)`, `Description` max `OrderPackage.DescriptionMaxLength` optional, `CreatedAt` required, `HasOne(p => p.Order).WithMany().HasForeignKey(p => p.OrderId).OnDelete(DeleteBehavior.Restrict)` (NOT Cascade: SQL Server error 1785 multiple cascade paths), `HasOne<Currency>().WithMany().HasForeignKey(p => p.CurrencyId).OnDelete(Restrict)`, index on OrderId.
 - [ ] T007 In `MariCamiStore/Infrastructure/Persistance/EntityConfigurations/CxPEntryEntityTypeConfiguration.cs` add `builder.HasOne<OrderPackage>().WithMany().HasForeignKey(e => e.OrderPackageId).OnDelete(DeleteBehavior.SetNull).IsRequired(false);` and `builder.HasIndex(e => e.OrderPackageId);`.
 - [ ] T008 In `MariCamiStore/Infrastructure/Persistance/MariCamiStoreContext.cs`: add `public DbSet<OrderPackage> OrderPackages { get; set; }` (with doc comment like others), apply `OrderPackageEntityTypeConfiguration`, add query filter `builder.Entity<OrderPackage>().HasQueryFilter(p => p.Order.OrganizationId == currentOrganizationService.OrganizationId);`.
-- [ ] T009 From `MariCamiStore/`: `dotnet ef migrations add AddOrderPackages --output-dir Infrastructure/Persistance/Migrations`. Verify `Up` creates `OrderPackages` (FKs, index), adds `CxPEntries.OrderPackageId` (FK SetNull, index) and drops `Orders.ActualShippingAmountToCR`; `Down` reverses. Snapshot updated. Do NOT update any database. (Build will fail until T010/T012 remove remaining `ActualShippingAmountToCR` references — do those first if needed, then generate the migration.)
-
 ## Phase 3: US5 — Retire the 009 rule (P2, done early to keep build green)
 
 - [ ] T010 [US5] In `MariCamiStore/Services/IOrderService.cs` remove the `ActualShippingAmountToCR` parameter from `TransitionOrderDto`; in `MariCamiStore/Services/OrderService.cs` `TransitionOrderAsync` remove the whole `else if (dto.ToStatus == OrderStatus.Delivered.Key) { ... }` block (keep AutoActiva).
 - [ ] T011 [US5] In `MariCamiStore/Pages/Orders/Index.cshtml` remove the `#actual-shipping-group` form-group; in `MariCamiStore/wwwroot/js/pages/orders/index.js` remove the `actual-shipping` show/hide in `openTransitionModal`, its `shippingAmountToCR` parameter (and the argument at the call site), and `payload.actualShippingAmountToCR`.
 - [ ] T012 [US5] Search the solution for any remaining `ActualShippingAmountToCR` / `actual-shipping` references outside `Migrations/` and remove them.
 - [ ] T013 [P] [US5] Append a dated section "## Descartado (2026-09-28)" to `brainstorm/09-cuentas-por-pagar.md` and a note to `specs/009-cuentas-por-pagar/spec.md` (after the Status line or as a final section) stating that the shipping rule (FR-008 a FR-010: "Shipping real a CR" al entregar y entrada AutoDelivered; y el cálculo de "Shipping CR Pendientes" solo con órdenes Activas) fue descartada y reemplazada por `specs/013-paquetes-orden` (paquetes de envío).
+
+- [ ] T009 (runs after T010–T012, needs a compiling project) From `MariCamiStore/`: `dotnet ef migrations add AddOrderPackages --output-dir Infrastructure/Persistance/Migrations`. Verify `Up` creates `OrderPackages` (FK to Orders with `ReferentialAction.Restrict`/NoAction — NOT Cascade — FK to Currencies Restrict, index), adds `CxPEntries.OrderPackageId` (FK `SetNull`, index) and drops `Orders.ActualShippingAmountToCR`; `Down` reverses. Snapshot updated. Do NOT update any database.
 
 ## Phase 4: US1 + US3 — Package service (P1/P2)
 
@@ -56,7 +56,7 @@ Stories: US1 add package→CxP, US2 Shipping CR Pendientes, US3 delete→reversa
 
 ## Phase 7: CxP entries display (US1/US3)
 
-- [ ] T023 [US1] In `MariCamiStore/wwwroot/js/pages/cxp/index.js`: add `'AutoPaquete': 'Auto-Paquete'` and `'ReversoPaquete': 'Reverso Paquete'` to `TYPE_LABELS` (keep `AutoDelivered`); render negative amounts (row and subtotal) as `<span class="text-danger">−` + `formatMoney(Math.abs(x), sign)` + `</span>` (FR-010). Delete buttons unchanged (FR-009b).
+- [ ] T023 [US1] In `MariCamiStore/wwwroot/js/pages/cxp/index.js`: add `'AutoPaquete': 'Auto-Paquete'` and `'ReversoPaquete': 'Reverso Paquete'` to `TYPE_LABELS` (keep `AutoDelivered`); render negative amounts (row and subtotal `group.total`, plus any other `formatMoney` use on possibly negative CxP amounts) as `<span class="text-danger">−` + `formatMoney(Math.abs(x), sign)` + `</span>` (FR-010). Delete buttons unchanged (FR-009b).
 
 ## Phase 8: Polish
 

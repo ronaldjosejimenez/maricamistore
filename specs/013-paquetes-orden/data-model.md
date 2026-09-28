@@ -5,7 +5,7 @@
 | Field | Type | Constraints |
 |-------|------|-------------|
 | Id | Guid | PK |
-| OrderId | Guid | FK → Orders (Cascade), required, indexed |
+| OrderId | Guid | FK → Orders (Restrict / NO ACTION, avoids multiple cascade paths), required, indexed |
 | DeliveryDate | date | required |
 | Amount | decimal(18,2) | required, > 0 |
 | CurrencyId | Guid | FK → Currencies (Restrict), required; always = Order.CurrencyId |
