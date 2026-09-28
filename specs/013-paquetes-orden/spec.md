@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-28
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: Brainstorm `brainstorm/13-paquetes-orden.md`: registrar los paquetes de envío (shipping a CR) de cada orden; cada paquete genera su deuda en Cuentas por Pagar y al eliminarlo se genera un movimiento de reversión; "Shipping CR Pendientes" pasa a calcularse por orden (Activas y Entregando) descontando los paquetes; se descarta la regla de shipping real al entregar del requerimiento 009.
 
