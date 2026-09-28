@@ -34,7 +34,7 @@ En la pantalla de Pagos, bajo la tabla "Saldos de Clientes", el usuario ve una f
 2. **Given** la tabla con varios clientes, **When** el usuario escribe un texto en "Filtrar por cliente...", **Then** el total muestra la suma neta solo de los clientes que quedan visibles.
 3. **Given** un filtro que no coincide con ningún cliente, **When** la tabla queda sin filas, **Then** la tabla muestra una fila "Ningún cliente coincide con el filtro" y la fila Total muestra 0.
 4. **Given** la tabla con su total visible, **When** el usuario registra un pago y la tabla se recarga, **Then** el total refleja el nuevo saldo del cliente.
-5. **Given** que la suma neta es negativa, **When** se muestra el total, **Then** se presenta con la misma convención visual de saldo negativo (a favor) que usan las filas.
+5. **Given** que la suma neta es negativa, **When** se muestra el total, **Then** se presenta con el prefijo "−" como las filas con saldo a favor, sin insignia.
 
 ---
 
@@ -110,7 +110,8 @@ Al crear o editar un ítem de una orden, el usuario puede escribir la talla de l
 - **FR-001**: La tabla "Saldos de Clientes" MUST mostrar al pie una fila "Total" con la suma neta de los saldos de las filas visibles, donde los saldos negativos (a favor) restan.
 - **FR-002**: El total MUST recalcularse cada vez que cambia el texto de "Filtrar por cliente...", considerando solo los clientes visibles.
 - **FR-003**: El total MUST recalcularse cuando la tabla se recarga (por ejemplo, tras registrar un pago).
-- **FR-004**: El total MUST usar el mismo formato de moneda local y la misma convención visual para montos negativos que las filas de la tabla.
+- **FR-004**: El total MUST usar el mismo formato de moneda local que las filas; si es negativo MUST mostrarse con el prefijo "−" como las filas, sin insignia ("badge") de estado. La fila Total se distingue visualmente (texto en negrita).
+- **FR-005a**: Si no existe ningún saldo registrado, se mantiene el mensaje actual "No hay saldos registrados." y no se muestra fila Total.
 - **FR-005**: Cuando el filtro no deja filas visibles, la tabla MUST mostrar una fila "Ningún cliente coincide con el filtro" y el Total MUST mostrar 0.
 
 **Filtro de estados en Órdenes**
@@ -119,7 +120,7 @@ Al crear o editar un ítem de una orden, el usuario puede escribir la talla de l
 - **FR-007**: Al entrar a Órdenes sin selección heredada, solo Pendiente y Activa MUST estar marcadas.
 - **FR-008**: Marcar o desmarcar una casilla MUST recargar automáticamente la lista de órdenes, mostrando únicamente órdenes cuyo estado está marcado.
 - **FR-009**: Si no hay ninguna casilla marcada, la lista MUST quedar vacía.
-- **FR-010**: El acceso a los ítems de una orden desde la lista MUST llevar consigo la selección de estados vigente, y el botón "Volver" de la pantalla de ítems MUST regresar a Órdenes restaurando exactamente esa selección.
+- **FR-010**: El enlace "Ver ítems" de cada orden en la lista MUST llevar consigo la selección de estados vigente, y el botón "Volver" de la pantalla de ítems MUST regresar a Órdenes restaurando exactamente esa selección.
 - **FR-011**: Entrar a Órdenes por cualquier vía distinta de "Volver" (menú, dirección sin selección) MUST usar la selección por defecto (Pendiente y Activa).
 - **FR-012**: Valores de estado desconocidos en la selección heredada MUST ignorarse; si se indicaron valores pero ninguno es válido, MUST usarse la selección por defecto.
 - **FR-013**: Cuando varias recargas se solapan, la lista mostrada MUST corresponder a la selección más reciente.
