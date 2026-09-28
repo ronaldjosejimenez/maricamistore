@@ -21,12 +21,12 @@
 ## POST /Orders/Items?handler=Insert | handler=Update
 
 - Request body (`OrderItemDto`) adds `size: string | null`.
-- Server: `size = (size ?? "").Trim()`; if `size.Length > 20` → `200 { "error": "La talla no puede superar 20 caracteres." }` and nothing is saved.
+- Server: `size = blank ? "N/A" : size.Trim()`; if `size.Length > 20` → `200 { "error": "La talla no puede superar 20 caracteres." }` and nothing is saved.
 - Response adds `size`.
 
 ## GET /Orders/Items?handler=Load&orderId={guid}
 
-- Each item adds `size` (string, may be `""`). Not displayed in the grid; used to prefill the edit modal.
+- Each item adds `size` (string, `"N/A"` when not specified). Not displayed in the grid; used to prefill the edit modal.
 
 ## GET /Payments?handler=Saldos
 

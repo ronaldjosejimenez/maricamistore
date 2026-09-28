@@ -17,7 +17,7 @@ namespace MariCamiStore.Infrastructure.Persistance.Migrations
                 type: "nvarchar(20)",
                 maxLength: 20,
                 nullable: false,
-                defaultValue: "");
+                defaultValue: "N/A");
         }
 
         /// <inheritdoc />

@@ -354,7 +354,7 @@ namespace MariCamiStore.Infrastructure.Persistance.Migrations
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("");
+                        .HasDefaultValue("N/A");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");

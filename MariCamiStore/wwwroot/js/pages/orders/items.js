@@ -113,7 +113,7 @@ function openAddItem() {
     $('#item-product-description').val('');
     $('#item-product-link').val('');
     $('#item-product-source-code').val('');
-    $('#item-size').val('');
+    $('#item-size').val('N/A');
     $('#item-product-image').val('');
     $('#item-product-image-preview').hide();
     $('#item-image-error').hide();
@@ -157,7 +157,7 @@ function openEditItem(item) {
     $('#item-product-description').val(item.productDescription);
     $('#item-product-link').val(item.productLink || '');
     $('#item-product-source-code').val(item.productSourceCode || '');
-    $('#item-size').val(item.size || '');
+    $('#item-size').val(item.size || 'N/A');
     $('#item-product-image').val('');
     if (item.hasImage) {
         $('#item-product-image-preview').attr('src', '?handler=ItemImage&itemId=' + item.id + '&orderId=' + orderId).show();

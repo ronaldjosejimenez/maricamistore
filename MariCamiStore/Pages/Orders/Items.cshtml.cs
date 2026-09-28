@@ -112,12 +112,16 @@ public class ItemsModel(
     public async Task<JsonResult> OnGetHistoryAsync(Guid orderId) =>
         new JsonResult(await orderService.GetOrderStatusHistoryAsync(orderId));
 
+    // Trimmed size; blank means OrderItem.DefaultSize
+    private static string NormalizeSize(string? size) =>
+        string.IsNullOrWhiteSpace(size) ? OrderItem.DefaultSize : size.Trim();
+
     // T012: insert with DTO supporting image as base64
     public async Task<JsonResult> OnPostInsertAsync([FromBody] OrderItemDto dto)
     {
-        var size = (dto.Size ?? string.Empty).Trim();
-        if (size.Length > 20)
-            return new JsonResult(new { error = "La talla no puede superar 20 caracteres." });
+        var size = NormalizeSize(dto.Size);
+        if (size.Length > OrderItem.SizeMaxLength)
+            return new JsonResult(new { error = $"La talla no puede superar {OrderItem.SizeMaxLength} caracteres." });
 
         byte[]? imageBytes = null;
         if (!string.IsNullOrEmpty(dto.ProductImageBase64))
@@ -168,9 +172,9 @@ public class ItemsModel(
     // T013: update with DTO; null image = preserve; "" = clear
     public async Task<JsonResult> OnPostUpdateAsync([FromBody] OrderItemDto dto)
     {
-        var size = (dto.Size ?? string.Empty).Trim();
-        if (size.Length > 20)
-            return new JsonResult(new { error = "La talla no puede superar 20 caracteres." });
+        var size = NormalizeSize(dto.Size);
+        if (size.Length > OrderItem.SizeMaxLength)
+            return new JsonResult(new { error = $"La talla no puede superar {OrderItem.SizeMaxLength} caracteres." });
 
         var existing = (await orderService.GetOrderItemsAsync(dto.OrderId))
             .FirstOrDefault(i => i.Id == dto.Id);

@@ -34,9 +34,9 @@ dotnet run
 ## 4. Talla
 
 1. Create an item with Talla "XL" → edit → shows "XL".
-2. Edit with Talla empty → saves.
+2. Edit with Talla empty → saves as "N/A". New-item form opens with "N/A" prefilled.
 3. Try typing 25 chars → input stops at 20.
 4. Enter " M " → saved as "M".
-5. Open an item created before the migration → Talla empty, saves fine.
+5. Open an item created before the migration → Talla "N/A", saves fine.
 6. Items grid has no Talla column.
 7. In an Active order, reassign an item with Talla "S" (Reasignar) → edit shows Talla still "S".

@@ -54,6 +54,7 @@ function loadGrid() {
             // Aborted (superseded) loads are expected; ignore them
             var xhr = args.args && args.args[0];
             if (xhr && xhr.statusText === 'abort') return;
+            alert('Error al cargar las órdenes.');
         },
 
         fields: [

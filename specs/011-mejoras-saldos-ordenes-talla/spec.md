@@ -15,6 +15,7 @@
 - Q: ¿Qué se muestra cuando el filtro de clientes no coincide con ninguna fila? → A: Se mantiene la tabla con una fila "Ningún cliente coincide con el filtro" y la fila Total muestra 0 (suma de un conjunto vacío).
 - Q: ¿Cómo se hace cumplir el máximo de 20 caracteres de la talla? → A: En ambos lados: el campo del formulario no permite escribir más de 20 caracteres y el servidor rechaza con un mensaje de validación cualquier talla que, tras recortar espacios, supere 20 caracteres.
 - Q: ¿La fila Total incluye clientes especiales como "Sin Cliente" (Especulativo)? → A: Sí, suma todas las filas visibles sin excepciones; no se excluye ningún cliente.
+- Q: (Solicitud del usuario tras la implementación) ¿Cuál es el valor por defecto de la talla? → A: "N/A". Los ítems existentes quedan con "N/A", el formulario de crear ítem se abre con "N/A" y una talla vacía o solo con espacios se guarda como "N/A".
 
 ---
 
@@ -77,14 +78,14 @@ Al crear o editar un ítem de una orden, el usuario puede escribir la talla de l
 
 **Why this priority**: Evita mezclar la talla dentro de la descripción del producto. Es útil pero no bloquea la operación diaria.
 
-**Independent Test**: Crear un ítem con talla "XL", reabrirlo en edición y comprobar que conserva "XL"; editarlo dejando la talla vacía y comprobar que se guarda sin error.
+**Independent Test**: Crear un ítem con talla "XL", reabrirlo en edición y comprobar que conserva "XL"; editarlo dejando la talla vacía y comprobar que se guarda con "N/A".
 
 **Acceptance Scenarios**:
 
 1. **Given** el formulario de crear ítem, **When** el usuario escribe "XL" en Talla y guarda, **Then** el ítem se guarda y al abrirlo en edición el campo Talla muestra "XL".
-2. **Given** el formulario de crear o editar ítem, **When** el usuario deja Talla vacía y guarda, **Then** el ítem se guarda sin error con talla vacía.
+2. **Given** el formulario de crear o editar ítem, **When** el usuario deja Talla vacía y guarda, **Then** el ítem se guarda sin error con talla "N/A".
 3. **Given** el formulario de ítem, **When** el usuario intenta ingresar más de 20 caracteres en Talla, **Then** el campo no permite escribir más de 20 caracteres; y si llegara al servidor una talla de más de 20 caracteres (tras recortar espacios), se rechaza con un mensaje de validación y no se guarda.
-4. **Given** ítems creados antes de esta funcionalidad, **When** el usuario los abre en edición, **Then** el campo Talla aparece vacío y el ítem puede guardarse normalmente.
+4. **Given** ítems creados antes de esta funcionalidad, **When** el usuario los abre en edición, **Then** el campo Talla muestra "N/A" y el ítem puede guardarse normalmente.
 5. **Given** la tabla de ítems de una orden, **When** el usuario la observa, **Then** no se agrega ninguna columna de talla (la talla solo se ve en el formulario).
 6. **Given** el usuario escribe " M " con espacios al inicio o final, **When** guarda, **Then** la talla se almacena como "M".
 
@@ -98,7 +99,7 @@ Al crear o editar un ítem de una orden, el usuario puede escribir la talla de l
 - **Ninguna casilla marcada**: lista de órdenes vacía (no hay órdenes desde las cuales navegar a ítems, así que no se hereda una selección vacía por el flujo normal). Si la dirección de Órdenes indica explícitamente una selección vacía, se respeta y la lista queda vacía.
 - **Estados inválidos en la dirección de regreso**: se ignoran; si todos son inválidos, se usan los estados por defecto.
 - **Recargas rápidas**: si el usuario marca/desmarca varias casillas rápidamente, la lista final debe corresponder a la última selección, no a una respuesta anterior.
-- **Talla solo con espacios**: se guarda como talla vacía.
+- **Talla solo con espacios**: se guarda como "N/A".
 - **Reasignación de ítems (feature 010)**: reasignar cliente o ajustar precio de un ítem no debe borrar ni alterar su talla.
 
 ## Requirements *(mandatory)*
@@ -127,16 +128,16 @@ Al crear o editar un ítem de una orden, el usuario puede escribir la talla de l
 
 **Talla en ítems de orden**
 
-- **FR-014**: Cada ítem de orden MUST tener un dato "Talla" de texto que nunca es nulo; su valor por defecto es vacío.
+- **FR-014**: Cada ítem de orden MUST tener un dato "Talla" de texto que nunca es nulo; su valor por defecto es "N/A"; el formulario de crear ítem se abre con "N/A" y una talla vacía o solo con espacios se guarda como "N/A".
 - **FR-015**: Los formularios de crear y editar ítem MUST incluir un campo de texto libre "Talla", opcional, con un máximo de 20 caracteres.
 - **FR-016**: El campo Talla MUST limitar la escritura a 20 caracteres; el servidor MUST eliminar espacios al inicio y al final y MUST rechazar con un mensaje de validación cualquier talla resultante de más de 20 caracteres.
-- **FR-017**: Los ítems existentes MUST quedar con talla vacía tras la actualización, sin pérdida de otros datos.
+- **FR-017**: Los ítems existentes MUST quedar con talla "N/A" tras la actualización, sin pérdida de otros datos.
 - **FR-018**: La talla MUST NOT mostrarse en la tabla de ítems ni en otras pantallas; solo en el formulario de crear/editar ítem.
 - **FR-019**: Las operaciones existentes sobre ítems que no editan la talla (por ejemplo, reasignación de cliente o ajuste de precio) MUST conservar la talla almacenada.
 
 ### Key Entities
 
-- **Ítem de orden (OrderItem)**: prenda o producto dentro de una orden, asignado a un cliente. Se agrega el atributo **Talla**: texto libre, no nulo, vacío por defecto, máximo 20 caracteres. En el futuro podría relacionarse con un catálogo de tallas por tipo de producto (fuera de alcance).
+- **Ítem de orden (OrderItem)**: prenda o producto dentro de una orden, asignado a un cliente. Se agrega el atributo **Talla**: texto libre, no nulo, "N/A" por defecto, máximo 20 caracteres. En el futuro podría relacionarse con un catálogo de tallas por tipo de producto (fuera de alcance).
 - **Estado de orden (OrderStatus)**: catálogo fijo de seis estados (Pendiente, Activa, Entregando, Entregada, Completada, Anulada) usado para filtrar la lista de órdenes. Sin cambios en su definición.
 - **Saldo de cliente**: saldo por cliente ya calculado y mostrado en la pantalla de Pagos. Sin cambios en su cálculo; solo se agrega su suma neta visible.
 
