@@ -51,6 +51,7 @@ function loadPeriod() {
 
         // Fill indicators
         $('#por-pagar-colones').text(formatMoney(data.porPagarEnColones, '₡'));
+        $('#entradas-total-colonizado').text(formatMoney(data.porPagarEnColones, '₡'));
         $('#saldos-cobrar').text(formatMoney(data.saldosPorCobrar, '₡'));
         $('#deuda-pagar').text(formatMoney(data.deudaAPagar, '₡'));
         $('#pendiente-recoger').text(formatMoney(data.pendienteDeRecoger, '₡'));
@@ -67,12 +68,11 @@ function loadPeriod() {
         if (data.porPagarPorMoneda) {
             $.each(data.porPagarPorMoneda, function (_, bal) {
                 $monedas.append(
-                    '<div class="col-md-4 col-sm-6">' +
                     '<div class="info-box bg-light">' +
                     '<div class="info-box-content">' +
                     '<span class="info-box-text">Por pagar en ' + escHtml(bal.currencyName) + '</span>' +
                     '<span class="info-box-number">' + formatMoney(bal.amount, bal.sign) + '</span>' +
-                    '</div></div></div>'
+                    '</div></div>'
                 );
             });
         }

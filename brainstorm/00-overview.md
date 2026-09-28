@@ -17,6 +17,7 @@ Last updated: 2026-09-28
 | 09 | 2026-06-10 | cuentas-por-pagar | active | - |
 | 10 | 2026-06-11 | flexibilidad-items-activos | active | - |
 | 11 | 2026-09-28 | mejoras-saldos-ordenes-talla | spec-created | specs/011-mejoras-saldos-ordenes-talla |
+| 12 | 2026-09-28 | ajustes-visuales-cxp | active | - |
 
 ## Open Threads
 
@@ -26,6 +27,8 @@ Last updated: 2026-09-28
 - ¿"Sin Cliente" debe aparecer en el dropdown del modal de *creación* de ítem (Pending) o solo en reasignación? (from #10)
 - ¿El modal "Reasignar" debe validar precio = 0 con confirmación explícita? (from #10)
 - ¿Los totales recalculados (TotalAgreedPriceInLocal, EstimatedProfitInLocal) se persisten inmediatamente o al siguiente guardado manual? (from #10)
+- ¿Qué muestra el total junto a "Entradas del Período" sin entradas o con Tipo de Cambio 0? (from #12)
+- ¿Íconos concretos para Deuda a Pagar y Pendiente de Recoger? (from #12)
 
 ## Parked Ideas
 
