@@ -19,6 +19,7 @@ Last updated: 2026-09-28
 | 11 | 2026-09-28 | mejoras-saldos-ordenes-talla | spec-created | specs/011-mejoras-saldos-ordenes-talla |
 | 12 | 2026-09-28 | ajustes-visuales-cxp | spec-created | specs/012-ajustes-visuales-cxp |
 | 13 | 2026-09-28 | paquetes-orden | spec-created | specs/013-paquetes-orden |
+| 14 | 2026-09-28 | cierre-mes-cxp | active | - |
 
 ## Open Threads
 
@@ -28,6 +29,9 @@ Last updated: 2026-09-28
 - ¿"Sin Cliente" debe aparecer en el dropdown del modal de *creación* de ítem (Pending) o solo en reasignación? (from #10)
 - ¿El modal "Reasignar" debe validar precio = 0 con confirmación explícita? (from #10)
 - ¿Los totales recalculados (TotalAgreedPriceInLocal, EstimatedProfitInLocal) se persisten inmediatamente o al siguiente guardado manual? (from #10)
+- Verificar que no haya más de un mes CxP abierto por organización antes de aplicar el índice único (from #14)
+- ¿Vista previa del cierre calculada en el servidor o en el navegador? (from #14)
+- ¿Qué TC proponer al cerrar si la Configuración tiene TC 0? (from #14)
 
 ## Parked Ideas
 
