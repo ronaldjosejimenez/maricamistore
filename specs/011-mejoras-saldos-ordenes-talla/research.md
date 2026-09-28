@@ -32,8 +32,8 @@
 
 ## R6 — Size column migration
 
-- **Decision**: `nvarchar(20) NOT NULL` with SQL default `''` via `HasDefaultValue(string.Empty)`; migration generated with `dotnet ef migrations add AddOrderItemSize` (dotnet-ef 10.0.9 available).
-- **Rationale**: Existing rows get `''` automatically (FR-017); matches other required string columns (e.g. `ProductSourceCode`).
+- **Decision**: `nvarchar(20) NOT NULL` with SQL default `'N/A'` via `HasDefaultValue(OrderItem.DefaultSize)` (changed from `''` at user request after implementation); migration generated with `dotnet ef migrations add AddOrderItemSize` (dotnet-ef 10.0.9 available).
+- **Rationale**: Existing rows get `'N/A'` automatically (FR-017); matches other required string columns (e.g. `ProductSourceCode`).
 - **Alternatives**: Nullable column — rejected by requirement (non-nullable).
 
 ## R7 — Size validation

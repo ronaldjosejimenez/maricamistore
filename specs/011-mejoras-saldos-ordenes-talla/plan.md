@@ -10,7 +10,7 @@ Three small, independent UI/data improvements:
 
 1. **Payments – Saldos total**: add a bold `<tfoot>` "Total" row to the client-rendered Saldos table (`wwwroot/js/pages/payments/index.js`), computed from the currently filtered rows. Pure front-end change.
 2. **Orders – status checkboxes**: replace the `#statusFilter` `<select>` with six server-rendered checkboxes (one per `OrderStatus`). The page reads an optional `statuses` query parameter to decide the initial selection; the selection travels in the "Items" link (`/Orders/Items?orderId=…&statuses=…`) and back through the "Volver" button. The load handler and `OrderService.GetOrdersAsync` switch from "empty = all" to explicit status lists (empty = none).
-3. **OrderItem.Size**: new non-nullable `nvarchar(20)` column with default `''` (EF migration), exposed in the item DTOs and the create/edit item modal only. Server trims and validates length.
+3. **OrderItem.Size**: new non-nullable `nvarchar(20)` column with default `'N/A'` (EF migration; blank input saved as `N/A`), exposed in the item DTOs and the create/edit item modal only. Server trims and validates length.
 
 ## Technical Context
 
@@ -28,7 +28,7 @@ Three small, independent UI/data improvements:
 
 **Performance Goals**: N/A (small business scale; filters are client-side or single indexed queries)
 
-**Constraints**: Existing items must keep working after migration (default `''`); reassignment flow (feature 010) must not alter `Size`
+**Constraints**: Existing items must keep working after migration (default `'N/A'`); reassignment flow (feature 010) must not alter `Size`
 
 **Scale/Scope**: Tens of customers, hundreds of orders
 
@@ -62,7 +62,7 @@ MariCamiStore/
 ├── Model/
 │   └── OrderItem.cs                                            [MODIFY] add Size
 ├── Infrastructure/Persistance/
-│   ├── EntityConfigurations/OrderItemEntityTypeConfiguration.cs [MODIFY] Size: required, max 20, default ''
+│   ├── EntityConfigurations/OrderItemEntityTypeConfiguration.cs [MODIFY] Size: required, max 20, default 'N/A'
 │   └── Migrations/<timestamp>_AddOrderItemSize.cs              [CREATE] dotnet ef migrations add AddOrderItemSize
 ├── Services/
 │   ├── IOrderService.cs                                        [MODIFY] GetOrdersAsync(IReadOnlyCollection<string> statuses); OrderItemWithCustomerDto + Size
@@ -114,9 +114,9 @@ MariCamiStore/
 
 ### D6 — Size field (FR-014..019)
 
-- Entity: `public string Size { get; set; } = string.Empty;`
-- EF: `.IsRequired().HasMaxLength(20).HasDefaultValue(string.Empty)` → migration adds `Size nvarchar(20) NOT NULL DEFAULT N''` (existing rows get `''`).
-- `OrderItemDto` gets `string? Size`; Insert/Update handlers: `var size = (dto.Size ?? string.Empty).Trim(); if (size.Length > 20) return new JsonResult(new { error = "La talla no puede superar 20 caracteres." });`
+- Entity: `public string Size { get; set; } = DefaultSize;` (`DefaultSize = "N/A"`, `SizeMaxLength = 20` constants on `OrderItem`)
+- EF: `.IsRequired().HasMaxLength(OrderItem.SizeMaxLength).HasDefaultValue(OrderItem.DefaultSize)` → migration adds `Size nvarchar(20) NOT NULL DEFAULT N'N/A'` (existing rows get `'N/A'`).
+- `OrderItemDto` gets `string? Size`; Insert/Update handlers: `var size = string.IsNullOrWhiteSpace(dto.Size) ? OrderItem.DefaultSize : dto.Size.Trim(); if (size.Length > 20) return new JsonResult(new { error = "La talla no puede superar 20 caracteres." });`
 - `OrderItemWithCustomerDto` gets `Size` so the edit modal can prefill; the items grid does **not** render it.
 - Reassign flow (`ReasignarItemAsync`) loads the tracked entity and only changes customer/price → `Size` preserved (verify, no code change expected).
 
