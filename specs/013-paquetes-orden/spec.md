@@ -16,6 +16,7 @@
 - Q: ¿Las entradas CxP manuales deben aceptar montos negativos por coherencia con las reversiones? → A: No; solo las entradas automáticas Reverso Paquete pueden ser negativas.
 - Q: ¿Cómo se muestran los montos negativos en la tabla de entradas CxP? → A: Con signo "−" delante del monto y en color rojo; restan del total de su moneda.
 - Q: ¿Qué nombre de la orden se usa en la referencia? → A: El nombre de la orden (NameOfOrder) vigente al momento de registrar o eliminar el paquete.
+- Q: ¿Se pueden borrar desde la pantalla CxP las entradas Auto-Paquete y Reverso Paquete? → A: Sí, igual que hoy con cualquier entrada del mes abierto (regla FR-018 del 009). Borrarlas no modifica el paquete; el cuadre queda a cargo del usuario.
 
 ---
 
@@ -33,7 +34,7 @@ Mientras una orden está Activa o Entregando, el usuario registra cada paquete q
 
 1. **Given** una orden Activa o Entregando y un mes CxP abierto, **When** el usuario agrega un paquete con fecha, monto mayor a 0 y descripción, **Then** el paquete se guarda en la moneda de la orden y se crea una entrada CxP de tipo Auto-Paquete con ese monto, esa moneda, la orden asociada y referencia "{Nombre de la orden} - {Descripción}".
 2. **Given** un paquete sin descripción, **When** se registra, **Then** la referencia de la entrada CxP es solo "{Nombre de la orden}".
-3. **Given** que no hay un mes CxP abierto, **When** el usuario intenta agregar un paquete, **Then** el paquete no se guarda y se muestra un mensaje indicando que no hay un período CxP abierto.
+3. **Given** que no hay un mes CxP abierto, **When** el usuario intenta agregar un paquete, **Then** el paquete no se guarda y se muestra "No hay un período CxP abierto.".
 4. **Given** el formulario de agregar paquete, **When** se abre, **Then** la fecha de entrega sugiere el día de hoy y puede cambiarse a cualquier fecha.
 5. **Given** un monto vacío, cero o negativo, **When** el usuario intenta guardar, **Then** el paquete no se guarda y se muestra un mensaje de validación.
 
@@ -115,7 +116,8 @@ La transición a "Entregada" deja de pedir "Shipping real a CR" y deja de crear 
 - **Orden sin envío estimado (0)** con paquetes: aporta 0; los paquetes siguen generando deuda en CxP.
 - **Orden anulada con paquetes**: los paquetes y sus entradas CxP se conservan (sin reversión automática al anular, igual que la regla del 009 para anulaciones); la lista queda en solo lectura.
 - **Error al crear la entrada CxP**: el paquete no se guarda (todo o nada); igual al eliminar con su reversión.
-- **Doble clic en Agregar**: no debe crear paquetes duplicados por un solo clic.
+- **Doble clic en Agregar/Eliminar**: el botón se deshabilita durante la operación (FR-017a).
+- **Entrada Auto-Paquete borrada desde CxP**: el paquete sigue en la orden y sigue descontándose de "Shipping CR Pendientes"; si luego se elimina el paquete, se genera su Reverso Paquete igualmente. El cuadre es responsabilidad del usuario.
 - **Montos con decimales**: se aceptan 2 decimales, igual que el resto de montos.
 - **Tipo de cambio 0**: el indicador en colones muestra 0 con el aviso existente; la entrada CxP del paquete se crea igual (se guarda en la moneda de la orden).
 - **Entradas CxP negativas**: las reversiones se muestran con signo negativo en la tabla de entradas y restan del total por moneda.
@@ -136,8 +138,10 @@ La transición a "Entregada" deja de pedir "Shipping real a CR" y deja de crear 
 
 - **FR-006**: Al agregar un paquete, el sistema MUST crear una entrada CxP en el período abierto con: moneda de la orden, monto del paquete, tipo Auto-Paquete, orden asociada, vínculo al paquete y referencia "{Nombre de la orden} - {Descripción}" (o "{Nombre de la orden}" si no hay descripción).
 - **FR-007**: Al eliminar un paquete, el sistema MUST crear una entrada CxP en el período abierto con: el monto del paquete en negativo, la misma moneda, tipo Reverso Paquete, la orden asociada y referencia "Reverso: {Nombre de la orden} - {Descripción}" (o "Reverso: {Nombre de la orden}"); la entrada Auto-Paquete original MUST NOT modificarse.
-- **FR-008**: Si no hay un período CxP abierto, agregar o eliminar un paquete MUST rechazarse con un mensaje, sin cambios.
+- **FR-008**: Si no hay un período CxP abierto, agregar o eliminar un paquete MUST rechazarse con el mensaje "No hay un período CxP abierto.", sin cambios.
 - **FR-009**: Guardar/eliminar el paquete y crear su entrada CxP MUST ser una sola operación atómica (ambas o ninguna).
+- **FR-009a**: El vínculo de la entrada CxP con su paquete MUST ser opcional y quedar vacío cuando el paquete se elimina; la entrada Reverso Paquete no lleva vínculo al paquete.
+- **FR-009b**: Las entradas Auto-Paquete y Reverso Paquete MUST poder borrarse desde la pantalla CxP igual que cualquier otra entrada del mes abierto; borrarlas MUST NOT modificar ni eliminar el paquete. Eliminar después el paquete genera igualmente su Reverso Paquete.
 - **FR-010**: La tabla de entradas CxP MUST mostrar los tipos nuevos con etiquetas legibles ("Auto-Paquete", "Reverso Paquete") y los montos negativos con signo "−" y en color rojo.
 
 **Shipping CR Pendientes**
@@ -152,6 +156,7 @@ La transición a "Entregada" deja de pedir "Shipping real a CR" y deja de crear 
 - **FR-015**: La sección MUST mostrar un resumen con Envío a CR estimado, Total en paquetes y Pendiente (máx(0, estimado − total)), y una lista con fecha de entrega, descripción y monto, todo en la moneda de la orden.
 - **FR-016**: Eliminar un paquete MUST pedir confirmación.
 - **FR-017**: La lista y el resumen MUST actualizarse tras agregar o eliminar sin recargar la página manualmente.
+- **FR-017a**: Los botones Agregar y Eliminar MUST deshabilitarse mientras la operación está en curso, para que un doble clic no genere paquetes o reversiones duplicadas.
 
 **Retiro de la regla del requerimiento 009**
 
@@ -171,7 +176,7 @@ La transición a "Entregada" deja de pedir "Shipping real a CR" y deja de crear 
 ### Measurable Outcomes
 
 - **SC-001**: El 100 % de los paquetes registrados aparece en CxP como deuda en el mismo momento, sin registro manual.
-- **SC-002**: Tras eliminar un paquete, la deuda en CxP y "Shipping CR Pendientes" vuelven exactamente a los valores previos a registrarlo (diferencia 0).
+- **SC-002**: Para cada paquete eliminado, la suma neta de su entrada Auto-Paquete y su Reverso Paquete es 0 en la moneda de la orden, y el pendiente de shipping de la orden vuelve a su valor previo.
 - **SC-003**: Ninguna orden Activa o Entregando queda fuera de "Shipping CR Pendientes" mientras tenga envío estimado sin cubrir por paquetes.
 - **SC-004**: En 0 casos se pueden agregar, eliminar o editar paquetes fuera de los estados permitidos.
 - **SC-005**: La transición a Entregada no genera ninguna entrada CxP.
@@ -183,7 +188,7 @@ La transición a "Entregada" deja de pedir "Shipping real a CR" y deja de crear 
 - No se validan paquetes al pasar de Entregando a Entregada.
 - Las entradas CxP manuales siguen aceptando solo montos positivos.
 - Las 2 órdenes que se pusieron en Entregada por fuera de la app no se corrigen en este requerimiento.
-- La actualización de base de datos se aplica manualmente en cada ambiente antes de desplegar.
+- La actualización de base de datos (tabla de paquetes, vínculo en entradas CxP y eliminación del dato "shipping real a CR") se entrega como migración y se aplica manualmente en cada ambiente antes de desplegar.
 
 ## Out of Scope
 
