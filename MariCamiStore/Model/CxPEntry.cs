@@ -9,6 +9,7 @@ public class CxPEntry
     public string Reference { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public Guid? OrderId { get; set; }
+    public Guid? OrderPackageId { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public PeriodControl? Period { get; set; }
