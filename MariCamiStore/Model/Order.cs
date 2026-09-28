@@ -78,6 +78,4 @@ public partial class Order
     /// <summary>Gets or sets the identifier of the currency.</summary>
     /// <value>The identifier of the currency.</value>
     public Guid CurrencyId { get; set; }
-
-    public decimal ActualShippingAmountToCR { get; set; }
 }

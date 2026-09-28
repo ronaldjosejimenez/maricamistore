@@ -290,20 +290,9 @@ public class OrderService(
             {
                 var period = await cxpService.GetOpenPeriodAsync();
                 if (period != null)
-                    await cxpService.CreateAutoEntryAsync(period.Id, order.Id, order.CurrencyId, order.TotalToPayToSupplier, order.NameOfOrder, "AutoActiva");
+                    await cxpService.CreateAutoEntryAsync(period.Id, order.Id, order.CurrencyId, order.TotalToPayToSupplier, order.NameOfOrder, CxPEntryType.AutoActiva);
                 else
                     logger.LogWarning("No open CxP period when activating order {OrderId} — AutoActiva entry skipped.", order.Id);
-            }
-            else if (dto.ToStatus == OrderStatus.Delivered.Key)
-            {
-                order.ActualShippingAmountToCR = dto.ActualShippingAmountToCR ?? order.ShippingAmountToCR;
-                await context.SaveChangesAsync();
-
-                var period = await cxpService.GetOpenPeriodAsync();
-                if (period != null)
-                    await cxpService.CreateAutoEntryAsync(period.Id, order.Id, order.CurrencyId, order.ActualShippingAmountToCR, order.NameOfOrder, "AutoDelivered");
-                else
-                    logger.LogWarning("No open CxP period when delivering order {OrderId} — AutoDelivered entry skipped.", order.Id);
             }
         }
         catch (Exception ex)

@@ -18,6 +18,7 @@ Last updated: 2026-09-28
 | 10 | 2026-06-11 | flexibilidad-items-activos | active | - |
 | 11 | 2026-09-28 | mejoras-saldos-ordenes-talla | spec-created | specs/011-mejoras-saldos-ordenes-talla |
 | 12 | 2026-09-28 | ajustes-visuales-cxp | spec-created | specs/012-ajustes-visuales-cxp |
+| 13 | 2026-09-28 | paquetes-orden | active | - |
 
 ## Open Threads
 
@@ -27,6 +28,9 @@ Last updated: 2026-09-28
 - ¿"Sin Cliente" debe aparecer en el dropdown del modal de *creación* de ítem (Pending) o solo en reasignación? (from #10)
 - ¿El modal "Reasignar" debe validar precio = 0 con confirmación explícita? (from #10)
 - ¿Los totales recalculados (TotalAgreedPriceInLocal, EstimatedProfitInLocal) se persisten inmediatamente o al siguiente guardado manual? (from #10)
+- ¿Validar algo al pasar de Entregando a Entregada (p. ej. pendiente de shipping ≠ 0)? (from #13)
+- ¿Permitir montos negativos en entradas manuales de CxP? (from #13)
+- ¿Cómo mostrar montos negativos (ReversoPaquete) en la tabla de entradas CxP? (from #13)
 
 ## Parked Ideas
 

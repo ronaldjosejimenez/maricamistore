@@ -34,5 +34,13 @@ public class CxPEntryEntityTypeConfiguration : IEntityTypeConfiguration<CxPEntry
             .HasForeignKey(e => e.OrderId)
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
+
+        builder.HasOne<OrderPackage>()
+            .WithMany()
+            .HasForeignKey(e => e.OrderPackageId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        builder.HasIndex(e => e.OrderPackageId);
     }
 }

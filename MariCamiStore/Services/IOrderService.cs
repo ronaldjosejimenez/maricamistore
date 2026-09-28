@@ -38,8 +38,7 @@ public record TransitionOrderDto(
     string ToStatus,
     DateTime TransitionDate,
     string? Notes,
-    string? Justification,
-    decimal? ActualShippingAmountToCR = null);
+    string? Justification);
 
 public interface IOrderService
 {

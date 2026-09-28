@@ -6,8 +6,18 @@ var TYPE_LABELS = {
     'AutoActiva': 'Auto-Activa',
     'AutoDelivered': 'Auto-Entregada',
     'SaldoAnterior': 'Saldo Anterior',
-    'Manual': 'Manual'
+    'Manual': 'Manual',
+    'AutoPaquete': 'Auto-Paquete',
+    'ReversoPaquete': 'Reverso Paquete'
 };
+
+// Negative amounts (e.g. package reversals) are shown in red with a leading minus sign.
+function formatSignedMoneyHtml(amount, sign) {
+    var value = parseFloat(amount) || 0;
+    if (value < 0)
+        return '<span class="text-danger">−' + formatMoney(Math.abs(value), sign) + '</span>';
+    return formatMoney(value, sign);
+}
 
 function ajaxPost(handler, data, success, error) {
     $.ajax({
@@ -71,7 +81,7 @@ function loadPeriod() {
                     '<div class="info-box bg-light">' +
                     '<div class="info-box-content">' +
                     '<span class="info-box-text">Por pagar en ' + escHtml(bal.currencyName) + '</span>' +
-                    '<span class="info-box-number">' + formatMoney(bal.amount, bal.sign) + '</span>' +
+                    '<span class="info-box-number">' + formatSignedMoneyHtml(bal.amount, bal.sign) + '</span>' +
                     '</div></div>'
                 );
             });
@@ -113,7 +123,7 @@ function loadEntries() {
                 rows += '<tr>' +
                     '<td>' + escHtml(e.reference) + '</td>' +
                     '<td>' + typeLabel + '</td>' +
-                    '<td class="text-right">' + formatMoney(e.amount, group.sign) + '</td>' +
+                    '<td class="text-right">' + formatSignedMoneyHtml(e.amount, group.sign) + '</td>' +
                     '<td>' + dateStr + '</td>' +
                     '<td class="text-center">' + deleteBtn + '</td>' +
                     '</tr>';
@@ -129,7 +139,7 @@ function loadEntries() {
                 '</tr></thead><tbody>' + rows + '</tbody>' +
                 '<tfoot><tr>' +
                 '<td colspan="2" class="text-right font-weight-bold">Subtotal</td>' +
-                '<td class="text-right font-weight-bold">' + formatMoney(group.total, group.sign) + '</td>' +
+                '<td class="text-right font-weight-bold">' + formatSignedMoneyHtml(group.total, group.sign) + '</td>' +
                 '<td colspan="2"></td>' +
                 '</tr></tfoot>' +
                 '</table></div></div>';

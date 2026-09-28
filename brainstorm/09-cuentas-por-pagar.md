@@ -75,3 +75,11 @@ Enfoque A — página única `/CxP/Index` con:
 - ¿Cómo se crea el primer `PeriodControl` si la tabla está vacía? (¿bootstrap automático al primer acceso o pantalla de inicialización?)
 - ¿Se puede tener más de una entrada AutoActiva por orden si la orden pasa por múltiples estados intermedios antes de Active?
 - ¿Las entradas AutoDelivered/AutoActiva deben poder editarse o eliminarse manualmente desde la UI, o son solo de lectura?
+
+## Descartado (2026-09-28)
+
+La regla de shipping de este módulo fue **descartada** y reemplazada por `specs/013-paquetes-orden` (paquetes de envío por orden):
+
+- FR-008 a FR-010: el campo "Shipping real a CR" en la transición a Entregada y la creación de la entrada CxP `AutoDelivered` ya no existen (la columna `Orders.ActualShippingAmountToCR` se elimina).
+- El cálculo de "Shipping CR Pendientes" solo con órdenes Activas se reemplaza por: Σ sobre órdenes Activas y Entregando de max(0, shipping estimado − Σ paquetes registrados).
+- Ahora cada paquete registrado en la orden genera una entrada `AutoPaquete` en CxP, y su eliminación una entrada negativa `ReversoPaquete`. Las entradas `AutoDelivered` históricas se conservan.

@@ -93,7 +93,7 @@ public class CxPService(
             CurrencyId = localCurrencyId,
             Amount = deudaAPagar,
             Reference = "Saldo anterior",
-            Type = "SaldoAnterior",
+            Type = CxPEntryType.SaldoAnterior,
             OrderId = null,
             CreatedAt = DateTime.UtcNow
         };
@@ -154,14 +154,21 @@ public class CxPService(
                     porPagarEnColones += kvp.Value.Amount * period.ExchangeRate;
             }
 
-            var activeOrders = await context.Orders
-                .Where(o => o.Status == OrderStatus.Active.Key)
-                .Select(o => new { o.ShippingAmountToCR, o.CurrencyId })
+            // Pending shipping per Active/Delivering order = max(0, estimated shipping - registered packages)
+            var shippingRows = await context.Orders
+                .Where(o => o.Status == OrderStatus.Active.Key || o.Status == OrderStatus.Delivering.Key)
+                .Select(o => new
+                {
+                    o.CurrencyId,
+                    o.ShippingAmountToCR,
+                    Packages = context.OrderPackages.Where(p => p.OrderId == o.Id).Sum(p => (decimal?)p.Amount) ?? 0m
+                })
                 .ToListAsync();
-            shippingCRPendientesDeAplicar = activeOrders.Sum(o =>
-                o.CurrencyId == localCurrencyId
-                    ? o.ShippingAmountToCR
-                    : o.ShippingAmountToCR * period.ExchangeRate);
+            shippingCRPendientesDeAplicar = shippingRows.Sum(r =>
+            {
+                var pending = Math.Max(0m, r.ShippingAmountToCR - r.Packages);
+                return r.CurrencyId == localCurrencyId ? pending : pending * period.ExchangeRate;
+            });
         }
 
         var saldosRows = await paymentService.GetSaldosReportAsync();
@@ -241,7 +248,7 @@ public class CxPService(
             CurrencyId = req.CurrencyId,
             Amount = req.Amount,
             Reference = req.Reference.Trim(),
-            Type = "Manual",
+            Type = CxPEntryType.Manual,
             OrderId = null,
             CreatedAt = DateTime.UtcNow
         };

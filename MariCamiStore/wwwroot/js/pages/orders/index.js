@@ -85,7 +85,7 @@ function loadGrid() {
                         var labels = { Active: 'Activar', Delivering: 'Enviar', Delivered: 'Entregada', Completed: 'Completar', Voided: 'Anular' };
                         var btnClass = s === 'Voided' ? 'btn-danger' : 'btn-warning';
                         $('<button class="btn btn-xs ' + btnClass + ' mr-1">' + (labels[s] || s) + '</button>')
-                            .on('click', (function (status) { return function () { openTransitionModal(item.id, status, item.shippingAmountToCR); }; })(s))
+                            .on('click', (function (status) { return function () { openTransitionModal(item.id, status); }; })(s))
                             .appendTo(btns);
                     });
                     return btns;
@@ -172,7 +172,7 @@ $('#btn-save-order').on('click', function () {
 
 // ── Transition Modal ──────────────────────────────────────────────────────────
 
-function openTransitionModal(orderId, toStatus, shippingAmountToCR) {
+function openTransitionModal(orderId, toStatus) {
     var today = new Date().toISOString().split('T')[0];
     $('#transition-order-id').val(orderId);
     $('#transition-to-status').val(toStatus);
@@ -181,12 +181,6 @@ function openTransitionModal(orderId, toStatus, shippingAmountToCR) {
     $('#transition-justification').val('');
     $('#transition-error').hide();
     $('#justification-group').toggle(toStatus === 'Voided');
-    if (toStatus === 'Delivered') {
-        $('#actual-shipping-amount').val(shippingAmountToCR || 0);
-        $('#actual-shipping-group').show();
-    } else {
-        $('#actual-shipping-group').hide();
-    }
     $('#transitionModal').modal('show');
 }
 
@@ -200,9 +194,6 @@ $('#btn-confirm-transition').on('click', function () {
         notes: $('#transition-notes').val(),
         justification: $('#transition-justification').val()
     };
-    if (toStatus === 'Delivered') {
-        payload.actualShippingAmountToCR = parseFloat($('#actual-shipping-amount').val() || '0');
-    }
 
     ajaxPost('Transition', payload,
         function (r) {
