@@ -330,7 +330,7 @@ public class OrderService(
             [OrderStatus.Active.Key]     = [OrderStatus.Delivering.Key, OrderStatus.Voided.Key],
             [OrderStatus.Delivering.Key] = [OrderStatus.Delivered.Key,  OrderStatus.Voided.Key],
             [OrderStatus.Delivered.Key]  = [OrderStatus.Completed.Key,  OrderStatus.Voided.Key],
-            [OrderStatus.Completed.Key]  = [OrderStatus.Voided.Key],
+            [OrderStatus.Completed.Key]  = [], // final: a completed order cannot be voided
         };
 
         if (!allowed.TryGetValue(fromStatus, out var targets) || !targets.Contains(toStatus))
