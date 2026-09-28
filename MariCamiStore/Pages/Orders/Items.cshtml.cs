@@ -115,7 +115,7 @@ public class ItemsModel(
 
     // ── Shipping packages ────────────────────────────────────────────────────
 
-    public record AddPackageRequest(Guid OrderId, DateTime DeliveryDate, decimal Amount, string? Description);
+    public record AddPackageRequest(Guid OrderId, DateTime DeliveryDate, decimal Amount, string? Description, string? TrackingNumber);
 
     public record DeletePackageRequest(Guid PackageId);
 
@@ -125,7 +125,7 @@ public class ItemsModel(
     public async Task<JsonResult> OnPostAddPackageAsync([FromBody] AddPackageRequest request)
     {
         var (success, error) = await orderPackageService.AddAsync(
-            request.OrderId, request.DeliveryDate, request.Amount, request.Description);
+            request.OrderId, request.DeliveryDate, request.Amount, request.Description, request.TrackingNumber);
         return new JsonResult(new { success, error });
     }
 

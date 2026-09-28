@@ -10,6 +10,7 @@
 | Amount | decimal(18,2) | required, > 0 |
 | CurrencyId | Guid | FK → Currencies (Restrict), required; always = Order.CurrencyId |
 | Description | nvarchar(500) | optional (null when blank) |
+| TrackingNumber | nvarchar(100) | optional (null when blank), carrier tracking number; label "Número de tracking" |
 | CreatedAt | datetime2 | required (UTC) |
 
 - Immutable (no update path). Organization scoping via query filter on `Order.OrganizationId`.
@@ -39,3 +40,7 @@
 ## Migration `AddOrderPackages`
 
 Create `OrderPackages` (+ FKs, index) · add `CxPEntries.OrderPackageId` (+ FK SetNull, index) · drop `Orders.ActualShippingAmountToCR`. Down reverses (re-adds column with default 0).
+
+## Migration `AddOrderPackageTrackingNumber`
+
+Adds nullable `OrderPackages.TrackingNumber nvarchar(100)`. Down drops it. Apply after `AddOrderPackages`.

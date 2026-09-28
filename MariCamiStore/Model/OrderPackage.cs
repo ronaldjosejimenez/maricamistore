@@ -6,6 +6,9 @@ public class OrderPackage
     /// <summary>(Immutable) the maximum length of the description.</summary>
     public const int DescriptionMaxLength = 500;
 
+    /// <summary>(Immutable) the maximum length of the tracking number.</summary>
+    public const int TrackingNumberMaxLength = 100;
+
     /// <summary>Gets or sets the identifier.</summary>
     /// <value>The identifier.</value>
     public Guid Id { get; set; }
@@ -29,6 +32,10 @@ public class OrderPackage
     /// <summary>Gets or sets the optional description.</summary>
     /// <value>The description.</value>
     public string? Description { get; set; }
+
+    /// <summary>Gets or sets the optional carrier tracking number.</summary>
+    /// <value>The tracking number.</value>
+    public string? TrackingNumber { get; set; }
 
     /// <summary>Gets or sets the Date/Time of the created at (UTC).</summary>
     /// <value>The created at.</value>

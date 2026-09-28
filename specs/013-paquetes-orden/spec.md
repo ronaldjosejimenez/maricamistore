@@ -16,6 +16,7 @@
 - Q: ¿Las entradas CxP manuales deben aceptar montos negativos por coherencia con las reversiones? → A: No; solo las entradas automáticas Reverso Paquete pueden ser negativas.
 - Q: ¿Cómo se muestran los montos negativos en la tabla de entradas CxP? → A: Con signo "−" delante del monto y en color rojo; restan del total de su moneda.
 - Q: ¿Qué nombre de la orden se usa en la referencia? → A: El nombre de la orden (NameOfOrder) vigente al momento de registrar o eliminar el paquete.
+- Q: (Agregado tras la implementación, a pedido del usuario) ¿Se registra el número de guía del paquete? → A: Sí, campo opcional "Número de tracking" (TrackingNumber), texto libre de hasta 100 caracteres; se muestra en el formulario y en la lista de paquetes; no se incluye en la referencia CxP. Se entrega en una migración separada.
 - Q: ¿Se pueden borrar desde la pantalla CxP las entradas Auto-Paquete y Reverso Paquete? → A: Sí, igual que hoy con cualquier entrada del mes abierto (regla FR-018 del 009). Borrarlas no modifica el paquete; el cuadre queda a cargo del usuario.
 
 ---
@@ -128,7 +129,7 @@ La transición a "Entregada" deja de pedir "Shipping real a CR" y deja de crear 
 
 **Paquetes**
 
-- **FR-001**: El sistema MUST permitir registrar paquetes de envío por orden con: fecha de entrega (requerida), monto (requerido, mayor que 0, hasta 2 decimales), descripción (opcional) y moneda.
+- **FR-001**: El sistema MUST permitir registrar paquetes de envío por orden con: fecha de entrega (requerida), monto (requerido, mayor que 0, hasta 2 decimales), número de tracking (opcional, texto libre, máximo 100 caracteres), descripción (opcional) y moneda.
 - **FR-002**: La moneda del paquete MUST ser siempre la moneda de la orden, asignada automáticamente y no editable.
 - **FR-003**: Los paquetes MUST ser inmutables: solo se pueden agregar y eliminar, nunca editar.
 - **FR-004**: Agregar y eliminar paquetes MUST estar permitido únicamente cuando la orden está Activa o Entregando; el sistema MUST rechazar la operación en cualquier otro estado, incluso si se invoca directamente.
@@ -167,7 +168,7 @@ La transición a "Entregada" deja de pedir "Shipping real a CR" y deja de crear 
 
 ### Key Entities
 
-- **Paquete de orden (OrderPackage)**: envío/paquete recibido de una orden. Atributos: orden, fecha de entrega, monto, moneda (la de la orden), descripción opcional, fecha de creación. Inmutable.
+- **Paquete de orden (OrderPackage)**: envío/paquete recibido de una orden. Atributos: orden, fecha de entrega, monto, moneda (la de la orden), número de tracking opcional (máx. 100), descripción opcional, fecha de creación. Inmutable.
 - **Entrada CxP (modificada)**: se agregan los tipos Auto-Paquete y Reverso Paquete, y el vínculo opcional al paquete que la originó; puede tener monto negativo (solo en reversiones).
 - **Orden (modificada)**: se elimina el dato "shipping real a CR"; conserva el envío estimado a CR.
 

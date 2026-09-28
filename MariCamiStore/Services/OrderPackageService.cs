@@ -20,7 +20,7 @@ public class OrderPackageService(
             .Where(p => p.OrderId == orderId)
             .OrderBy(p => p.DeliveryDate)
             .ThenBy(p => p.CreatedAt)
-            .Select(p => new OrderPackageDto(p.Id, p.DeliveryDate, p.Amount, p.Description, p.CreatedAt))
+            .Select(p => new OrderPackageDto(p.Id, p.DeliveryDate, p.Amount, p.Description, p.TrackingNumber, p.CreatedAt))
             .ToListAsync();
 
         var total = packages.Sum(p => p.Amount);
@@ -33,7 +33,7 @@ public class OrderPackageService(
             Packages: packages);
     }
 
-    public async Task<(bool Success, string? Error)> AddAsync(Guid orderId, DateTime deliveryDate, decimal amount, string? description)
+    public async Task<(bool Success, string? Error)> AddAsync(Guid orderId, DateTime deliveryDate, decimal amount, string? description, string? trackingNumber)
     {
         var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
         if (order == null)
@@ -50,6 +50,10 @@ public class OrderPackageService(
         if (desc != null && desc.Length > OrderPackage.DescriptionMaxLength)
             return (false, $"La descripción no puede superar {OrderPackage.DescriptionMaxLength} caracteres.");
 
+        var trackNo = string.IsNullOrWhiteSpace(trackingNumber) ? null : trackingNumber.Trim();
+        if (trackNo != null && trackNo.Length > OrderPackage.TrackingNumberMaxLength)
+            return (false, $"El número de tracking no puede superar {OrderPackage.TrackingNumberMaxLength} caracteres.");
+
         var period = await cxpService.GetOpenPeriodAsync();
         if (period == null)
             return (false, "No hay un período CxP abierto.");
@@ -63,6 +67,7 @@ public class OrderPackageService(
             Amount = amount,
             CurrencyId = order.CurrencyId,
             Description = desc,
+            TrackingNumber = trackNo,
             CreatedAt = now
         };
         context.OrderPackages.Add(package);

@@ -380,13 +380,14 @@ function renderPackagesTable(packages) {
     }
     var $table = $('<table class="table table-sm table-bordered">');
     var $htr = $('<tr>');
-    ['Fecha de entrega', 'Descripción', 'Monto'].forEach(function (h) { $htr.append($('<th>').text(h)); });
+    ['Fecha de entrega', 'Número de tracking', 'Descripción', 'Monto'].forEach(function (h) { $htr.append($('<th>').text(h)); });
     if (canManagePackages) $htr.append($('<th>'));
     $table.append($('<thead>').append($htr));
     var $tbody = $('<tbody>');
     packages.forEach(function (p) {
         var $tr = $('<tr>');
         $tr.append($('<td>').text((p.deliveryDate || '').substr(0, 10)));
+        $tr.append($('<td>').text(p.trackingNumber || ''));
         $tr.append($('<td>').text(p.description || ''));
         $tr.append($('<td>').text(formatMoney(p.amount, orderCurrencySign)));
         if (canManagePackages) {
@@ -417,12 +418,14 @@ function addPackage() {
         orderId: orderId,
         deliveryDate: deliveryDate,
         amount: amount,
-        description: $('#pkg-description').val()
+        description: $('#pkg-description').val(),
+        trackingNumber: $('#pkg-tracking-number').val()
     }, function (r) {
         $btn.prop('disabled', false);
         if (r && r.success) {
             $('#pkg-amount').val('');
             $('#pkg-description').val('');
+            $('#pkg-tracking-number').val('');
             $('#pkg-date').val(todayIso());
             loadPackages();
         } else {

@@ -13,6 +13,7 @@ Needs an open CxP period and orders in several states.
    - Add $30 "Caja 1" (date defaults to today) → list shows it; summary 100 / 30 / 70.
    - CxP → entries: "Auto-Paquete", "{Orden} - Caja 1", $30. "Shipping CR Pendientes" includes 70 × TC.
    - Add without description → reference is only the order name.
+   - Add with "Número de tracking" → shown in the list column; > 100 chars is blocked by the input (server also rejects).
    - Amount 0 or empty → validation message, nothing saved.
    - Double-click Agregar → only one package.
 3. **Delete** the $30 package → confirm → list empty; CxP has "Reverso Paquete" −$30 in red with "Reverso: {Orden} - Caja 1"; Shipping CR Pendientes back to previous value.

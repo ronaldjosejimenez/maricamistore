@@ -154,7 +154,11 @@
                             <label for="pkg-amount">Monto</label>
                             <input id="pkg-amount" type="number" step="0.01" min="0.01" class="form-control form-control-sm" />
                         </div>
-                        <div class="form-group col-md-6">
+                        <div class="form-group col-md-2">
+                            <label for="pkg-tracking-number">Número de tracking</label>
+                            <input id="pkg-tracking-number" type="text" maxlength="@MariCamiStore.Model.OrderPackage.TrackingNumberMaxLength" class="form-control form-control-sm" />
+                        </div>
+                        <div class="form-group col-md-4">
                             <label for="pkg-description">Descripción</label>
                             <input id="pkg-description" type="text" maxlength="@MariCamiStore.Model.OrderPackage.DescriptionMaxLength" class="form-control form-control-sm" />
                         </div>

@@ -32,6 +32,10 @@ public class OrderPackageEntityTypeConfiguration : IEntityTypeConfiguration<Orde
             .IsRequired(false)
             .HasMaxLength(OrderPackage.DescriptionMaxLength);
 
+        builder.Property(p => p.TrackingNumber)
+            .IsRequired(false)
+            .HasMaxLength(OrderPackage.TrackingNumberMaxLength);
+
         builder.Property(p => p.CreatedAt)
             .IsRequired();
 
