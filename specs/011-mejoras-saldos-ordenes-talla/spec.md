@@ -8,6 +8,14 @@
 
 **Input**: Brainstorm `brainstorm/11-mejoras-saldos-ordenes-talla.md`: total neto en la tabla "Saldos de Clientes" (pantalla de Pagos), reemplazo del combo de filtro de estados en Órdenes por una lista de casillas con recuerdo de selección al usar "Volver", y nuevo dato "Talla" en los ítems de orden.
 
+## Clarifications
+
+### Session 2026-09-28
+
+- Q: ¿Qué se muestra cuando el filtro de clientes no coincide con ninguna fila? → A: Se mantiene la tabla con una fila "Ningún cliente coincide con el filtro" y la fila Total muestra 0 (suma de un conjunto vacío).
+- Q: ¿Cómo se hace cumplir el máximo de 20 caracteres de la talla? → A: En ambos lados: el campo del formulario no permite escribir más de 20 caracteres y el servidor rechaza con un mensaje de validación cualquier talla que, tras recortar espacios, supere 20 caracteres.
+- Q: ¿La fila Total incluye clientes especiales como "Sin Cliente" (Especulativo)? → A: Sí, suma todas las filas visibles sin excepciones; no se excluye ningún cliente.
+
 ---
 
 ## User Scenarios & Testing *(mandatory)*
@@ -24,7 +32,7 @@ En la pantalla de Pagos, bajo la tabla "Saldos de Clientes", el usuario ve una f
 
 1. **Given** clientes con saldos 10 000, 5 000 y −2 000, **When** el usuario abre la pantalla de Pagos, **Then** la tabla "Saldos de Clientes" muestra al pie una fila "Total" con 13 000, con el mismo formato de moneda que las filas.
 2. **Given** la tabla con varios clientes, **When** el usuario escribe un texto en "Filtrar por cliente...", **Then** el total muestra la suma neta solo de los clientes que quedan visibles.
-3. **Given** un filtro que no coincide con ningún cliente, **When** la tabla queda sin filas, **Then** no se muestra un total engañoso (se muestra el mensaje de "sin resultados" o un total de 0).
+3. **Given** un filtro que no coincide con ningún cliente, **When** la tabla queda sin filas, **Then** la tabla muestra una fila "Ningún cliente coincide con el filtro" y la fila Total muestra 0.
 4. **Given** la tabla con su total visible, **When** el usuario registra un pago y la tabla se recarga, **Then** el total refleja el nuevo saldo del cliente.
 5. **Given** que la suma neta es negativa, **When** se muestra el total, **Then** se presenta con la misma convención visual de saldo negativo (a favor) que usan las filas.
 
@@ -75,7 +83,7 @@ Al crear o editar un ítem de una orden, el usuario puede escribir la talla de l
 
 1. **Given** el formulario de crear ítem, **When** el usuario escribe "XL" en Talla y guarda, **Then** el ítem se guarda y al abrirlo en edición el campo Talla muestra "XL".
 2. **Given** el formulario de crear o editar ítem, **When** el usuario deja Talla vacía y guarda, **Then** el ítem se guarda sin error con talla vacía.
-3. **Given** el formulario de ítem, **When** el usuario intenta ingresar más de 20 caracteres en Talla, **Then** el sistema no permite superar 20 caracteres (el campo lo limita o se muestra un mensaje de validación y no se guarda).
+3. **Given** el formulario de ítem, **When** el usuario intenta ingresar más de 20 caracteres en Talla, **Then** el campo no permite escribir más de 20 caracteres; y si llegara al servidor una talla de más de 20 caracteres (tras recortar espacios), se rechaza con un mensaje de validación y no se guarda.
 4. **Given** ítems creados antes de esta funcionalidad, **When** el usuario los abre en edición, **Then** el campo Talla aparece vacío y el ítem puede guardarse normalmente.
 5. **Given** la tabla de ítems de una orden, **When** el usuario la observa, **Then** no se agrega ninguna columna de talla (la talla solo se ve en el formulario).
 6. **Given** el usuario escribe " M " con espacios al inicio o final, **When** guarda, **Then** la talla se almacena como "M".
@@ -84,7 +92,7 @@ Al crear o editar un ítem de una orden, el usuario puede escribir la talla de l
 
 ### Edge Cases
 
-- **Total con filtro sin coincidencias**: la tabla muestra su mensaje de "sin resultados"; el total no debe quedar mostrando la suma anterior.
+- **Total con filtro sin coincidencias**: la tabla muestra la fila "Ningún cliente coincide con el filtro" y el Total en 0; nunca queda mostrando la suma anterior.
 - **Total cero**: si los saldos visibles se compensan exactamente, se muestra 0 con el formato de moneda.
 - **Total incluye clientes especiales**: el total suma todas las filas visibles de la tabla tal como se listan hoy (incluido el cliente genérico "Sin Cliente" si aparece en la tabla).
 - **Ninguna casilla marcada**: lista de órdenes vacía (no hay órdenes desde las cuales navegar a ítems, así que no se hereda una selección vacía por el flujo normal). Si la dirección de Órdenes indica explícitamente una selección vacía, se respeta y la lista queda vacía.
@@ -103,7 +111,7 @@ Al crear o editar un ítem de una orden, el usuario puede escribir la talla de l
 - **FR-002**: El total MUST recalcularse cada vez que cambia el texto de "Filtrar por cliente...", considerando solo los clientes visibles.
 - **FR-003**: El total MUST recalcularse cuando la tabla se recarga (por ejemplo, tras registrar un pago).
 - **FR-004**: El total MUST usar el mismo formato de moneda local y la misma convención visual para montos negativos que las filas de la tabla.
-- **FR-005**: Cuando no hay filas visibles, el sistema MUST NOT mostrar un total que no corresponda a las filas visibles.
+- **FR-005**: Cuando el filtro no deja filas visibles, la tabla MUST mostrar una fila "Ningún cliente coincide con el filtro" y el Total MUST mostrar 0.
 
 **Filtro de estados en Órdenes**
 
@@ -120,7 +128,7 @@ Al crear o editar un ítem de una orden, el usuario puede escribir la talla de l
 
 - **FR-014**: Cada ítem de orden MUST tener un dato "Talla" de texto que nunca es nulo; su valor por defecto es vacío.
 - **FR-015**: Los formularios de crear y editar ítem MUST incluir un campo de texto libre "Talla", opcional, con un máximo de 20 caracteres.
-- **FR-016**: El sistema MUST rechazar o impedir tallas de más de 20 caracteres, y MUST eliminar espacios al inicio y al final antes de guardar.
+- **FR-016**: El campo Talla MUST limitar la escritura a 20 caracteres; el servidor MUST eliminar espacios al inicio y al final y MUST rechazar con un mensaje de validación cualquier talla resultante de más de 20 caracteres.
 - **FR-017**: Los ítems existentes MUST quedar con talla vacía tras la actualización, sin pérdida de otros datos.
 - **FR-018**: La talla MUST NOT mostrarse en la tabla de ítems ni en otras pantallas; solo en el formulario de crear/editar ítem.
 - **FR-019**: Las operaciones existentes sobre ítems que no editan la talla (por ejemplo, reasignación de cliente o ajuste de precio) MUST conservar la talla almacenada.
