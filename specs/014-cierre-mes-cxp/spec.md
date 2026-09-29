@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-28
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: Brainstorm `brainstorm/14-cierre-mes-cxp.md`: nuevas reglas del cierre de mes (Saldo anterior = Pendiente de Recoger si es positivo; En Cuenta del mes nuevo = lo que queda después de pagar la deuda), diálogo de vista previa antes de cerrar, tipo de cambio siempre mayor a cero, sin montos negativos, protección contra doble cierre y ajustes visuales del panel de Cuentas por Pagar.
 

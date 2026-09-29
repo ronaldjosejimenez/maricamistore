@@ -8,7 +8,8 @@ metadata:
 # Brainstorm: Cierre de Mes de CxP — Reglas, Vista Previa y Protecciones
 
 **Date:** 2026-09-28
-**Status:** active
+**Status:** spec-created
+**Spec:** specs/014-cierre-mes-cxp
 
 ## Problem Framing
 
@@ -106,6 +107,19 @@ La decisión técnica principal fue cómo proteger contra el doble cierre.
 - Autenticación (pendiente aparte).
 
 ## Open Questions
-- Antes de aplicar el índice único, verificar que ninguna organización tenga más de un mes abierto en producción; si hay, corregirlo a mano.
-- ¿Recalcular la vista previa en el diálogo con un endpoint "preview" en el servidor, o calcular en el navegador? (sugerencia: servidor, para usar exactamente las mismas fórmulas).
-- ¿Qué pasa si la Configuración tiene TC 0 al cerrar? (sugerencia: el diálogo propone el TC del mes que cierra y exige un valor > 0 para confirmar).
+_(todas resueltas en la spec 014)_
+- Verificación de meses abiertos: consulta documentada en `specs/014-cierre-mes-cxp/quickstart.md`; se ejecuta antes de aplicar la migración.
+- Vista previa: calculada en el servidor (endpoint `ClosePreview`) con las mismas fórmulas del panel; el servidor recalcula al confirmar.
+- TC propuesto si la Configuración tiene 0: el del mes que cierra; para confirmar se exige TC > 0.
+
+## Cierre (2026-09-28)
+- Implementado en `specs/014-cierre-mes-cxp`: PR #25 (→ develop) y release a `main`.
+- Aclaraciones del usuario durante la spec:
+  - Nunca se paga de más: al cerrar, la deuda se paga con lo que hay En Cuenta; lo que sobra queda En Cuenta y lo que no alcanza es el Saldo anterior. Una deuda negativa se trata como 0.
+  - El Saldo anterior es de solo lectura en el diálogo; solo el TC y En Cuenta del mes nuevo son editables.
+- Correcciones de la revisión de código:
+  - El cierre por ID respeta el filtro de organización.
+  - Se cancela la vista previa vieja al editar.
+  - Se escapa el signo de moneda en el HTML.
+- La migración `OneOpenPeriodPerOrganization` (índice único filtrado) se aplica manualmente. El código no depende de ella para funcionar; la migración agrega la protección en la base contra cierres simultáneos.
+- Pendiente anotado: `GetPeriodIndicatorsAsync` y `UpdatePeriodFieldsAsync` (código del requerimiento 009) todavía usan `FindAsync`, que se salta el filtro de organización. Revisarlo junto con la autenticación.
