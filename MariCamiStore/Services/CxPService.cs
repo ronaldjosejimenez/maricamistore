@@ -67,7 +67,8 @@ public class CxPService(
             throw new InvalidOperationException(CxPMessages.ValueCannotBeNegative);
 
         // Close exactly the period shown in the preview; never fall back to "the open period".
-        var period = await context.PeriodControls.FindAsync(periodId);
+        // Query (not FindAsync) so the organization query filter applies to the client-supplied id.
+        var period = await context.PeriodControls.FirstOrDefaultAsync(p => p.Id == periodId);
         if (period == null || period.IsClosed)
             throw new InvalidOperationException(CxPMessages.PeriodAlreadyClosed);
 

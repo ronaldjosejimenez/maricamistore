@@ -82,7 +82,7 @@ function loadPeriod() {
                     '<div class="info-box bg-light">' +
                     '<div class="info-box-content">' +
                     '<span class="info-box-text">Por pagar en ' + escHtml(bal.currencyName) + '</span>' +
-                    '<span class="info-box-number">' + formatSignedMoneyHtml(bal.amount, bal.sign) + '</span>' +
+                    '<span class="info-box-number">' + formatSignedMoneyHtml(bal.amount, escHtml(bal.sign)) + '</span>' +
                     '</div></div>'
                 );
             });
@@ -247,6 +247,8 @@ $('#btn-close-period').on('click', function () {
 $('#close-new-tc, #close-new-encuenta').on('input', function () {
     $('#btn-confirm-close').prop('disabled', true);
     clearTimeout(closePreviewTimer);
+    // Drop any in-flight preview so a stale response cannot re-enable "Confirmar cierre".
+    if (closePreviewRequest) { closePreviewRequest.abort(); closePreviewRequest = null; }
     closePreviewTimer = setTimeout(function () {
         loadClosePreview($('#close-new-tc').val(), $('#close-new-encuenta').val(), false);
     }, 400);
@@ -306,7 +308,7 @@ function renderClosePreview(data, firstLoad) {
 function indicatorRows(ind) {
     var rows = [['Total por pagar colonizado', formatSignedMoneyHtml(ind.porPagarEnColones, '₡')]];
     $.each(ind.porPagarPorMoneda || {}, function (_, bal) {
-        rows.push(['Por pagar en ' + escHtml(bal.currencyName), formatSignedMoneyHtml(bal.amount, bal.sign)]);
+        rows.push(['Por pagar en ' + escHtml(bal.currencyName), formatSignedMoneyHtml(bal.amount, escHtml(bal.sign))]);
     });
     rows.push(['Saldos por Cobrar a Clientes', formatSignedMoneyHtml(ind.saldosPorCobrar, '₡')]);
     rows.push(['Shipping CR Pendientes', formatSignedMoneyHtml(ind.shippingCRPendientesDeAplicar, '₡')]);
