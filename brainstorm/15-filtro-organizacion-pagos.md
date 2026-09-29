@@ -56,7 +56,8 @@ Traer todas las transacciones y filtrar en JavaScript por organización.
 ### 3. Con "Todas" seleccionado
 - **Saldos de Clientes**: se calculan sin importar la organización (comportamiento global de hoy, sin cambios).
 - **Saldo del Cliente**: "Saldo Esta Org." equivale al "Saldo Global" (misma cifra, ya que no hay una única organización elegida).
-- **Registrar Pago**: la transacción creada queda asociada a la **organización de la sesión** (comportamiento de hoy, sin cambios).
+- **Registrar Pago está bloqueado**: el botón "Registrar Pago" queda deshabilitado mientras el filtro esté en "Todas", para obligar al usuario a elegir a conciencia la organización a la que se le va a registrar el pago. Junto al botón (o en el lugar de `#payment-error`) se muestra una leyenda explicando por qué está bloqueado, por ejemplo: **"Seleccione una organización específica para poder registrar un pago."** El resto del formulario (cliente, monto, tarjeta de saldo) sigue disponible con "Todas" seleccionado; solo se bloquea la acción de registrar.
+- Si el usuario intentara forzar el registro sin pasar por el formulario (llamada directa al handler), el servidor también rechaza un `RegisterPayment` sin una organización específica.
 
 ### Fuera de alcance
 - Cambiar la organización activa de la sesión (afecta otras pantallas) — el filtro es local a Payments.
