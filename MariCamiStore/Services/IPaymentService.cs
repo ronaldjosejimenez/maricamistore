@@ -8,9 +8,9 @@ public record CustomerBalanceDto(
 
 public interface IPaymentService
 {
-    Task<CustomerBalanceDto?> GetCustomerBalanceAsync(Guid customerId);
-    Task<CustomerBalanceDto?> RegisterPaymentAsync(Guid customerId, decimal amount);
-    Task<List<SaldoReportRow>> GetSaldosReportAsync();
+    Task<CustomerBalanceDto?> GetCustomerBalanceAsync(Guid customerId, Guid? organizationId);
+    Task<(bool Success, string? Error, CustomerBalanceDto? Balance)> RegisterPaymentAsync(Guid customerId, decimal amount, Guid? organizationId);
+    Task<List<SaldoReportRow>> GetSaldosReportAsync(Guid? organizationId);
 }
 
 public record SaldoReportRow(Guid CustomerId, string CustomerName, decimal Balance, bool IsGeneric);

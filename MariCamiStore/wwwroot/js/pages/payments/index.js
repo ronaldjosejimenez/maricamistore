@@ -1,12 +1,46 @@
 var token = $('input[name="__RequestVerificationToken"]').val();
 var allSaldosData = [];
+var saldosRequest = null;
+var balanceRequest = null;
+
+function currentOrgFilter() {
+    var v = $('#payment-org-filter').val();
+    return v ? v : null;
+}
+
+function updateRegisterButtonState() {
+    var blocked = currentOrgFilter() === null;
+    $('#btn-register-payment').prop('disabled', blocked);
+    $('#payment-org-required-hint').toggle(blocked);
+}
 
 function loadSaldos() {
-    $.get('?handler=Saldos', function (data) {
+    if (saldosRequest) saldosRequest.abort();
+    var orgId = currentOrgFilter();
+    var url = '?handler=Saldos' + (orgId ? '&organizationId=' + encodeURIComponent(orgId) : '');
+    saldosRequest = $.get(url, function (data) {
+        saldosRequest = null;
         allSaldosData = data;
         renderSaldos(data);
-    }).fail(function () {
+    }).fail(function (xhr) {
+        if (xhr.statusText === 'abort') return;
         $('#saldos-table-container').html('<p class="p-3 text-danger">Error al cargar los saldos.</p>');
+    });
+}
+
+function loadBalance(customerId) {
+    if (!customerId) { $('#balance-card').hide(); return; }
+    if (balanceRequest) balanceRequest.abort();
+    var orgId = currentOrgFilter();
+    var url = '?handler=Balance&customerId=' + customerId + (orgId ? '&organizationId=' + encodeURIComponent(orgId) : '');
+    balanceRequest = $.get(url, function (r) {
+        balanceRequest = null;
+        if (r.error) { alert(r.error); return; }
+        $('#balance-global').text(formatMoney(r.globalBalance, localCurrencySign));
+        $('#balance-org').text(formatMoney(r.orgBalance, localCurrencySign));
+        $('#balance-card').show();
+    }).fail(function (xhr) {
+        if (xhr.statusText === 'abort') return;
     });
 }
 
@@ -69,15 +103,7 @@ $(function () {
 
     // Load balance on customer change
     $('#payment-customer').on('change', function () {
-        var id = $(this).val();
-        if (!id) { $('#balance-card').hide(); return; }
-
-        $.get('?handler=Balance&customerId=' + id, function (r) {
-            if (r.error) { alert(r.error); return; }
-            $('#balance-global').text(formatMoney(r.globalBalance, localCurrencySign));
-            $('#balance-org').text(formatMoney(r.orgBalance, localCurrencySign));
-            $('#balance-card').show();
-        });
+        loadBalance($(this).val());
     });
 
     // Register payment
@@ -85,6 +111,7 @@ $(function () {
         $('#payment-error').hide();
         var customerId = $('#payment-customer').val();
         var amount = parseFloat($('#payment-amount').val()) || 0;
+        var organizationId = currentOrgFilter();
 
         if (!customerId || amount <= 0) {
             $('#payment-error').text('Seleccione un cliente e ingrese un monto mayor a cero.').show();
@@ -95,7 +122,7 @@ $(function () {
             url: '?handler=RegisterPayment', method: 'POST',
             contentType: 'application/json',
             headers: { 'RequestVerificationToken': token },
-            data: JSON.stringify({ customerId: customerId, amount: amount }),
+            data: JSON.stringify({ customerId: customerId, amount: amount, organizationId: organizationId }),
             success: function (r) {
                 if (r.success) {
                     $('#payment-amount').val('');
@@ -112,6 +139,15 @@ $(function () {
     // Filter saldos table in real time
     $('#saldos-filter').on('input', function () { renderSaldos(allSaldosData); });
 
-    // Initial load of saldos
+    // Organization filter change: recompute button state, saldos, and balance card (if a customer is selected)
+    $('#payment-org-filter').on('change', function () {
+        updateRegisterButtonState();
+        loadSaldos();
+        var customerId = $('#payment-customer').val();
+        if (customerId) loadBalance(customerId);
+    });
+
+    // Initial state
+    updateRegisterButtonState();
     loadSaldos();
 });

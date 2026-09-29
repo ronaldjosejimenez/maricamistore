@@ -14,6 +14,16 @@
 <section class="content">
     <div class="row">
         <div class="col-md-6">
+            <div class="form-group">
+                <label>Organización</label>
+                <select id="payment-org-filter" class="form-control">
+                    <option value="">Todas</option>
+                    @foreach (var o in (List<MariCamiStore.Model.Organization>)ViewData["Organizations"]!)
+                    {
+                        <option value="@o.Id" selected="@(o.Id == (Guid)ViewData["CurrentOrganizationId"]!)">@o.Name</option>
+                    }
+                </select>
+            </div>
             <div class="card">
                 <div class="card-header"><h3 class="card-title">Registrar Pago</h3></div>
                 <div class="card-body">
@@ -29,6 +39,7 @@
                     </div>
                     <div id="payment-error" class="text-danger" style="display:none;"></div>
                     <button id="btn-register-payment" class="btn btn-primary">Registrar Pago</button>
+                    <div id="payment-org-required-hint" class="text-danger small mt-1" style="display:none;">Seleccione una organización específica para poder registrar un pago.</div>
                 </div>
             </div>
         </div>

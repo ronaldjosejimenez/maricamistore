@@ -252,7 +252,7 @@ public class CxPService(
 
         var shippingCRPendientesDeAplicar = await ComputeShippingPendingAsync(period.ExchangeRate, localCurrencyId);
 
-        var saldosRows = await paymentService.GetSaldosReportAsync();
+        var saldosRows = await paymentService.GetSaldosReportAsync(null);
         var saldosPorCobrar = saldosRows.Sum(r => r.Balance);
 
         var (deudaAPagar, pendienteDeRecoger, posicion) = ComputeDerived(
