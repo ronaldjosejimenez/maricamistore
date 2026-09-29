@@ -5,28 +5,24 @@ using Microsoft.EntityFrameworkCore;
 namespace MariCamiStore.Services;
 
 public class PaymentService(
-    MariCamiStoreContext context) : IPaymentService
+    MariCamiStoreContext context,
+    ICurrentOrganizationService currentOrg) : IPaymentService
 {
-    public async Task<CustomerBalanceDto?> GetCustomerBalanceAsync(Guid customerId, Guid? organizationId)
+    public async Task<CustomerBalanceDto?> GetCustomerBalanceAsync(Guid customerId)
     {
         var customer = await context.Customers.FindAsync(customerId);
         if (customer == null) return null;
 
         var globalBalance = await CalcBalanceAsync(customerId, ignoreOrgFilter: true);
-        var orgBalance = organizationId.HasValue
-            ? await CalcBalanceAsync(customerId, ignoreOrgFilter: false, explicitOrganizationId: organizationId)
-            : globalBalance;
+        var orgBalance = await CalcBalanceAsync(customerId, ignoreOrgFilter: false);
 
         return new CustomerBalanceDto(customerId, customer.NickName ?? customer.Name ?? "", globalBalance, orgBalance);
     }
 
-    public async Task<(bool Success, string? Error, CustomerBalanceDto? Balance)> RegisterPaymentAsync(Guid customerId, decimal amount, Guid? organizationId)
+    public async Task<CustomerBalanceDto?> RegisterPaymentAsync(Guid customerId, decimal amount)
     {
-        if (organizationId == null)
-            return (false, "Seleccione una organización específica para registrar el pago.", null);
-
         var customer = await context.Customers.FindAsync(customerId);
-        if (customer == null) return (false, "Cliente no encontrado.", null);
+        if (customer == null) return null;
 
         var config = await context.Configurations.FirstOrDefaultAsync();
 
@@ -36,7 +32,7 @@ public class PaymentService(
         var transaction = new Transaction
         {
             Id = Guid.NewGuid(),
-            OrganizationId = organizationId.Value,
+            OrganizationId = currentOrg.OrganizationId,
             SourceId = null,
             Source = TransactionSource.Manual.Key,
             CustomerId = customerId,
@@ -51,7 +47,7 @@ public class PaymentService(
         context.Transactions.Add(transaction);
         await context.SaveChangesAsync();
 
-        return (true, null, await GetCustomerBalanceAsync(customerId, organizationId));
+        return await GetCustomerBalanceAsync(customerId);
     }
 
     public async Task<List<SaldoReportRow>> GetSaldosReportAsync(Guid? organizationId)
@@ -91,13 +87,11 @@ public class PaymentService(
         }).OrderBy(r => r.CustomerName).ToList();
     }
 
-    private async Task<decimal> CalcBalanceAsync(Guid customerId, bool ignoreOrgFilter, Guid? explicitOrganizationId = null)
+    private async Task<decimal> CalcBalanceAsync(Guid customerId, bool ignoreOrgFilter)
     {
-        var query = explicitOrganizationId.HasValue
-            ? context.Transactions.IgnoreQueryFilters().Where(t => t.CustomerId == customerId && t.OrganizationId == explicitOrganizationId.Value)
-            : ignoreOrgFilter
-                ? context.Transactions.IgnoreQueryFilters().Where(t => t.CustomerId == customerId)
-                : context.Transactions.Where(t => t.CustomerId == customerId);
+        var query = ignoreOrgFilter
+            ? context.Transactions.IgnoreQueryFilters().Where(t => t.CustomerId == customerId)
+            : context.Transactions.Where(t => t.CustomerId == customerId);
 
         return await query.SumAsync(t =>
             t.TransactionType == "Charge" ? t.TransactionAmount :

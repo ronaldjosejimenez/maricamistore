@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace MariCamiStore.Pages.Payments;
 
-public class IndexModel(IPaymentService paymentService, ICatalogService catalogService, IOrganizationService organizationService, ICurrentOrganizationService currentOrg)
+public class IndexModel(IPaymentService paymentService, ICatalogService catalogService, ICurrentOrganizationService currentOrg)
     : OrganizationPageModel(currentOrg)
 {
     public async Task<IActionResult> OnGetAsync()
@@ -15,14 +15,15 @@ public class IndexModel(IPaymentService paymentService, ICatalogService catalogS
         var config = await catalogService.GetConfigurationAsync();
         var localCurrency = config != null ? await catalogService.GetCurrencyByIdAsync(config.LocalCurrencyId) : null;
         ViewData["LocalCurrencySign"] = localCurrency?.Sign ?? string.Empty;
-        ViewData["Organizations"] = await organizationService.GetOrganizationsAsync();
+        // Exposed to the page's JS so the "Ver saldo completo" checkbox can scope Saldos de Clientes
+        // to the session's organization when unchecked (default) vs. globally when checked.
         ViewData["CurrentOrganizationId"] = CurrentOrg.OrganizationId;
         return Page();
     }
 
-    public async Task<JsonResult> OnGetBalanceAsync(Guid customerId, Guid? organizationId)
+    public async Task<JsonResult> OnGetBalanceAsync(Guid customerId)
     {
-        var balance = await paymentService.GetCustomerBalanceAsync(customerId, organizationId);
+        var balance = await paymentService.GetCustomerBalanceAsync(customerId);
         if (balance == null) return new JsonResult(new { error = "Cliente no encontrado." });
         return new JsonResult(balance);
     }
@@ -37,13 +38,10 @@ public class IndexModel(IPaymentService paymentService, ICatalogService catalogS
         if (request.CustomerId == Guid.Empty || request.Amount <= 0)
             return new JsonResult(new { success = false, error = "Cliente y monto son requeridos. El monto debe ser mayor a cero." });
 
-        if (request.OrganizationId == null)
-            return new JsonResult(new { success = false, error = "Seleccione una organización específica para registrar el pago." });
-
-        var (success, error, balance) = await paymentService.RegisterPaymentAsync(request.CustomerId, request.Amount, request.OrganizationId);
-        return new JsonResult(new { success, error, balance });
+        var result = await paymentService.RegisterPaymentAsync(request.CustomerId, request.Amount);
+        return new JsonResult(new { success = true, balance = result });
     }
 
-    public record PaymentRequest(Guid CustomerId, decimal Amount, Guid? OrganizationId);
+    public record PaymentRequest(Guid CustomerId, decimal Amount);
 }
 
