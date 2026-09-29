@@ -8,6 +8,13 @@
 
 **Input**: Brainstorm `brainstorm/14-cierre-mes-cxp.md`: nuevas reglas del cierre de mes (Saldo anterior = Pendiente de Recoger si es positivo; En Cuenta del mes nuevo = lo que queda después de pagar la deuda), diálogo de vista previa antes de cerrar, tipo de cambio siempre mayor a cero, sin montos negativos, protección contra doble cierre y ajustes visuales del panel de Cuentas por Pagar.
 
+## Clarifications
+
+### Session 2026-09-28
+
+- Q: ¿Qué pasa con En Cuenta del mes nuevo si la Deuda a Pagar es negativa (sobrepago)? → A: En la operación nunca se paga de más: al cerrar, la deuda se paga con lo que hay En Cuenta; lo que sobra queda En Cuenta y lo que no alcanza es el Saldo anterior. Si por error la Deuda a Pagar fuera negativa, se trata como 0 (En Cuenta pasa igual, no se suma).
+- Q: ¿La entrada Saldo anterior se puede editar en el diálogo de cierre? → A: No; se muestra en solo lectura (monto calculado o "Sin saldo anterior"). Solo el Tipo de Cambio y En Cuenta del mes nuevo son editables; cualquier ajuste se hace después con una entrada manual en el mes nuevo.
+
 ---
 
 ## User Scenarios & Testing *(mandatory)*
@@ -25,7 +32,7 @@ Al cerrar el mes se asume que la deuda del mes se paga con el dinero que hay En 
 1. **Given** Deuda a Pagar ₡500.000 y En Cuenta ₡200.000 (Pendiente de Recoger ₡300.000), **When** se cierra el mes, **Then** el mes nuevo tiene una entrada "Saldo anterior" de ₡300.000 en colones y En Cuenta ₡0.
 2. **Given** Deuda a Pagar ₡500.000 y En Cuenta ₡700.000 (Pendiente de Recoger −₡200.000), **When** se cierra el mes, **Then** el mes nuevo no tiene entrada "Saldo anterior" y En Cuenta es ₡200.000.
 3. **Given** Deuda a Pagar ₡500.000 y En Cuenta ₡500.000 (Pendiente de Recoger ₡0), **When** se cierra el mes, **Then** no hay "Saldo anterior" y En Cuenta del mes nuevo es ₡0.
-4. **Given** Deuda a Pagar 0 o negativa (por ejemplo −₡50.000) y En Cuenta ₡100.000, **When** se cierra el mes, **Then** no hay "Saldo anterior" y En Cuenta del mes nuevo es ₡100.000 (el sobrepago no suma).
+4. **Given** Deuda a Pagar ₡0 (o negativa por un error de digitación, que se trata como 0) y En Cuenta ₡100.000, **When** se cierra el mes, **Then** no hay "Saldo anterior" y En Cuenta del mes nuevo es ₡100.000.
 5. **Given** cualquier cierre, **When** se crea el mes nuevo, **Then** Pagos Realizados arranca en ₡0 y el mes que se cierra queda en solo lectura.
 
 ---
@@ -42,7 +49,7 @@ Al presionar "Cerrar Mes" el usuario ve un diálogo con dos columnas: los valore
 
 1. **Given** un mes abierto, **When** el usuario presiona "Cerrar Mes", **Then** se abre el diálogo y no se modifica ningún dato.
 2. **Given** el diálogo abierto, **When** el usuario lo revisa, **Then** la columna "Mes que cierra ({mes/año})" muestra en solo lectura: Total por pagar colonizado, Por pagar en {Moneda}, Saldos por Cobrar a Clientes, Shipping CR Pendientes, Deuda a Pagar, En Cuenta, Pendiente de Recoger, Posición, Tipo de Cambio y Pagos Realizados.
-3. **Given** el diálogo abierto, **When** el usuario lo revisa, **Then** la columna "Mes nuevo ({mes/año siguiente})" muestra: Tipo de Cambio propuesto (editable), Pagos Realizados ₡0 (solo lectura), En Cuenta propuesto con la regla de arrastre (editable), las entradas con que arranca ("Saldo anterior" con su monto, o "Sin saldo anterior") y sus indicadores iniciales.
+3. **Given** el diálogo abierto, **When** el usuario lo revisa, **Then** la columna "Mes nuevo ({mes/año siguiente})" muestra: Tipo de Cambio propuesto (editable), Pagos Realizados ₡0 (solo lectura), En Cuenta propuesto con la regla de arrastre (editable), las entradas con que arranca en solo lectura ("Saldo anterior" con su monto, o "Sin saldo anterior") y sus indicadores iniciales.
 4. **Given** el diálogo abierto, **When** el usuario cambia el Tipo de Cambio o En Cuenta del mes nuevo, **Then** los indicadores del mes nuevo se actualizan.
 5. **Given** el diálogo abierto, **When** el usuario presiona "Cancelar", **Then** el diálogo se cierra y el mes sigue abierto sin cambios.
 6. **Given** el diálogo con valores válidos, **When** el usuario confirma, **Then** el mes se cierra y el mes nuevo se crea con el Tipo de Cambio y En Cuenta del diálogo y con el Saldo anterior calculado por el sistema al momento de confirmar.
@@ -127,7 +134,7 @@ En la primera columna del panel el usuario ve, en este orden, Deuda a Pagar (roj
 
 - **FR-007**: Presionar "Cerrar Mes" MUST abrir un diálogo de vista previa sin modificar ningún dato.
 - **FR-008**: El diálogo MUST mostrar la columna "Mes que cierra" con los valores listados en Story 2 (escenario 2), en solo lectura.
-- **FR-009**: El diálogo MUST mostrar la columna "Mes nuevo" con Tipo de Cambio (editable), Pagos Realizados 0 (solo lectura), En Cuenta (editable), las entradas iniciales y los indicadores iniciales del mes nuevo.
+- **FR-009**: El diálogo MUST mostrar la columna "Mes nuevo" con Tipo de Cambio (editable), Pagos Realizados 0 (solo lectura), En Cuenta (editable), las entradas iniciales (Saldo anterior en solo lectura; no se pueden agregar ni editar entradas desde el diálogo) y los indicadores iniciales del mes nuevo.
 - **FR-010**: Los indicadores del mes nuevo en el diálogo MUST recalcularse cuando cambian el Tipo de Cambio o En Cuenta del mes nuevo, usando las mismas fórmulas que el panel.
 - **FR-011**: "Cancelar" MUST cerrar el diálogo sin cambios; "Confirmar cierre" MUST ejecutar el cierre con el Tipo de Cambio y En Cuenta editados.
 - **FR-012**: Al confirmar, el sistema MUST recalcular el Saldo anterior con los datos actuales del mes, sin usar valores calculados en el navegador.
