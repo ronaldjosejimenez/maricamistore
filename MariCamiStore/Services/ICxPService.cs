@@ -40,6 +40,32 @@ public record InitPeriodRequest(int Month, int Year, decimal ExchangeRate);
 
 public record DeleteEntryRequest(Guid EntryId);
 
+public record ClosePeriodRequest(Guid PeriodId, decimal ExchangeRate, decimal EnCuenta);
+
+public record ClosePreviewNewPeriodDto(
+    int Month,
+    int Year,
+    decimal ExchangeRate,
+    decimal ProposedExchangeRate,
+    decimal PagosRealizados,
+    decimal EnCuenta,
+    decimal ProposedEnCuenta,
+    decimal? SaldoAnterior,
+    CxPPeriodIndicatorsDto Indicators);
+
+public record ClosePreviewDto(
+    CxPPeriodIndicatorsDto Closing,
+    ClosePreviewNewPeriodDto NewPeriod,
+    List<string> Errors);
+
+/// <summary>User-facing messages shared by the CxP service and page.</summary>
+public static class CxPMessages
+{
+    public const string ExchangeRateMustBePositive = "El tipo de cambio debe ser mayor a cero.";
+    public const string ValueCannotBeNegative = "El valor no puede ser negativo.";
+    public const string PeriodAlreadyClosed = "Este mes ya fue cerrado.";
+}
+
 public interface ICxPService
 {
     Task<PeriodControl?> GetOpenPeriodAsync();
@@ -50,5 +76,6 @@ public interface ICxPService
     Task DeleteEntryAsync(Guid entryId);
     Task<CxPEntry> CreateAutoEntryAsync(Guid periodId, Guid orderId, Guid currencyId, decimal amount, string reference, string type);
     Task<PeriodControl> UpdatePeriodFieldsAsync(Guid periodId, UpdatePeriodFieldsRequest req);
-    Task ClosePeriodAsync(Guid periodId);
+    Task ClosePeriodAsync(Guid periodId, decimal newExchangeRate, decimal newEnCuenta);
+    Task<ClosePreviewDto> GetClosePreviewAsync(Guid periodId, decimal? newExchangeRate, decimal? newEnCuenta);
 }
