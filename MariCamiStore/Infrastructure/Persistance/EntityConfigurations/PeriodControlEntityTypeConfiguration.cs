@@ -21,5 +21,11 @@ public class PeriodControlEntityTypeConfiguration : IEntityTypeConfiguration<Per
         builder.Property(p => p.CreatedAt).IsRequired();
 
         builder.HasIndex(p => new { p.OrganizationId, p.TransactionMonth, p.TransactionYear }).IsUnique();
+
+        // At most one open period per organization (protects the month close against double/concurrent closes).
+        builder.HasIndex(p => p.OrganizationId)
+            .IsUnique()
+            .HasFilter("[IsClosed] = 0")
+            .HasDatabaseName("IX_PeriodControls_OneOpenPerOrganization");
     }
 }

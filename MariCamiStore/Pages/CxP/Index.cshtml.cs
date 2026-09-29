@@ -79,7 +79,7 @@ public class IndexModel(
         if (req.Year < 2020)
             return new JsonResult(new { success = false, error = "El año debe ser mayor o igual a 2020." });
         if (req.ExchangeRate <= 0)
-            return new JsonResult(new { success = false, error = "El tipo de cambio debe ser mayor a cero." });
+            return new JsonResult(new { success = false, error = CxPMessages.ExchangeRateMustBePositive });
 
         try
         {
@@ -128,8 +128,10 @@ public class IndexModel(
         if (period == null)
             return new JsonResult(new { success = false, error = "No hay un período abierto." });
 
-        if (req.ExchangeRate < 0 || req.PagosRealizados < 0 || req.EnCuenta < 0)
-            return new JsonResult(new { success = false, error = "Los valores no pueden ser negativos." });
+        if (req.ExchangeRate <= 0)
+            return new JsonResult(new { success = false, error = CxPMessages.ExchangeRateMustBePositive });
+        if (req.PagosRealizados < 0 || req.EnCuenta < 0)
+            return new JsonResult(new { success = false, error = CxPMessages.ValueCannotBeNegative });
 
         try
         {
@@ -142,20 +144,29 @@ public class IndexModel(
         }
     }
 
-    public async Task<JsonResult> OnPostClosePeriodAsync()
+    public async Task<JsonResult> OnGetClosePreviewAsync(Guid periodId, decimal? exchangeRate, decimal? enCuenta)
     {
-        var period = await cxpService.GetOpenPeriodAsync();
-        if (period == null)
-            return new JsonResult(new { success = false, error = "No hay un período abierto." });
-
         try
         {
-            await cxpService.ClosePeriodAsync(period.Id);
+            return new JsonResult(await cxpService.GetClosePreviewAsync(periodId, exchangeRate, enCuenta));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new JsonResult(new { error = ex.Message, alreadyClosed = ex.Message == CxPMessages.PeriodAlreadyClosed });
+        }
+    }
+
+    // Closes exactly the period shown in the preview (never "whatever period is open now").
+    public async Task<JsonResult> OnPostClosePeriodAsync([FromBody] ClosePeriodRequest req)
+    {
+        try
+        {
+            await cxpService.ClosePeriodAsync(req.PeriodId, req.ExchangeRate, req.EnCuenta);
             return new JsonResult(new { success = true });
         }
         catch (Exception ex)
         {
-            return new JsonResult(new { success = false, error = ex.Message });
+            return new JsonResult(new { success = false, error = ex.Message, alreadyClosed = ex.Message == CxPMessages.PeriodAlreadyClosed });
         }
     }
 }
