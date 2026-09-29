@@ -64,6 +64,7 @@ function loadPeriod() {
         $('#entradas-total-colonizado').text(formatMoney(data.porPagarEnColones, '₡'));
         $('#saldos-cobrar').text(formatMoney(data.saldosPorCobrar, '₡'));
         $('#deuda-pagar').text(formatMoney(data.deudaAPagar, '₡'));
+        $('#en-cuenta-indicator').text(formatMoney(data.enCuenta, '₡'));
         $('#pendiente-recoger').text(formatMoney(data.pendienteDeRecoger, '₡'));
         $('#shipping-pendientes').text(formatMoney(data.shippingCRPendientesDeAplicar, '₡'));
 
@@ -212,9 +213,8 @@ function savePeriodFields() {
     var pagos = parseFloat($('#pagos-input').val());
     var enCuenta = parseFloat($('#en-cuenta-input').val());
 
-    if (isNaN(tc) || tc < 0) { $('#panel-error').text('El tipo de cambio no puede ser negativo.').show(); return; }
-    if (isNaN(pagos) || pagos < 0) { $('#panel-error').text('Pagos realizados no puede ser negativo.').show(); return; }
-    if (isNaN(enCuenta) || enCuenta < 0) { $('#panel-error').text('En cuenta no puede ser negativo.').show(); return; }
+    if (isNaN(tc) || tc <= 0) { $('#panel-error').text(MSG_TC_POSITIVE).show(); return; }
+    if (isNaN(pagos) || pagos < 0 || isNaN(enCuenta) || enCuenta < 0) { $('#panel-error').text(MSG_NOT_NEGATIVE).show(); return; }
 
     $('#panel-error').hide();
     ajaxPost('UpdatePeriod', { exchangeRate: tc, pagosRealizados: pagos, enCuenta: enCuenta }, function (r) {
@@ -228,23 +228,132 @@ function savePeriodFields() {
 
 // ── Close period ──────────────────────────────────────────────────────────────
 
+var MSG_TC_POSITIVE = 'El tipo de cambio debe ser mayor a cero.';
+var MSG_NOT_NEGATIVE = 'El valor no puede ser negativo.';
+var closePreviewTimer = null;
+var closePreviewRequest = null;
+var closePreviewErrors = [];
+
 $('#btn-close-period').on('click', function () {
     $('#close-error').hide();
+    $('#close-preview-body').hide();
+    $('#close-loading').show();
+    $('#close-new-tc, #close-new-encuenta').val('');
+    $('#btn-confirm-close').prop('disabled', true);
     $('#modal-close-period').modal('show');
+    loadClosePreview(null, null, true);
 });
+
+$('#close-new-tc, #close-new-encuenta').on('input', function () {
+    $('#btn-confirm-close').prop('disabled', true);
+    clearTimeout(closePreviewTimer);
+    closePreviewTimer = setTimeout(function () {
+        loadClosePreview($('#close-new-tc').val(), $('#close-new-encuenta').val(), false);
+    }, 400);
+});
+
+// Server-computed preview; no data is written until the user confirms.
+function loadClosePreview(tc, enCuenta, firstLoad) {
+    if (closePreviewRequest) closePreviewRequest.abort();
+    var url = '?handler=ClosePreview&periodId=' + encodeURIComponent(currentPeriodId);
+    if (tc !== null && tc !== '') url += '&exchangeRate=' + encodeURIComponent(tc);
+    if (enCuenta !== null && enCuenta !== '') url += '&enCuenta=' + encodeURIComponent(enCuenta);
+
+    closePreviewRequest = $.get(url, function (data) {
+        closePreviewRequest = null;
+        if (data.error) {
+            showCloseError(data.error, data.alreadyClosed);
+            return;
+        }
+        renderClosePreview(data, firstLoad);
+    }).fail(function (xhr) {
+        if (xhr.statusText !== 'abort') showCloseError('Error al calcular la vista previa.', false);
+    });
+}
+
+function renderClosePreview(data, firstLoad) {
+    var c = data.closing, n = data.newPeriod;
+    $('#close-closing-title').text('Mes que cierra (' + c.transactionMonth + '/' + c.transactionYear + ')');
+    $('#close-new-title').text('Mes nuevo (' + n.month + '/' + n.year + ')');
+
+    var closingRows = indicatorRows(c);
+    closingRows.push(['Tipo de Cambio', formatMoney(c.exchangeRate, '')]);
+    closingRows.push(['Pagos Realizados', formatMoney(c.pagosRealizados, '₡')]);
+    $('#close-closing-table').html(rowsHtml(closingRows));
+
+    if (firstLoad) {
+        $('#close-new-tc').val(n.exchangeRate);
+        $('#close-new-encuenta').val(n.enCuenta);
+    }
+    $('#close-new-tc-hint').text('Propuesto: ' + formatMoney(n.proposedExchangeRate, ''));
+    $('#close-new-encuenta-hint').text('Propuesto: ' + formatMoney(n.proposedEnCuenta, '₡'));
+    $('#close-new-entries').text(n.saldoAnterior != null
+        ? 'Saldo anterior: ' + formatMoney(n.saldoAnterior, '₡')
+        : 'Sin saldo anterior');
+    $('#close-new-table').html(rowsHtml(indicatorRows(n.indicators)));
+
+    closePreviewErrors = data.errors || [];
+    if (closePreviewErrors.length) {
+        $('#close-error').text(closePreviewErrors.join(' ')).show();
+    } else {
+        $('#close-error').hide();
+    }
+    $('#close-loading').hide();
+    $('#close-preview-body').show();
+    $('#btn-confirm-close').prop('disabled', closePreviewErrors.length > 0);
+}
+
+function indicatorRows(ind) {
+    var rows = [['Total por pagar colonizado', formatSignedMoneyHtml(ind.porPagarEnColones, '₡')]];
+    $.each(ind.porPagarPorMoneda || {}, function (_, bal) {
+        rows.push(['Por pagar en ' + escHtml(bal.currencyName), formatSignedMoneyHtml(bal.amount, bal.sign)]);
+    });
+    rows.push(['Saldos por Cobrar a Clientes', formatSignedMoneyHtml(ind.saldosPorCobrar, '₡')]);
+    rows.push(['Shipping CR Pendientes', formatSignedMoneyHtml(ind.shippingCRPendientesDeAplicar, '₡')]);
+    rows.push(['Deuda a Pagar', formatSignedMoneyHtml(ind.deudaAPagar, '₡')]);
+    rows.push(['En Cuenta', formatSignedMoneyHtml(ind.enCuenta, '₡')]);
+    rows.push(['Pendiente de Recoger', formatSignedMoneyHtml(ind.pendienteDeRecoger, '₡')]);
+    rows.push(['<strong>Posición</strong>', '<strong>' + formatSignedMoneyHtml(ind.posicion, '₡') + '</strong>']);
+    return rows;
+}
+
+function rowsHtml(rows) {
+    return rows.map(function (r) {
+        return '<tr><td>' + r[0] + '</td><td class="text-right">' + r[1] + '</td></tr>';
+    }).join('');
+}
+
+function showCloseError(msg, alreadyClosed) {
+    $('#close-loading').hide();
+    $('#close-error').text(msg).show();
+    $('#btn-confirm-close').prop('disabled', true);
+    if (alreadyClosed) setTimeout(function () { window.location.reload(); }, 1500);
+}
 
 $('#btn-confirm-close').on('click', function () {
     closePeriod();
 });
 
 function closePeriod() {
-    ajaxPost('ClosePeriod', {}, function (r) {
+    var tc = parseFloat($('#close-new-tc').val());
+    var enCuenta = parseFloat($('#close-new-encuenta').val());
+    if (isNaN(tc) || tc <= 0) { $('#close-error').text(MSG_TC_POSITIVE).show(); return; }
+    if (isNaN(enCuenta) || enCuenta < 0) { $('#close-error').text(MSG_NOT_NEGATIVE).show(); return; }
+
+    var $btn = $('#btn-confirm-close').prop('disabled', true);
+    ajaxPost('ClosePeriod', { periodId: currentPeriodId, exchangeRate: tc, enCuenta: enCuenta }, function (r) {
         if (r.success) {
             $('#modal-close-period').modal('hide');
             window.location.reload();
+        } else if (r.alreadyClosed) {
+            showCloseError(r.error, true);
         } else {
             $('#close-error').text(r.error || 'Error al cerrar el período.').show();
+            $btn.prop('disabled', false);
         }
+    }, function (msg) {
+        $('#close-error').text(msg || 'Error al cerrar el período.').show();
+        $btn.prop('disabled', false);
     });
 }
 
@@ -257,7 +366,7 @@ $('#btn-init-period').on('click', function () {
 
     if (!month || month < 1 || month > 12) { $('#init-error').text('El mes debe estar entre 1 y 12.').show(); return; }
     if (!year || year < 2020) { $('#init-error').text('El año debe ser mayor o igual a 2020.').show(); return; }
-    if (!tc || tc <= 0) { $('#init-error').text('El tipo de cambio debe ser mayor a cero.').show(); return; }
+    if (!tc || tc <= 0) { $('#init-error').text(MSG_TC_POSITIVE).show(); return; }
 
     $('#init-error').hide();
     ajaxPost('InitPeriod', { month: month, year: year, exchangeRate: tc }, function (r) {
