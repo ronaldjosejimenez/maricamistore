@@ -77,3 +77,25 @@ _(todas resueltas en la spec 015)_
 - Sin migraciones; sin cambios de esquema.
 - Corrección del plan (revisión): `CxPService.GetSaldosReportAsync()` actualizado a `GetSaldosReportAsync(null)`, único otro llamador del método, para que el proyecto siguiera compilando.
 - Corrección posterior al despliegue local (probada por el usuario): la leyenda "Seleccione una organización específica para poder registrar un pago." quedaba siempre visible porque la clase `d-block` de Bootstrap (`display: block !important;`) le ganaba al `display: none` en línea que ponía `jQuery.toggle()`. Se cambió el elemento de `<small class="... d-block ...">` a `<div class="... small ...">`, que no tiene ese conflicto.
+
+---
+
+## Revisit: 2026-09-29
+
+### Updated Problem Framing
+
+Ya en producción, se detectó un problema de diseño en el enfoque original: el combo mezclaba en un solo control una decisión de solo lectura (qué se consulta) con una de escritura (a qué organización se registra el pago). Eso permitía que, al dejar el filtro en otra organización, un pago se registrara ahí sin que el usuario lo decidiera a conciencia — justo el tipo de error silencioso que se quería evitar con el bloqueo de "Todas". El usuario confirmó que **nunca** hace falta registrar pagos a otra organización; el único objetivo real siempre fue consultar el saldo total del cliente.
+
+### Updated Decision
+
+Se reemplaza el combo de organizaciones por una **casilla de dos estados** ("Ver saldo completo del cliente"), ubicada junto al filtro de texto de "Saldos de Clientes", que afecta **solo esa tabla**:
+- Desmarcada (por defecto): solo la organización de la sesión (igual que siempre).
+- Marcada: todas las organizaciones.
+
+La tarjeta "Saldo del Cliente" (Saldo Global / Saldo Esta Org.) y el registro de pagos **no dependen de esta casilla**: siguen exactamente el comportamiento previo a todo este requerimiento (la tarjeta siempre muestra ambos alcances; el pago siempre se registra en la organización de la sesión). Se elimina por completo el bloqueo del botón "Registrar Pago", porque ya no hay forma de que un pago se registre en el lugar equivocado.
+
+De paso, se hizo más visible el filtro de texto "Filtrar por cliente..." (ícono de búsqueda), a pedido del usuario.
+
+### Open Threads
+
+- Ninguno. Spec 015 actualizada (ver `specs/015-filtro-organizacion-pagos/spec.md`, sección "Revision History").
