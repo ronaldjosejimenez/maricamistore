@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-29
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: Brainstorm `brainstorm/15-filtro-organizacion-pagos.md`: agregar un combo de Organización ("Todas" + lista) en la pantalla Payments que determina el alcance de los saldos mostrados y la organización a la que se asocia un pago registrado; con "Todas" seleccionado, el registro de pagos queda bloqueado con una leyenda explicativa.
 

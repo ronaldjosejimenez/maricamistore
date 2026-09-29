@@ -8,7 +8,8 @@ metadata:
 # Brainstorm: Filtro de Organización en Payments
 
 **Date:** 2026-09-29
-**Status:** active
+**Status:** spec-created
+**Spec:** specs/015-filtro-organizacion-pagos
 
 ## Problem Framing
 
@@ -67,5 +68,12 @@ Traer todas las transacciones y filtrar en JavaScript por organización.
 - Autenticación o permisos (pendiente aparte).
 
 ## Open Questions
-- ¿Qué pasa si el combo de organizaciones vuelve vacío (no hay ninguna organización dada de alta)? (sugerencia: no debería ocurrir porque ya existe la organización de la sesión; tratar como caso raro y mostrar solo "Todas").
-- ¿El filtro debe recalcular automáticamente la tarjeta "Saldo del Cliente" si ya hay un cliente elegido cuando se cambia de organización, o solo afecta la próxima consulta? (sugerencia: recalcular automáticamente, igual que "Saldos de Clientes").
+_(todas resueltas en la spec 015)_
+- Combo vacío: caso extremo no observado; no debería ocurrir porque la organización de la sesión ya existe.
+- La tarjeta de saldo del cliente sí se recalcula automáticamente al cambiar el filtro (FR-009, Story 2 escenario 4).
+
+## Cierre (2026-09-29)
+- Implementado en `specs/015-filtro-organizacion-pagos`: PR #27 (→ develop) y release a `main`.
+- Sin migraciones; sin cambios de esquema.
+- Corrección del plan (revisión): `CxPService.GetSaldosReportAsync()` actualizado a `GetSaldosReportAsync(null)`, único otro llamador del método, para que el proyecto siguiera compilando.
+- Corrección posterior al despliegue local (probada por el usuario): la leyenda "Seleccione una organización específica para poder registrar un pago." quedaba siempre visible porque la clase `d-block` de Bootstrap (`display: block !important;`) le ganaba al `display: none` en línea que ponía `jQuery.toggle()`. Se cambió el elemento de `<small class="... d-block ...">` a `<div class="... small ...">`, que no tiene ese conflicto.
