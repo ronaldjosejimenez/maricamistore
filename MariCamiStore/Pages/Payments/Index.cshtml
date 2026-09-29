@@ -14,16 +14,6 @@
 <section class="content">
     <div class="row">
         <div class="col-md-6">
-            <div class="form-group">
-                <label>Organización</label>
-                <select id="payment-org-filter" class="form-control">
-                    <option value="">Todas</option>
-                    @foreach (var o in (List<MariCamiStore.Model.Organization>)ViewData["Organizations"]!)
-                    {
-                        <option value="@o.Id" selected="@(o.Id == (Guid)ViewData["CurrentOrganizationId"]!)">@o.Name</option>
-                    }
-                </select>
-            </div>
             <div class="card">
                 <div class="card-header"><h3 class="card-title">Registrar Pago</h3></div>
                 <div class="card-body">
@@ -39,7 +29,6 @@
                     </div>
                     <div id="payment-error" class="text-danger" style="display:none;"></div>
                     <button id="btn-register-payment" class="btn btn-primary">Registrar Pago</button>
-                    <div id="payment-org-required-hint" class="text-danger small mt-1" style="display:none;">Seleccione una organización específica para poder registrar un pago.</div>
                 </div>
             </div>
         </div>
@@ -63,10 +52,21 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
                     <h3 class="card-title mb-0">Saldos de Clientes</h3>
-                    <input type="text" id="saldos-filter" class="form-control form-control-sm w-25"
-                           placeholder="Filtrar por cliente..." />
+                    <div class="d-flex align-items-center">
+                        <div class="form-check mr-3">
+                            <input type="checkbox" class="form-check-input" id="saldos-full-balance" />
+                            <label class="form-check-label" for="saldos-full-balance">Ver saldo completo del cliente</label>
+                        </div>
+                        <div class="input-group input-group-sm" style="width: 220px;">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            </div>
+                            <input type="text" id="saldos-filter" class="form-control"
+                                   placeholder="Filtrar por cliente..." />
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div id="saldos-table-container">
@@ -78,5 +78,8 @@
     </div>
 </section>
 
-<script>var localCurrencySign = @Html.Raw(Json.Serialize(ViewData["LocalCurrencySign"]));</script>
+<script>
+    var localCurrencySign = @Html.Raw(Json.Serialize(ViewData["LocalCurrencySign"]));
+    var sessionOrganizationId = @Html.Raw(Json.Serialize(ViewData["CurrentOrganizationId"]!.ToString()));
+</script>
 <script src="/js/pages/payments/index.js" asp-append-version="true"></script>

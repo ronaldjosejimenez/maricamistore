@@ -8,8 +8,8 @@ public record CustomerBalanceDto(
 
 public interface IPaymentService
 {
-    Task<CustomerBalanceDto?> GetCustomerBalanceAsync(Guid customerId, Guid? organizationId);
-    Task<(bool Success, string? Error, CustomerBalanceDto? Balance)> RegisterPaymentAsync(Guid customerId, decimal amount, Guid? organizationId);
+    Task<CustomerBalanceDto?> GetCustomerBalanceAsync(Guid customerId);
+    Task<CustomerBalanceDto?> RegisterPaymentAsync(Guid customerId, decimal amount);
     Task<List<SaldoReportRow>> GetSaldosReportAsync(Guid? organizationId);
 }
 

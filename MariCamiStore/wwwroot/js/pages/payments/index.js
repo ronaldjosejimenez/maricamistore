@@ -3,20 +3,16 @@ var allSaldosData = [];
 var saldosRequest = null;
 var balanceRequest = null;
 
-function currentOrgFilter() {
-    var v = $('#payment-org-filter').val();
-    return v ? v : null;
-}
-
-function updateRegisterButtonState() {
-    var blocked = currentOrgFilter() === null;
-    $('#btn-register-payment').prop('disabled', blocked);
-    $('#payment-org-required-hint').toggle(blocked);
+// Saldos de Clientes scope: unchecked (default) = only the session's organization; checked = all organizations.
+// This does not affect the "Saldo del Cliente" card (Saldo Global / Saldo Esta Org. are always both shown),
+// nor which organization a registered payment is posted to (always the session's).
+function saldosOrganizationId() {
+    return $('#saldos-full-balance').is(':checked') ? null : sessionOrganizationId;
 }
 
 function loadSaldos() {
     if (saldosRequest) saldosRequest.abort();
-    var orgId = currentOrgFilter();
+    var orgId = saldosOrganizationId();
     var url = '?handler=Saldos' + (orgId ? '&organizationId=' + encodeURIComponent(orgId) : '');
     saldosRequest = $.get(url, function (data) {
         saldosRequest = null;
@@ -31,8 +27,7 @@ function loadSaldos() {
 function loadBalance(customerId) {
     if (!customerId) { $('#balance-card').hide(); return; }
     if (balanceRequest) balanceRequest.abort();
-    var orgId = currentOrgFilter();
-    var url = '?handler=Balance&customerId=' + customerId + (orgId ? '&organizationId=' + encodeURIComponent(orgId) : '');
+    var url = '?handler=Balance&customerId=' + customerId;
     balanceRequest = $.get(url, function (r) {
         balanceRequest = null;
         if (r.error) { alert(r.error); return; }
@@ -106,12 +101,11 @@ $(function () {
         loadBalance($(this).val());
     });
 
-    // Register payment
+    // Register payment (always posted to the session's organization)
     $('#btn-register-payment').on('click', function () {
         $('#payment-error').hide();
         var customerId = $('#payment-customer').val();
         var amount = parseFloat($('#payment-amount').val()) || 0;
-        var organizationId = currentOrgFilter();
 
         if (!customerId || amount <= 0) {
             $('#payment-error').text('Seleccione un cliente e ingrese un monto mayor a cero.').show();
@@ -122,7 +116,7 @@ $(function () {
             url: '?handler=RegisterPayment', method: 'POST',
             contentType: 'application/json',
             headers: { 'RequestVerificationToken': token },
-            data: JSON.stringify({ customerId: customerId, amount: amount, organizationId: organizationId }),
+            data: JSON.stringify({ customerId: customerId, amount: amount }),
             success: function (r) {
                 if (r.success) {
                     $('#payment-amount').val('');
@@ -139,15 +133,11 @@ $(function () {
     // Filter saldos table in real time
     $('#saldos-filter').on('input', function () { renderSaldos(allSaldosData); });
 
-    // Organization filter change: recompute button state, saldos, and balance card (if a customer is selected)
-    $('#payment-org-filter').on('change', function () {
-        updateRegisterButtonState();
+    // "Ver saldo completo del cliente" toggles Saldos de Clientes between session-org-only and all organizations
+    $('#saldos-full-balance').on('change', function () {
         loadSaldos();
-        var customerId = $('#payment-customer').val();
-        if (customerId) loadBalance(customerId);
     });
 
-    // Initial state
-    updateRegisterButtonState();
+    // Initial load
     loadSaldos();
 });
