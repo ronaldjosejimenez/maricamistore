@@ -47,7 +47,8 @@ specs/015-filtro-organizacion-pagos/
 MariCamiStore/
 ├── Services/
 │   ├── IPaymentService.cs   [MODIFY] add Guid? organizationId param to balance/register methods
-│   └── PaymentService.cs    [MODIFY] explicit-org query paths; reuse existing IgnoreQueryFilters pattern
+│   ├── PaymentService.cs    [MODIFY] explicit-org query paths; reuse existing IgnoreQueryFilters pattern
+│   └── CxPService.cs        [MODIFY] update its sole call to GetSaldosReportAsync() → GetSaldosReportAsync(null) (unrelated to the Payments filter; keeps CxP's Saldos por Cobrar global, unchanged)
 ├── Pages/Payments/
 │   ├── Index.cshtml.cs      [MODIFY] handlers take organizationId; expose organizations + session org id to the page
 │   └── Index.cshtml         [MODIFY] Organization combo above "Registrar Pago"; disabled button + legend
@@ -63,6 +64,10 @@ MariCamiStore/
 
 - Client sends `organizationId: null` (JS: `""` → `null` before serializing) when "Todas" is selected, a real GUID string otherwise. Never `Guid.Empty` as a sentinel (an actual `Organization.Id` could theoretically collide, however unlikely; `null` is unambiguous and idiomatic for a nullable `Guid?`).
 - Handlers/service signatures use `Guid? organizationId`. `null` = "Todas" (global scope for reads; rejected for the register action per FR-013).
+
+### D1a — Whole-solution caller impact (resolves plan review finding #1)
+
+`GetSaldosReportAsync()` has exactly one other caller: `CxPService.GetPeriodIndicatorsAsync` (`Services/CxPService.cs:255`), used for the unrelated "Saldos por Cobrar" indicator on the CxP dashboard. It MUST be updated to `GetSaldosReportAsync(null)` (global scope, same value as before — CxP has no organization filter of its own and is out of scope for this feature). `GetCustomerBalanceAsync`/`RegisterPaymentAsync` have no other external callers (verified solution-wide); their only caller is `Payments/IndexModel`. The new `Guid? organizationId` parameters are **not given a default value** in the interface — every caller (Payments handlers, and the one CxPService call) passes it explicitly, so there is no ambiguity about an implicit default being added later.
 
 ### D2 — Service changes (`IPaymentService` / `PaymentService`)
 
