@@ -81,7 +81,7 @@ MariCamiStore/
 
 ## Key Design Decisions
 
-1. **Pure distributor** (`DailyGoalDistributor.Distribute(year, month, goal) → decimal[]`): weekday base weights Lun 19, Mar 22, Mié 26, Jue 29, Vie 36, Sáb 51, Dom 36 (averages observed in the Oct-2026 Excel) × linear ramp 0.94 → 1.06 over the month; floor to 1 000-unit blocks by largest-remainder; leftover (< 1 000, or cents) added to the heaviest day. Constants live at the top of the class for later tuning.
+1. **Pure distributor** (`DailyGoalDistributor.Distribute(year, month, goal) → decimal[]`): weight of each day comes from a reference table indexed by (day of week, n-th occurrence of that weekday in the month) taken from the Oct-2026 Excel, so October 2026 @ 4 000 000 reproduces the sheet exactly; 5th occurrences of Sun/Mon/Tue/Wed (absent from the sample) repeat the 4th. Amounts are floored to 1 000-unit blocks by largest-remainder; leftover (< 1 000, or cents) goes to the heaviest day. Constants live at the top of the class for later tuning.
 2. **"Ajustado" is derived**: a day is manually adjusted when `GoalAmount != ProposedAmount`. Header goal/currency change → recompute proposals; `GoalAmount` follows only days where it equaled the *old* proposal.
 3. **Server owns the math**: every mutating handler returns the full refreshed model (header, days, `todayPercentage`, `todayStatus`), so UI state can never drift from the DB.
 4. **Idempotent create**: unique index + try/insert/catch `DbUpdateException` → re-read.

@@ -1,10 +1,11 @@
-namespace MariCamiStore.Helpers;
+﻿namespace MariCamiStore.Helpers;
 
 /// <summary>
 /// Pure, isolated algorithm that proposes how a monthly sales goal is spread over the days of the month.
-/// Fixed weekday profile x linear weekly ramp, rounded to blocks of <see cref="Unit"/> using the largest
-/// remainder method; the residue (less than one block, or cents) is added to the heaviest day so the
-/// sum is exactly the goal.
+/// Each day's weight comes from a reference table indexed by (day of week, n-th occurrence of that weekday in
+/// the month), taken from the October 2026 budget sheet, so that month reproduces the sheet exactly. Amounts are
+/// rounded to blocks of <see cref="Unit"/> using the largest remainder method; the residue (less than one block,
+/// or cents) is added to the heaviest day so the sum is exactly the goal.
 /// </summary>
 public static class DailyGoalDistributor
 {
@@ -12,22 +13,20 @@ public static class DailyGoalDistributor
     /// <summary>Rounding block for proposed amounts.</summary>
     public const decimal Unit = 1000m;
 
-    /// <summary>Ramp factor applied to the first day of the month.</summary>
-    public const decimal RampStart = 0.94m;
-
-    /// <summary>Ramp factor applied to the last day of the month.</summary>
-    public const decimal RampEnd = 1.06m;
-
-    /// <summary>Base weekday weights (average observed in the Excel), indexed by <see cref="DayOfWeek"/>.</summary>
-    private static readonly decimal[] WeekdayWeights =
+    /// <summary>
+    /// Reference weights (relative to a total of 1000 for a 31-day month), indexed by <see cref="DayOfWeek"/> and then by
+    /// occurrence number (1st..5th) of that weekday in the month. Values for 1st-4th (and 5th of Thu/Fri/Sat) come from
+    /// the October 2026 sheet. The 5th occurrence of Sun/Mon/Tue/Wed was not in the sample, so it repeats the 4th.
+    /// </summary>
+    private static readonly decimal[][] OccurrenceWeights =
     [
-        36m, // Sunday / Domingo
-        19m, // Monday / Lunes
-        22m, // Tuesday / Martes
-        26m, // Wednesday / Miercoles
-        29m, // Thursday / Jueves
-        36m, // Friday / Viernes
-        51m, // Saturday / Sabado
+        [39m, 32m, 38m, 35m, 35m], // Sunday / Domingo
+        [20m, 18m, 18m, 19m, 19m], // Monday / Lunes
+        [21m, 22m, 22m, 24m, 24m], // Tuesday / Martes
+        [25m, 25m, 26m, 28m, 28m], // Wednesday / Miercoles
+        [28m, 27m, 31m, 30m, 32m], // Thursday / Jueves
+        [37m, 34m, 35m, 37m, 38m], // Friday / Viernes
+        [52m, 48m, 53m, 50m, 56m], // Saturday / Sabado
     ];
     // -----------------------------------------------------------------------------------------
 
@@ -43,11 +42,9 @@ public static class DailyGoalDistributor
         decimal total = 0m;
         for (var i = 0; i < days; i++)
         {
-            var date = new DateTime(year, month, i + 1);
-            var ramp = days == 1
-                ? RampStart
-                : RampStart + (RampEnd - RampStart) * i / (days - 1);
-            weights[i] = WeekdayWeights[(int)date.DayOfWeek] * ramp;
+            var occurrence = i / 7; // 0-based: day 1-7 => 1st occurrence of its weekday, 8-14 => 2nd, ...
+            var weekday = (int)new DateTime(year, month, i + 1).DayOfWeek;
+            weights[i] = OccurrenceWeights[weekday][occurrence];
             total += weights[i];
         }
 
