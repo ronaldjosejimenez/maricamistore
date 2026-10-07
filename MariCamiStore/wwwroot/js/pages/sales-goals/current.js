@@ -56,6 +56,8 @@ function render(goal) {
         .closest('.info-box').removeClass('goal-red goal-yellow goal-green bg-light')
         .addClass(statusClass(goal.todayStatus) || 'bg-light');
 
+    renderDistributionBanner(goal, sign);
+
     var today = crToday();
     var $tbody = $('#days-table tbody').empty();
     goal.days.forEach(function (d) {
@@ -70,6 +72,26 @@ function render(goal) {
         $tr.append($('<td class="text-right">').text(fmtPct(d.compliancePercentage)));
         $tbody.append($tr);
     });
+}
+
+// Compares the sum of the daily goals against the monthly goal and flags any gap.
+function renderDistributionBanner(goal, sign) {
+    var total = goal.days.reduce(function (acc, d) { return acc + Number(d.goalAmount || 0); }, 0);
+    var diff = Math.round((total - Number(goal.goalAmount)) * 100) / 100;
+    var $banner = $('#distribution-banner').removeClass('alert-danger alert-warning alert-success');
+
+    if (diff === 0) {
+        $banner.hide().text('');
+        return;
+    }
+    if (diff > 0) {
+        $banner.addClass('alert-warning')
+            .text('Las metas diarias suman ' + sign + ' ' + fmt(total) + ': se pasan de la meta del mes por ' + sign + ' ' + fmt(diff) + '.');
+    } else {
+        $banner.addClass('alert-danger')
+            .text('Las metas diarias suman ' + sign + ' ' + fmt(total) + ': faltan ' + sign + ' ' + fmt(-diff) + ' para llegar a la meta del mes.');
+    }
+    $banner.show();
 }
 
 function cellInput(day, field) {
