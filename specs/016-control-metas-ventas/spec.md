@@ -135,7 +135,7 @@ En el menú Ventas → Metas hay una segunda opción, "Histórico de metas", de 
 ### Edge Cases
 
 - **No existe ningún vendedor**: la pantalla "Mes Actual" muestra un mensaje que invita a crear vendedores en el catálogo, sin errores.
-- **Meta mensual = 0 o ausente**: no se permite; si falta el valor de configuración se usa 4 000 000.
+- **Meta mensual = 0 o ausente**: no se permite; si falta el valor de configuración, FR-009 usa 4 000 000 como valor de respaldo.
 - **% de cumplimiento con meta cero** (por ejemplo, meta diaria acumulada igual a 0 al inicio, o un día con Monto Meta 0): se muestra 0% en lugar de producir error o infinito.
 - **Cambio de mes mientras la pantalla está abierta** (pasada la medianoche de Costa Rica del último día del mes): al recargar o cambiar de vendedor se muestra/crea el mes nuevo; la pantalla no debe seguir editando el mes anterior como si fuera el actual.
 - **Meta de un vendedor en dos organizaciones el mismo mes**: son registros independientes (una por vendedor + mes + año + organización).
@@ -175,7 +175,7 @@ En el menú Ventas → Metas hay una segunda opción, "Histórico de metas", de 
 - **FR-009**: Al consultar un vendedor sin meta para el mes actual en la organización de la sesión, el sistema MUST crear automáticamente la meta (monto de meta = valor por defecto de configuración, monto real 0, % 0, moneda = moneda local por defecto de la configuración, organización de la sesión) y todos sus renglones diarios.
 - **FR-010**: El sistema MUST determinar el mes, año y día actuales siempre con la zona horaria de Costa Rica, independientemente de la zona horaria o fecha del cliente.
 - **FR-011**: El sistema MUST crear el detalle completo del mes (todos los días naturales) sin importar en qué día del mes ocurra la creación; el cálculo de monto meta propuesto cubre el mes completo.
-- **FR-012**: El sistema MUST calcular el Monto Meta Propuesto de cada día mediante un algoritmo de distribución, aislado en un componente único y reemplazable, que: (a) pondera cada día según su día de la semana (sábado más alto, luego viernes/domingo/jueves; lunes el más bajo; martes y miércoles intermedios) y según su posición en el mes (peso creciente hacia el final), (b) redondea a una granularidad definida y (c) ajusta el residuo de redondeo en un día para que la suma sea exactamente igual al Monto de la meta, sin montos negativos.
+- **FR-012**: El sistema MUST calcular el Monto Meta Propuesto de cada día mediante un algoritmo de distribución, aislado en un componente único y reemplazable, que: (a) pondera cada día según su día de la semana (sábado más alto, luego viernes/domingo/jueves; lunes el más bajo; martes y miércoles intermedios) y según su posición en el mes (peso creciente hacia el final), (b) redondea a múltiplos de 1 000 unidades de moneda y (c) ajusta el residuo de redondeo en un día para que la suma sea exactamente igual al Monto de la meta, sin montos negativos.
 - **FR-013**: La creación bajo demanda MUST ser segura ante consultas simultáneas (no duplicar encabezado ni detalle).
 
 **Pantalla Mes Actual**
@@ -186,8 +186,10 @@ En el menú Ventas → Metas hay una segunda opción, "Histórico de metas", de 
 - **FR-017**: El % de cumplimiento al día de hoy MUST mostrarse en rojo si es menor a 70%, amarillo si está entre 70% y 90% (ambos inclusive), y verde si es mayor a 90%.
 - **FR-018**: El detalle MUST mostrarse como una tabla con: número de día, nombre del día de la semana, fecha (dd/mm/yyyy), Monto Meta Control (propuesto, no editable), Monto Meta (editable), Monto real (editable) y % de cumplimiento del día (monto real ÷ monto meta del día).
 - **FR-019**: Al modificar un monto real, el sistema MUST recalcular y guardar el monto real y el % de cumplimiento del día y del encabezado, y actualizar la pantalla inmediatamente.
-- **FR-020**: Al modificar el Monto Meta de un día, el sistema MUST guardar el cambio, recalcular el % de cumplimiento del día y del encabezado y el % al día de hoy, y marcar ese día como ajustado manualmente.
+- **FR-020**: Al modificar el Monto Meta de un día, el sistema MUST guardar el cambio, recalcular el % de cumplimiento del día y del encabezado y el % al día de hoy, y considerar ese día como ajustado mientras su Monto Meta sea distinto de su Monto Meta Propuesto (si el usuario vuelve a dejarlo igual al propuesto, el día vuelve a seguir los recálculos).
 - **FR-021**: Al modificar el Monto de la meta del encabezado o la moneda, el sistema MUST recalcular el Monto Meta Propuesto de todos los días con el algoritmo, actualizar el Monto Meta únicamente en los días no ajustados manualmente, y MUST NOT modificar los montos reales; los porcentajes se recalculan.
+- **FR-026**: La pantalla "Mes Actual" MUST permitir editar únicamente el mes en curso (hora de Costa Rica); si el mes ya cambió, las ediciones sobre el mes anterior MUST rechazarse con un mensaje claro y la pantalla MUST mostrar el mes vigente.
+- **FR-027**: Si el guardado de una edición falla o el valor es inválido (por ejemplo, negativo), la pantalla MUST mostrar un error junto al campo y restaurar el valor anterior.
 - **FR-022**: Todos los cálculos de porcentaje MUST devolver 0 cuando el divisor sea 0.
 - **FR-023**: El sistema MUST rechazar montos reales o montos meta negativos, así como un Monto de la meta menor o igual a cero.
 
@@ -203,7 +205,7 @@ En el menú Ventas → Metas hay una segunda opción, "Histórico de metas", de 
 
 - **Vendedor**: persona a la que se le asigna una meta de ventas. Atributos: nombre, apodo, teléfono, correo, activo/inactivo. Catálogo global (no pertenece a una organización).
 - **Meta mensual (control de meta)**: meta de un vendedor para un mes/año en una organización. Atributos: vendedor, mes, año, monto de la meta, monto real, % de cumplimiento, moneda, organización. Una por vendedor + mes + año + organización.
-- **Meta diaria (detalle)**: un renglón por día natural del mes de una meta mensual. Atributos: día del mes, monto meta propuesto, monto meta (ajustable), monto real, % de cumplimiento, indicador de ajuste manual.
+- **Meta diaria (detalle)**: un renglón por día natural del mes de una meta mensual. Atributos: día del mes, monto meta propuesto, monto meta (ajustable), monto real, % de cumplimiento. Un día está "ajustado" cuando su monto meta difiere del propuesto (no hay indicador separado).
 - **Configuración** (existente): se amplía con "Meta mensual por defecto".
 
 ## Success Criteria *(mandatory)*
