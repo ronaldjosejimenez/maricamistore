@@ -61,7 +61,7 @@ function render(goal) {
     goal.days.forEach(function (d) {
         var adjusted = d.goalAmount !== d.proposedAmount;
         var $tr = $('<tr>').toggleClass('today-row', goal.isCurrentMonth && d.date === today);
-        $tr.append($('<td>').text(d.weekday));
+        $tr.append($('<td>').text(d.dayOfMonth + ' - ' + d.weekday));
         $tr.append($('<td>').text(d.date));
         $tr.append($('<td class="text-right">').text(fmt(d.proposedAmount)));
         $tr.append($('<td class="text-right">').append(cellInput(d, 'goalAmount')));

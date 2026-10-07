@@ -45,7 +45,7 @@ function loadDetail(goalId) {
         var $tbody = $('#detail-table tbody').empty();
         g.days.forEach(function (d) {
             var $tr = $('<tr>');
-            $tr.append($('<td>').text(d.weekday));
+            $tr.append($('<td>').text(d.dayOfMonth + ' - ' + d.weekday));
             $tr.append($('<td>').text(d.date));
             $tr.append($('<td class="text-right">').text(fmt(d.proposedAmount)));
             $tr.append($('<td class="text-right">').text(fmt(d.goalAmount)));
