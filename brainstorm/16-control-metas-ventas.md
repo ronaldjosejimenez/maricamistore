@@ -8,7 +8,7 @@ metadata:
 # Brainstorm: Control de Metas de Ventas
 
 **Date:** 2026-10-06
-**Status:** spec-created (specs/016-control-metas-ventas)
+**Status:** implemented (specs/016-control-metas-ventas)
 
 ## Problem Framing
 
@@ -88,3 +88,10 @@ Enfoque **A**. El algoritmo de distribución queda **en duro en el código pero 
 - ¿Un vendedor puede tener metas en varias organizaciones el mismo mes (una por organización)? (se asume que sí: clave vendedor+mes+año+organización).
 - ¿Qué hace el Histórico si no hay registros? ¿Se permite filtrar por vendedor/año?
 - Pantallas con autenticación pendiente (ver memoria): sin autenticación en producción.
+
+## Resolution (2026-10-07)
+- Algoritmo: pesos por (día de la semana, n-ésima ocurrencia en el mes) copiados del Excel; octubre 2026 @ 4 000 000 reproduce el Excel exacto. Redondeo a ₡1 000, residuo al día de mayor peso. Pendiente: más meses de ejemplo para afinar (5.ª ocurrencia de dom/lun/mar/mié repite la 4.ª).
+- % al día de hoy con meta diaria acumulada 0 → 0%.
+- Metas del mismo vendedor en varias organizaciones: una por vendedor + mes + año + organización.
+- Histórico: lista por vendedor (todas las organizaciones no; solo la de la sesión) con detalle de solo lectura.
+- Añadido: franja de aviso en Mes Actual cuando las metas diarias no suman la meta del mes.
