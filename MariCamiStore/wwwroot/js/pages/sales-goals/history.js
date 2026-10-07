@@ -49,9 +49,9 @@ function loadDetail(goalId) {
             $tr.append($('<td>').text(d.date));
             $tr.append($('<td class="text-right">').text(fmt(d.proposedAmount)));
             $tr.append($('<td class="text-right">').text(fmt(d.goalAmount)));
-            $tr.append($('<td>').html(d.goalAmount !== d.proposedAmount ? '<span class="badge badge-warning">Ajustado</span>' : ''));
             $tr.append($('<td class="text-right">').text(fmt(d.actualAmount)));
             $tr.append($('<td class="text-right">').text(fmtPct(d.compliancePercentage)));
+            $tr.append($('<td class="text-center">').html(d.goalAmount !== d.proposedAmount ? '<span class="badge badge-warning">Ajustado</span>' : ''));
             $tbody.append($tr);
         });
         $('#history-list-card').hide();
