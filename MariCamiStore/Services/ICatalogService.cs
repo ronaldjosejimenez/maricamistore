@@ -34,4 +34,10 @@ public interface ICatalogService
     Task<Customer> CreateCustomerAsync(Customer customer);
     Task<Customer> UpdateCustomerAsync(Customer customer);
     Task DeleteCustomerAsync(Guid id);
+
+    // Salespeople (global — no org filter, no hard delete)
+    Task<List<Salesperson>> GetSalespeopleAsync();
+    Task<List<Salesperson>> GetActiveSalespeopleAsync();
+    Task<Salesperson> CreateSalespersonAsync(Salesperson salesperson);
+    Task<Salesperson> UpdateSalespersonAsync(Salesperson salesperson);
 }

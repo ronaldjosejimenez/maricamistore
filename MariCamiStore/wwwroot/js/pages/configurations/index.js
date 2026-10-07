@@ -1,6 +1,23 @@
 var token = $('input[name="__RequestVerificationToken"]').val();
 var currencyItems = [];
 
+function upsert(item) {
+    var d = $.Deferred();
+    $.ajax({
+        url: '?handler=Upsert', method: 'POST',
+        contentType: 'application/json',
+        headers: { 'RequestVerificationToken': token },
+        data: JSON.stringify(item),
+        success: function (r) { d.resolve(r); },
+        error: function (xhr) {
+            var msg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : xhr.responseText;
+            alert('Error: ' + msg);
+            d.reject();
+        }
+    });
+    return d.promise();
+}
+
 function initGrid() {
     $('#jsGrid').jsGrid({
         height: 'auto',
@@ -26,22 +43,8 @@ function initGrid() {
                 });
                 return d.promise();
             },
-            insertItem: function (item) {
-                return $.ajax({
-                    url: '?handler=Upsert', method: 'POST',
-                    contentType: 'application/json',
-                    headers: { 'RequestVerificationToken': token },
-                    data: JSON.stringify(item)
-                });
-            },
-            updateItem: function (item) {
-                return $.ajax({
-                    url: '?handler=Upsert', method: 'POST',
-                    contentType: 'application/json',
-                    headers: { 'RequestVerificationToken': token },
-                    data: JSON.stringify(item)
-                });
-            }
+            insertItem: function (item) { return upsert(item); },
+            updateItem: function (item) { return upsert(item); }
         },
 
         fields: [
@@ -49,6 +52,7 @@ function initGrid() {
             { name: 'taxPercentage', title: 'Impuesto (%)', type: 'number', width: 130, validate: 'required' },
             { name: 'exchangeRate', title: 'Tipo de Cambio', type: 'number', width: 130, validate: 'required' },
             { name: 'exchangeRateMargin', title: 'Margen T.C.', type: 'number', width: 120 },
+            { name: 'defaultMonthlyGoal', title: 'Meta mensual por defecto', type: 'number', width: 170, validate: 'required' },
             {
                 name: 'localCurrencyId', title: 'Moneda Local', type: 'select',
                 items: currencyItems, valueField: 'id', textField: 'text', width: 120

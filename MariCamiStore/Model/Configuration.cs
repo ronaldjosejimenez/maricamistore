@@ -34,4 +34,7 @@ public partial class Configuration
     /// <summary>Gets or sets the product type identifier default.</summary>
     /// <value>The product type identifier default.</value>
     public Guid? ProductTypeIdDefault { get; set; }
+
+    /// <summary>Gets or sets the default monthly sales goal.</summary>
+    public decimal DefaultMonthlyGoal { get; set; } = 4000000;
 }

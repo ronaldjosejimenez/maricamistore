@@ -4,6 +4,7 @@ using MariCamiStore.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MariCamiStore.Infrastructure.Persistance.Migrations
 {
     [DbContext(typeof(MariCamiStoreContext))]
-    partial class MariCamiStoreContextModelSnapshot : ModelSnapshot
+    [Migration("20261007014108_AddSalesGoals")]
+    partial class AddSalesGoals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

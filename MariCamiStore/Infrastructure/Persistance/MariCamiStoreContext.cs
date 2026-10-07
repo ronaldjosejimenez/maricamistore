@@ -57,6 +57,15 @@ public class MariCamiStoreContext(
     public DbSet<PeriodControl> PeriodControls { get; set; }
     public DbSet<CxPEntry> CxPEntries { get; set; }
 
+    /// <summary>Gets or sets the salespeople.</summary>
+    public DbSet<Salesperson> Salespeople { get; set; }
+
+    /// <summary>Gets or sets the monthly sales goals.</summary>
+    public DbSet<SalesGoal> SalesGoals { get; set; }
+
+    /// <summary>Gets or sets the daily sales goal details.</summary>
+    public DbSet<SalesGoalDay> SalesGoalDays { get; set; }
+
     /// <summary>Gets or sets the order packages.</summary>
     /// <value>The order packages.</value>
     public DbSet<OrderPackage> OrderPackages { get; set; }
@@ -90,6 +99,9 @@ public class MariCamiStoreContext(
         builder.ApplyConfiguration(new PeriodControlEntityTypeConfiguration());
         builder.ApplyConfiguration(new CxPEntryEntityTypeConfiguration());
         builder.ApplyConfiguration(new OrderPackageEntityTypeConfiguration());
+        builder.ApplyConfiguration(new SalespersonEntityTypeConfiguration());
+        builder.ApplyConfiguration(new SalesGoalEntityTypeConfiguration());
+        builder.ApplyConfiguration(new SalesGoalDayEntityTypeConfiguration());
 
         // Capture the service reference (not value) so EF re-evaluates per DbContext instance
         builder.Entity<Configuration>().HasQueryFilter(c => c.OrganizationId == currentOrganizationService.OrganizationId);
@@ -98,5 +110,7 @@ public class MariCamiStoreContext(
         builder.Entity<Transaction>().HasQueryFilter(t => t.OrganizationId == currentOrganizationService.OrganizationId);
         builder.Entity<PeriodControl>().HasQueryFilter(p => p.OrganizationId == currentOrganizationService.OrganizationId);
         builder.Entity<OrderPackage>().HasQueryFilter(p => p.Order.OrganizationId == currentOrganizationService.OrganizationId);
+        builder.Entity<SalesGoal>().HasQueryFilter(g => g.OrganizationId == currentOrganizationService.OrganizationId);
+        builder.Entity<SalesGoalDay>().HasQueryFilter(d => d.SalesGoal!.OrganizationId == currentOrganizationService.OrganizationId);
     }
 }

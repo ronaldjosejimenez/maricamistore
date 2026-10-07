@@ -1,0 +1,88 @@
+Vamos a agrega una nueva funcionalidad para llevar el control de las metas de ventas
+Para lo cual necesitamos primero un catalogo de vendedores con los campos, podemos usar los mismo campos que usa la tabla de Customer, solo los campos que aplican
+Crear una entidad para el control de metas (Maestro)
+
+
+Campos:
+- Id
+- Vendedor
+- Mes
+- Año
+- Monto de la meta
+- Monto real 
+- Porcentaje de cumplimiento
+- Moneda
+- Organizacion
+
+Crear otra entidad detalle para el control diario de la meta
+Campos:
+- Id
+- Id Fk al control
+- Dia del mes
+- Monto Meta Propuesto
+- Monto Meta
+- Monto real
+- Porcentaje de cumplimiento
+
+A la entidad COnfiguration agregar
+- Meta mensual por defecto (por defecto 4000 000)
+
+
+Pantallas
+1. Agregar el nuevo campo a la pantalla de configuración
+2. En el menu de Ventas/Catalogos agregar el mantenimiento de vendedores
+3. En el menu de Ventas agregar un nuevo submenu: "Metas"
+4. A este nuevo sub menu agregar dos nuevas opciones
+5. Mes Actual: cuando se abre el mes actual 
+La pantalla tiene 3 secciones
+1. Combo donde se escoje el vendedor: se salga pre seleccionado el primer vendedor. Al seleccionar el vendedor , se deben mostrar los datos del mes actual, para la organizacion actual, si no hay registros del mes actual se deben crear. Ver proceso de creacion mas abajo.
+2. Encabezado 
+- Moneda: editbale combo de monedas
+- Mes, no editable
+- Año, no editable
+- Monto de la meta: editable
+- Monto real: calculado, sumatoria de los montos reales del detalle, siempre que se cambie un monto real de detalle se actualiza el valor en pantalla y base de datos, Debe estar resaltado
+- Porcentaje de cumplimiento: calculado, porcentaje que corresponde del monto real al monto de la meta, se actualiza cada vez que se actualiza el monto real y se guarda en base de datos. Debe estar resaltado
+- Porcentaje de cumplimiento al dia de hoy: calculado y no se guarda en base de datos, y se refresca cada vez que se cambia cualquier monto real en los detalle cambia: es el porcentaje que corresponde del monto real vs monto de la meta pero solo tomando en cuenta los dias desde el 1 del mes al dia de hoy en dias naturales. Este campo debe estar resaltado con colores de semaforo. Rojo si el porcentaje es menor al 70%, amarillo 70-90, verde mayor a 90.
+3. Seccion del detalle
+Grid con los registros del detalle
+- Dia en numero
+- Dia en nombre de la semana
+- Fecha que corresponde al dia en formato dd/mm/yyyy
+- Monto de la meta Control (monto de la meta calculada)
+- Monto de la meta, editable
+- Monto real, editable
+- Porcentaje de cumplimiento: porcentaje monto real vs monto de la meta
+
+Proceso de creacion de registros
+- Seria ideal que esto suceda de manera automatica a las 12:00 am del primer dia del mes, pero dado que esta app vive en un web container de azure que se duerme cuando no se usa, no podemos depender de eso, y ni tampoco mantenerlo vivo siempre por cuestion de costos.
+- Entonces la mejor forma es crear los registros bajo demanda:
+- Aca solo hablamos de dias naturales, no dias de sistema
+- Usamos la zona horaria de costa rica, osea esta seccion debe tener la zona horaria en duro, no va a depender del cliente.
+- Cuando se piden los datos de un vendedor que aun no tiene registro para el mes actual, se debe crear de la siguiente manera:
+-- Id: Generado guid
+-- Vendedor: id del vendedor seleccionado
+-- Mes: mes actual según zona horarioa de CR
+-- Año: año actual según zona horarioa de CR
+-- Monto de la meta: tomar el valor por defecto de la configuracion
+-- Monto real: 0
+-- Porcentaje de cumplimiento: 0
+-- Moneda: Moneda local por defecto según la configuracion
+-- Organización: de la sesión
+Detalle (por cada dia del mes actual se debe crear un registro, sin importar el dia del mes que suceda esta creacion)
+-- Id: Generado guid
+- Id Fk: relacionado
+- Dia del mes: dia del mes correspondiente
+- Monto Meta Propuesto: aplicar algoritmo para determinar cual es el monto correspondiente por dia de manera que sume el monto de la meta del encabezado
+- Monto Meta: mismo valor del propuesto
+- Monto real: 0
+- Porcentaje de cumplimiento: 0
+
+
+Aun no tengo cual es el algoritmo a usar, lo puedes inferir del siguiente ejemplo, puede quedar en duro en el código pero asilado para ir afinándolo
+La ruta del archivo es C:\Temp\PPTO Octubre 2026 - AVALOS MORALES MARIA EUGENIA.xlsx (de paso este archivo sirve para ver el objetivo de este requerimiento)
+Yo puedo inferir que dependiendo del dia de la semana y del mes cada dia tiene un porcentaje, pero no tengo suficientes datos para saber si eso es igual todos los meses o depende del mes en curso
+
+
+Haz commit hasta el puro final
+
