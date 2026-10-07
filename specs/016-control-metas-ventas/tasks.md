@@ -17,7 +17,7 @@ Format: `- [ ] T### [P?] [US?] Description (path)` — `[P]` = can run in parall
 
 - [ ] T006 Add EF configurations `SalespersonEntityTypeConfiguration`, `SalesGoalEntityTypeConfiguration` (unique index Salesperson+Org+Year+Month, decimal(18,2)/(9,1), FK to Currency/Salesperson), `SalesGoalDayEntityTypeConfiguration` (unique SalesGoal+Day, cascade) in `MariCamiStore/Infrastructure/Persistance/EntityConfigurations/`
 - [ ] T007 Update `ConfigurationEntityTypeConfiguration` (column `DefaultMonthlyGoal` decimal(18,2) default 4000000; set it in both `HasData` seeds) in `MariCamiStore/Infrastructure/Persistance/EntityConfigurations/ConfigurationEntityTypeConfiguration.cs`
-- [ ] T008 Implement `DailyGoalDistributor.Distribute(year, month, goal)` (weekday weights 19/22/26/29/36/51/36 × ramp 0.94→1.06, 1 000-unit largest-remainder, residue to heaviest day, Σ exact, no negatives, goal ≤ 0 → zeros) with constants at the top, in `MariCamiStore/Helpers/DailyGoalDistributor.cs`; verify with a throwaway snippet per quickstart step 10
+- [ ] T008 Implement `DailyGoalDistributor.Distribute(year, month, goal)` (weekday weights 19/22/26/29/36/51/36 × ramp 0.94→1.06, 1 000-unit largest-remainder, residue to heaviest day, Σ exact, no negatives, goal ≤ 0 → zeros) with constants at the top, in `MariCamiStore/Helpers/DailyGoalDistributor.cs`; verify with a throwaway snippet per quickstart step 10, including SC-007 (Oct 2026 @ 4 000 000: Saturday highest and Monday lowest in each week)
 - [ ] T009 Register DbSets (`Salespeople`, `SalesGoals`, `SalesGoalDays`), apply the three configurations, add org query filters for `SalesGoal` and `SalesGoalDay` in `MariCamiStore/Infrastructure/Persistance/MariCamiStoreContext.cs`
 - [ ] T010 Generate migration `AddSalesGoals` (`dotnet ef migrations add AddSalesGoals --project MariCamiStore`), review that existing `Configurations` rows get 4 000 000, and check the snapshot in `MariCamiStore/Infrastructure/Persistance/Migrations/`
 - [ ] T011 Define `ISalesGoalService` and DTOs (`GoalDto`, `GoalDayDto`, `HistoryRowDto`, request records) in `MariCamiStore/Services/ISalesGoalService.cs`; register in `MariCamiStore/Extensions/ApplicationExtensions.cs`
@@ -34,7 +34,7 @@ Format: `- [ ] T### [P?] [US?] Description (path)` — `[P]` = can run in parall
 ## Phase 4: User Story 5 — Meta mensual por defecto (P2)
 
 - [ ] T016 [US5] Copy `DefaultMonthlyGoal` in `CatalogService.UpsertConfigurationAsync` and reject values ≤ 0 (`MariCamiStore/Services/CatalogService.cs`)
-- [ ] T017 [US5] Add "Meta mensual por defecto" number column (required) to `MariCamiStore/wwwroot/js/pages/configurations/index.js`; make the Configurations page surface the server validation error
+- [ ] T017 [US5] Add "Meta mensual por defecto" number column (required) to `MariCamiStore/wwwroot/js/pages/configurations/index.js`; make `MariCamiStore/Pages/Configurations/Index.cshtml.cs` `OnPostUpsertAsync` return the server validation error so the grid alerts it
 
 ## Phase 5: User Story 2 — Creación bajo demanda (P1)
 
@@ -46,7 +46,7 @@ Format: `- [ ] T### [P?] [US?] Description (path)` — `[P]` = can run in parall
 - [ ] T020 [US1] Implement `UpdateDayAsync` (actual and/or goal; validations FR-023/FR-026; recompute day %, master actual and %; return `GoalDto`) in `MariCamiStore/Services/SalesGoalService.cs`
 - [ ] T021 [US1] Create `MariCamiStore/Pages/SalesGoals/Current.cshtml.cs` (OrganizationPageModel guard; handlers `Salespeople`, `Goal`, `UpdateHeader`, `UpdateDay`; error → `{success:false,error}`)
 - [ ] T022 [US1] Create `MariCamiStore/Pages/SalesGoals/Current.cshtml` (salesperson combo, header card with highlighted Real/% and traffic-light "% al día de hoy", currency combo, goal input, detail table, empty-state message when no salespeople)
-- [ ] T023 [US1] Create `MariCamiStore/wwwroot/js/pages/sales-goals/current.js` (load first salesperson, render DTO, save-on-blur for goal/actual cells with inline error + revert, refresh whole view from returned DTO, semáforo classes, es-CR number format)
+- [ ] T023 [US1] Create `MariCamiStore/wwwroot/js/pages/sales-goals/current.js` (load first salesperson, render DTO, save-on-blur for goal/actual cells with inline error + revert, refresh whole view from returned DTO; when the server rejects a stale-month edit (FR-026) reload the vendor's goal so the screen shows the current month, semáforo classes, es-CR number format)
 - [ ] T024 [US1] Add Ventas → "Metas" nested treeview (Mes Actual, Histórico de metas) in `MariCamiStore/Pages/Shared/_Layout.cshtml` (keep menu-open/active behavior consistent with `layout.js`)
 
 ## Phase 7: User Story 3 — Ajustes de meta (P2)
