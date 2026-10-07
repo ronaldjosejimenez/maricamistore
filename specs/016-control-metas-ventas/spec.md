@@ -10,6 +10,20 @@
 
 ---
 
+## Clarifications
+
+### Session 2026-10-06
+
+- Q: ¿Se pueden digitar montos reales de cualquier día del mes actual, incluidos días futuros? → A: Sí, cualquier día del mes en curso es editable (el usuario puede registrar con atraso o adelantado); solo los meses anteriores son de solo lectura.
+- Q: ¿Con qué precisión se muestran los porcentajes? → A: Un decimal (ej. 87.5%), tanto en pantalla como al guardarse.
+- Q: ¿Cómo se marca que un día fue "ajustado manualmente"? → A: Un día se considera ajustado cuando su Monto Meta es distinto de su Monto Meta Propuesto; no se requiere un indicador separado visible. Si el usuario deja el Monto Meta igual al propuesto, el día vuelve a seguir los recálculos.
+- Q: ¿Qué granularidad de redondeo usa el algoritmo de distribución? → A: Múltiplos de 1 000 unidades de moneda (para la meta de 4 000 000 reproduce el estilo del Excel); el residuo se asigna al día con mayor peso. El valor es una constante del componente del algoritmo.
+- Q: ¿Qué moneda y formato tienen los montos del detalle? → A: La moneda de la meta (encabezado), con el mismo formato de moneda ya usado en el resto de la aplicación.
+- Q: ¿El "Monto real" del encabezado puede editarse directamente? → A: No; siempre es la suma de los reales del detalle.
+- Q: ¿Qué pasa si el usuario cambia de vendedor con cambios sin guardar? → A: Cada edición de monto se guarda de inmediato al salir del campo, por lo que no hay cambios pendientes al cambiar de vendedor.
+
+---
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Dar seguimiento diario a la meta del mes de un vendedor (Priority: P1)
