@@ -209,6 +209,24 @@
                                         <p>Órdenes</p>
                                     </a>
                                 </li>
+                                <li class="nav-item has-treeview">
+                                    <a href="#" class="nav-link" id="menuGoals">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Metas<i class="fas fa-angle-left right"></i></p>
+                                    </a>
+                                    <ul class="nav nav-treeview">
+                                        <li class="nav-item">
+                                            <a asp-page="/SalesGoals/Current" data-menu-group="menuGoals" class="nav-link">
+                                                <i class="far fa-dot-circle nav-icon"></i><p>Mes Actual</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a asp-page="/SalesGoals/History" data-menu-group="menuGoals" class="nav-link">
+                                                <i class="far fa-dot-circle nav-icon"></i><p>Histórico de metas</p>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
                             </ul>
                         </li>
                         <li class="nav-item has-treeview">
@@ -225,6 +243,11 @@
                                 <li class="nav-item">
                                     <a asp-page="/Suppliers/Index" data-menu-group="menuCatalogs" class="nav-link">
                                         <i class="far fa-circle nav-icon"></i><p>Proveedores</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-page="/Salespeople/Index" data-menu-group="menuCatalogs" class="nav-link">
+                                        <i class="far fa-circle nav-icon"></i><p>Vendedores</p>
                                     </a>
                                 </li>
                             </ul>
@@ -296,6 +319,9 @@
             menu.classList.add("active");
             document.getElementById(menu.dataset.menuGroup)?.classList?.add("active");
         });
+        if (currentPath.toLowerCase().startsWith("/salesgoals")) {
+            document.getElementById("menuGoals")?.parentElement?.classList?.add("menu-open");
+        }
     }
   </script>
   <script src="/js/layout.js" asp-append-version="true"></script>
