@@ -8,7 +8,7 @@ metadata:
 # Brainstorm: Control de Metas de Ventas
 
 **Date:** 2026-10-06
-**Status:** active
+**Status:** spec-created (specs/016-control-metas-ventas)
 
 ## Problem Framing
 

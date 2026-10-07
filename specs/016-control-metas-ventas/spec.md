@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-06
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: Brainstorm `brainstorm/16-control-metas-ventas.md` (requerimiento original en `requerimientos/control de metas.txt`).
 

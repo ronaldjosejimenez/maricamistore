@@ -21,7 +21,7 @@ Last updated: 2026-10-06
 | 13 | 2026-09-28 | paquetes-orden | spec-created | specs/013-paquetes-orden |
 | 14 | 2026-09-28 | cierre-mes-cxp | spec-created | specs/014-cierre-mes-cxp |
 | 15 | 2026-09-29 | filtro-organizacion-pagos | spec-created | specs/015-filtro-organizacion-pagos |
-| 16 | 2026-10-06 | control-metas-ventas | active | - |
+| 16 | 2026-10-06 | control-metas-ventas | spec-created | specs/016-control-metas-ventas |
 
 ## Open Threads
 
