@@ -1,6 +1,6 @@
 # Brainstorm Overview
 
-Last updated: 2026-09-28
+Last updated: 2026-10-07
 
 ## Sessions
 
@@ -21,6 +21,7 @@ Last updated: 2026-09-28
 | 13 | 2026-09-28 | paquetes-orden | spec-created | specs/013-paquetes-orden |
 | 14 | 2026-09-28 | cierre-mes-cxp | spec-created | specs/014-cierre-mes-cxp |
 | 15 | 2026-09-29 | filtro-organizacion-pagos | spec-created | specs/015-filtro-organizacion-pagos |
+| 16 | 2026-10-06 | control-metas-ventas | implemented | specs/016-control-metas-ventas |
 
 ## Open Threads
 
@@ -31,7 +32,6 @@ Last updated: 2026-09-28
 - ¿El modal "Reasignar" debe validar precio = 0 con confirmación explícita? (from #10)
 - ¿Los totales recalculados (TotalAgreedPriceInLocal, EstimatedProfitInLocal) se persisten inmediatamente o al siguiente guardado manual? (from #10)
 - `GetPeriodIndicatorsAsync` / `UpdatePeriodFieldsAsync` usan `FindAsync` (se salta el filtro de organización); revisar con la autenticación (from #14)
-
 
 ## Parked Ideas
 
