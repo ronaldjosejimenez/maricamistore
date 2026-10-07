@@ -35,7 +35,12 @@ namespace MariCamiStore.Infrastructure.Persistance.EntityConfigurations
             builder.Property(c => c.OrderCurrencyIdDefault)
                 .IsRequired();
 
-            builder.Property(c => c.ProductTypeIdDefault);           
+            builder.Property(c => c.ProductTypeIdDefault);
+
+            builder.Property(c => c.DefaultMonthlyGoal)
+                .IsRequired()
+                .HasColumnType("decimal(18,2)")
+                .HasDefaultValue(4000000m);
 
             builder.HasData(
                 new Configuration 
@@ -48,6 +53,7 @@ namespace MariCamiStore.Infrastructure.Persistance.EntityConfigurations
                     TaxPercentage = 7,
                     OrderCurrencyIdDefault = Guid.Parse("64B4D953-66D5-409E-929D-6036111FB711"),
                     ProductTypeIdDefault = Guid.Parse("73B4D953-66D5-409E-929D-6036111FB712"),
+                    DefaultMonthlyGoal = 4000000m,
                 });
 
             // Testing org config
@@ -62,6 +68,7 @@ namespace MariCamiStore.Infrastructure.Persistance.EntityConfigurations
                     TaxPercentage = 13,
                     OrderCurrencyIdDefault = Guid.Parse("63B4D953-66D5-409E-929D-6036111FB711"), // USD
                     ProductTypeIdDefault = null,
+                    DefaultMonthlyGoal = 4000000m,
                 });
         }
     }
