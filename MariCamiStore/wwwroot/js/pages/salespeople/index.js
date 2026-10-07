@@ -35,7 +35,15 @@ $(function () {
             { name: 'nickName', title: 'Apodo', type: 'text', width: 140 },
             { name: 'phoneNumber', title: 'Teléfono', type: 'text', width: 120 },
             { name: 'email', title: 'Email', type: 'text', width: 200 },
-            { name: 'isActive', title: 'Activo', type: 'checkbox', width: 70, insertValue: true },
+            {
+                name: 'isActive', title: 'Activo', type: 'checkbox', width: 70,
+                // insertValue is a method in jsGrid; new salespeople start active by pre-checking the insert control
+                insertTemplate: function () {
+                    var $control = jsGrid.fields.checkbox.prototype.insertTemplate.call(this);
+                    $control.prop('checked', true);
+                    return $control;
+                }
+            },
             { type: 'control', deleteButton: false }
         ]
     });
