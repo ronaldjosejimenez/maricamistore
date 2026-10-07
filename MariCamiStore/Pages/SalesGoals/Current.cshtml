@@ -85,7 +85,7 @@
                             <th>Fecha</th>
                             <th class="text-right">Propuesta</th>
                             <th class="text-right">Meta</th>
-                            <th>Ajustado</th>
+                            <th class="text-center">Ajustado</th>
                             <th class="text-right">Real</th>
                             <th class="text-right">% Cumplimiento</th>
                         </tr>
@@ -102,7 +102,9 @@
     .goal-yellow { background-color: #ffc107 !important; color: #212529; }
     .goal-green { background-color: #28a745 !important; color: #fff; }
     #days-table tr.today-row { font-weight: bold; background-color: #e9f5ff; }
-    #days-table input.cell-input { width: 130px; text-align: right; }
+    #days-table th, #days-table td { vertical-align: middle; }
+    #days-table th.text-center, #days-table td.text-center { text-align: center; }
+    #days-table input.cell-input { width: 140px; text-align: right; margin-left: auto; }
     #days-table input.cell-error { border-color: #dc3545; }
 </style>
 

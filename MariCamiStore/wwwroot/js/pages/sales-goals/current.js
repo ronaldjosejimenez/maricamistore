@@ -67,7 +67,7 @@ function render(goal) {
         $tr.append($('<td>').text(d.date));
         $tr.append($('<td class="text-right">').text(fmt(d.proposedAmount)));
         $tr.append($('<td class="text-right">').append(cellInput(d, 'goalAmount')));
-        $tr.append($('<td>').html(adjusted ? '<span class="badge badge-warning">Ajustado</span>' : ''));
+        $tr.append($('<td class="text-center">').html(adjusted ? '<span class="badge badge-warning">Ajustado</span>' : ''));
         $tr.append($('<td class="text-right">').append(cellInput(d, 'actualAmount')));
         $tr.append($('<td class="text-right">').text(fmtPct(d.compliancePercentage)));
         $tbody.append($tr);
