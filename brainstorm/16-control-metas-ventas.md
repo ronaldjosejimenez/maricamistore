@@ -93,5 +93,5 @@ Enfoque **A**. El algoritmo de distribución queda **en duro en el código pero 
 - Algoritmo: pesos por (día de la semana, n-ésima ocurrencia en el mes) copiados del Excel; octubre 2026 @ 4 000 000 reproduce el Excel exacto. Redondeo a ₡1 000, residuo al día de mayor peso. Pendiente: más meses de ejemplo para afinar (5.ª ocurrencia de dom/lun/mar/mié repite la 4.ª).
 - % al día de hoy con meta diaria acumulada 0 → 0%.
 - Metas del mismo vendedor en varias organizaciones: una por vendedor + mes + año + organización.
-- Histórico: lista por vendedor (todas las organizaciones no; solo la de la sesión) con detalle de solo lectura.
+- Histórico: lista por vendedor de la organización de la sesión con detalle de solo lectura.
 - Añadido: franja de aviso en Mes Actual cuando las metas diarias no suman la meta del mes.
