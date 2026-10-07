@@ -17,10 +17,17 @@ public class IndexModel(ICatalogService catalogService, ICurrentOrganizationServ
         var list = config == null ? Array.Empty<Configuration>() : new[] { config };
         return new JsonResult(list);
     }
-    public async Task<JsonResult> OnPostUpsertAsync([FromBody] Configuration item)
+    public async Task<IActionResult> OnPostUpsertAsync([FromBody] Configuration item)
     {
-        var result = await catalogService.UpsertConfigurationAsync(item);
-        return new JsonResult(result);
+        try
+        {
+            var result = await catalogService.UpsertConfigurationAsync(item);
+            return new JsonResult(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { success = false, error = ex.Message });
+        }
     }
 }
 

@@ -48,6 +48,9 @@ public class CatalogService(
 
     public async Task<Configuration> UpsertConfigurationAsync(Configuration input)
     {
+        if (input.DefaultMonthlyGoal <= 0)
+            throw new ArgumentException("La meta mensual por defecto debe ser mayor a cero.");
+
         var existing = await context.Configurations.FirstOrDefaultAsync();
         if (existing == null)
         {
@@ -63,6 +66,7 @@ public class CatalogService(
             existing.LocalCurrencyId = input.LocalCurrencyId;
             existing.OrderCurrencyIdDefault = input.OrderCurrencyIdDefault;
             existing.ProductTypeIdDefault = input.ProductTypeIdDefault;
+            existing.DefaultMonthlyGoal = input.DefaultMonthlyGoal;
         }
         await context.SaveChangesAsync();
         return existing ?? input;
@@ -165,5 +169,34 @@ public class CatalogService(
             context.Customers.Remove(entity);
             await context.SaveChangesAsync();
         }
+    }
+
+    // ── Salespeople (global, no hard delete) ──────────────────────────────────
+
+    public Task<List<Salesperson>> GetSalespeopleAsync() =>
+        context.Salespeople.OrderBy(s => s.Name).ToListAsync();
+
+    public Task<List<Salesperson>> GetActiveSalespeopleAsync() =>
+        context.Salespeople.Where(s => s.IsActive).OrderBy(s => s.Name).ToListAsync();
+
+    public async Task<Salesperson> CreateSalespersonAsync(Salesperson salesperson)
+    {
+        if (string.IsNullOrWhiteSpace(salesperson.Name))
+            throw new ArgumentException("El nombre es requerido.");
+        salesperson.Id = Guid.NewGuid();
+        salesperson.Name = salesperson.Name.Trim();
+        context.Salespeople.Add(salesperson);
+        await context.SaveChangesAsync();
+        return salesperson;
+    }
+
+    public async Task<Salesperson> UpdateSalespersonAsync(Salesperson salesperson)
+    {
+        if (string.IsNullOrWhiteSpace(salesperson.Name))
+            throw new ArgumentException("El nombre es requerido.");
+        salesperson.Name = salesperson.Name.Trim();
+        context.Salespeople.Update(salesperson);
+        await context.SaveChangesAsync();
+        return salesperson;
     }
 }
