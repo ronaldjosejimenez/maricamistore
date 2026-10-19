@@ -205,7 +205,6 @@ function openViewItem(item) {
     openEditItem(item);
     $('#item-modal-title').text('Ver Ítem');
     $('#itemModal .modal-body').find('input, select, textarea').prop('disabled', true);
-    $('#item-customer').prop('disabled', true);
     $('#btn-save-item').hide();
     $('#btn-cancel-item').text('Cerrar');
 }
@@ -214,7 +213,6 @@ function openViewItem(item) {
 function restoreItemModalEditable() {
     itemViewMode = false;
     $('#itemModal .modal-body').find('input, select, textarea').not('#item-product-type').prop('disabled', false);
-    $('#item-customer').prop('disabled', false);
     // Keep the product type disabled when it only holds the "no types for this currency" option
     var ptSel = $('#item-product-type');
     var noTypes = ptSel.children('option').length > 0 && ptSel.children('option:not(:disabled)').length === 0;
@@ -738,7 +736,13 @@ $(function () {
         var tbody = $('#history-table tbody');
         tbody.empty();
         data.forEach(function (h) {
-            tbody.append('<tr><td>' + h.transitionDate.substr(0, 10) + '</td><td>' + (statusLabels[h.fromStatus] || h.fromStatus) + '</td><td>' + (statusLabels[h.toStatus] || h.toStatus) + '</td><td>' + (h.notes || '') + '</td><td>' + (h.justification || '') + '</td></tr>');
+            // Build cells as text nodes: notes/justification are free user text (avoid stored XSS)
+            tbody.append($('<tr>').append(
+                $('<td>').text((h.transitionDate || '').substr(0, 10)),
+                $('<td>').text(statusLabels[h.fromStatus] || h.fromStatus),
+                $('<td>').text(statusLabels[h.toStatus] || h.toStatus),
+                $('<td>').text(h.notes || ''),
+                $('<td>').text(h.justification || '')));
         });
     });
 });

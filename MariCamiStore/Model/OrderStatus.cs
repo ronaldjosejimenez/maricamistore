@@ -24,6 +24,16 @@ public class OrderStatus : Enumeration
     /// <returns>An enumerator that allows foreach to be used to process the matched items.</returns>
     public static IEnumerable<OrderStatus> List() => new[] { Pending, Active, Delivering, Completed, Voided };
 
+    /// <summary>Gets the display label for a status key without throwing on unknown keys.</summary>
+    /// <param name="key">The status key.</param>
+    /// <returns>
+    /// The status name; "Entregada" for the removed legacy key <c>Delivered</c> (spec 017); otherwise the raw key.
+    /// Used for display so a stray key (e.g. data not yet migrated) never breaks a page.
+    /// </returns>
+    public static string LabelFor(string key) =>
+        List().SingleOrDefault(s => s.Key == key)?.Name
+        ?? (key == "Delivered" ? "Entregada" : key);
+
     /// <summary>Gets the status keys selected by default in the orders filter.</summary>
     public static IReadOnlyList<string> DefaultFilterKeys => new[] { Pending.Key, Active.Key };
 
