@@ -22,7 +22,7 @@ Last updated: 2026-10-19
 | 14 | 2026-09-28 | cierre-mes-cxp | spec-created | specs/014-cierre-mes-cxp |
 | 15 | 2026-09-29 | filtro-organizacion-pagos | spec-created | specs/015-filtro-organizacion-pagos |
 | 16 | 2026-10-06 | control-metas-ventas | implemented | specs/016-control-metas-ventas |
-| 17 | 2026-10-19 | ajustes-ordenes-metas-clientes | active | - |
+| 17 | 2026-10-19 | ajustes-ordenes-metas-clientes | spec-created | specs/017-ajustes-ordenes-metas-clientes |
 
 ## Open Threads
 

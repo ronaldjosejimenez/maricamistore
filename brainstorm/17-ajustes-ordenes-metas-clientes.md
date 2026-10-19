@@ -8,7 +8,7 @@ metadata:
 # Brainstorm: Ajustes en Órdenes, Metas y Clientes
 
 **Date:** 2026-10-19
-**Status:** active
+**Status:** spec-created (specs/017-ajustes-ordenes-metas-clientes)
 
 ## Problem Framing
 
