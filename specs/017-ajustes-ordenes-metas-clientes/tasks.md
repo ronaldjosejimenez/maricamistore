@@ -34,14 +34,14 @@ None. The stories share no blocking prerequisites.
 - [ ] T006 [US1] Create the data-only EF migration `RemoveDeliveredOrderStatus` in `MariCamiStore/Infrastructure/Persistance/Migrations/`. Generate it with `dotnet ef migrations add RemoveDeliveredOrderStatus` from `MariCamiStore/`; the model snapshot must be unchanged.
   - `Up`: the `migrationBuilder.Sql` from plan.md (INSERT into `dbo.OrderStatusHistory` with Notes `N'Migración automática: el estado Entregada fue eliminado (spec 017).'`, then UPDATE `dbo.Orders` Delivered → Completed with `UpdatedAt = SYSUTCDATETIME()`).
   - `Down`: empty, with a comment saying it is an irreversible data fix.
+  - For the production run, generate an idempotent script with `dotnet ef migrations script --idempotent` (see the deploy-order note in plan.md).
 - [ ] T007 [US1] In `MariCamiStore/wwwroot/js/pages/orders/items.js`:
   - (a) L199: `var isDelivering = orderStatus === 'Delivering';`
   - (b) History rendering (~L704): map `fromStatus`/`toStatus` through a `statusLabels` map `{ Pending:'Pendiente', Active:'Activa', Delivering:'Entregando', Delivered:'Entregada', Completed:'Completada', Voided:'Anulada' }`, falling back to the raw key.
 - [ ] T008 [US1] In `MariCamiStore/wwwroot/js/pages/orders/items.js`:
-  - Add `openViewItem(item)`. It calls `openEditItem(item)`, sets `#item-modal-title` to "Ver Ítem", disables every `input, select, textarea` inside `#itemModal .modal-body` (including select2 `#item-customer` via `.prop('disabled', true)` and `#item-product-type` again after its async load), hides `#btn-save-item`, and changes the footer Cancel button text to "Cerrar".
+  - Add `openViewItem(item)`. It calls `openEditItem(item)`, sets `#item-modal-title` to "Ver Ítem", disables every `input, select, textarea` inside `#itemModal .modal-body` (including select2 `#item-customer` via `.prop('disabled', true)` and `#item-product-type` again after its async load), hides `#btn-save-item`, and changes the Cancel button text to "Cerrar". In `MariCamiStore/Pages/Orders/Items.cshtml` (~L310) add `id="btn-cancel-item"` to the item modal's Cancel button and target it by that id.
   - On `#itemModal` `hidden.bs.modal`, restore the enabled state (respecting the product-type "no types" case), Save visibility, and the "Cancelar" text.
   - In row rendering (~L275), when `!isPending` add `<button class="btn btn-xs btn-info mr-1">Ver</button>` calling `openViewItem(item)` before "Ver Img". Keep "Ver Img" and "Reasignar" unchanged.
-  - Make sure the `#item-customer` options are populated outside Pending; if the customer load or select2 init is Pending-only, run it for all statuses.
 - [ ] T009 [US1] Grep the repo (`*.cs`, `*.cshtml`, `*.js`, excluding Migrations) for remaining `Delivered` references to order status (not `OrderItemStatus`, not `CxPEntryType.AutoDelivered`), fix any leftovers, and run `dotnet build`.
 
 **Checkpoint**: US1 is complete and verifiable via quickstart §1.
@@ -57,7 +57,7 @@ None. The stories share no blocking prerequisites.
 - [ ] T010 [P] [US2] Create `MariCamiStore/Services/SalesGoalCommission.cs`: a static class with `For(decimal basePercentage)` returning `(decimal Rate, string Status)`: `< 85 → (0,"red")`, `< 86 → (2.5m,"yellow")`, `<= 110 → (5,"green")`, else `(6,"green-plus")`. Add `Amount(decimal actual, decimal rate)` returning `Math.Max(0, Math.Round(actual * rate / 100m, 2, MidpointRounding.AwayFromZero))`. Use XML doc comments like the other services.
 - [ ] T011 [US2] In `MariCamiStore/Services/ISalesGoalService.cs` append `decimal CommissionRate, decimal CommissionAmount, string CommissionStatus` to the `GoalDto` and `HistoryRowDto` records.
 - [ ] T012 [US2] In `MariCamiStore/Services/SalesGoalService.cs`:
-  - Extract the "% al día de hoy" computation (~L207-216) into a private static helper reused everywhere.
+  - Extract `private static decimal TodayPercentage(SalesGoal goal, <today type used in BuildDto> today)` from `BuildDto` (~L209-212) and call it from both `BuildDto` and `GetHistoryAsync`.
   - When building `GoalDto`, set the base = `todayPercentage` if `isCurrent`, else `goal.CompliancePercentage`, and fill the commission fields via `SalesGoalCommission`.
   - In `GetHistoryAsync`, keep the projection, then for the row matching the current Costa Rica year/month load that goal's days and compute today %. Set the commission fields for every row (current → today %, others → `CompliancePercentage`, amount from `ActualAmount`).
   - Fix every other `new GoalDto(`/`new HistoryRowDto(` call site so it compiles.
@@ -68,8 +68,8 @@ None. The stories share no blocking prerequisites.
 - [ ] T014 [US2] In `MariCamiStore/wwwroot/js/pages/sales-goals/current.js` render the commission next to `#today-total`:
   - Text `fmtPct(goal.commissionRate)` and `'(' + sign + ' ' + fmt(goal.commissionAmount) + ')'`.
   - On the closest `.info-box`, remove `goal-red goal-yellow goal-green goal-highlight bg-light`, then add the class for `commissionStatus` (`red → goal-red`, `yellow → goal-yellow`, `green → goal-green`, `green-plus → goal-green goal-highlight`).
-- [ ] T015 [P] [US2] In `MariCamiStore/Pages/SalesGoals/History.cshtml` add `<th class="text-right">% Comisión</th>` after "% Cumplimiento" in `#history-table`, and add the same `.goal-highlight` CSS (or a badge variant) for the highlighted state.
-- [ ] T016 [US2] In `MariCamiStore/wwwroot/js/pages/sales-goals/history.js` (~L25) add a cell after compliance containing a badge with `fmtPct(r.commissionRate)` (`badge-danger`/`badge-warning`/`badge-success`; `green-plus` adds the highlight class) followed by `<small> (sign amount)</small>`, using the existing `fmt` helper (add one matching current.js if absent).
+- [ ] T015 [P] [US2] In `MariCamiStore/Pages/SalesGoals/History.cshtml` add `<th class="text-right">% Comisión</th>` after "% Cumplimiento" in `#history-table`, and add the same `.goal-highlight` rule as Current.cshtml for the highlighted state.
+- [ ] T016 [US2] In `MariCamiStore/wwwroot/js/pages/sales-goals/history.js` (~L25) add a cell after compliance containing a badge with `fmtPct(r.commissionRate)` (`badge-danger`/`badge-warning`/`badge-success`; `green-plus` adds the highlight class) followed by `<small> (sign amount)</small>`, using the existing `fmt` helper.
 
 **Checkpoint**: US2 is complete and verifiable via quickstart §2.
 

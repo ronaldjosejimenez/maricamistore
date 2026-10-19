@@ -6,7 +6,7 @@ cd MariCamiStore
 dotnet build
 dotnet ef database update     # applies RemoveDeliveredOrderStatus
 ```
-Before deploying to production, count the affected orders: `SELECT COUNT(*) FROM dbo.Orders WHERE Status='Delivered';`
+**Deploy order:** apply the migration to production (`dotnet ef migrations script --idempotent`) before or together with the code; `OrderStatus.FromKey` throws on any order still in `Delivered`. Before deploying to production, count the affected orders: `SELECT COUNT(*) FROM dbo.Orders WHERE Status='Delivered';`
 
 ## 1. Órdenes
 1. After the migration: `SELECT COUNT(*) FROM dbo.Orders WHERE Status='Delivered'` → 0. Each previously Delivered order has a new history row containing "Migración automática".
