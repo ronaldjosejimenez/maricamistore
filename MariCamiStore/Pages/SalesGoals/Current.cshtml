@@ -47,7 +47,7 @@
                     </div>
                 </div>
                 <div class="row text-center">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="info-box bg-light">
                             <div class="info-box-content">
                                 <span class="info-box-text">Real</span>
@@ -55,7 +55,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="info-box bg-light">
                             <div class="info-box-content">
                                 <span class="info-box-text">% de cumplimiento</span>
@@ -63,11 +63,19 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="info-box bg-light">
                             <div class="info-box-content">
                                 <span class="info-box-text">% al día de hoy</span>
                                 <span class="info-box-number" id="today-total" style="font-size:1.6rem;">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-box bg-light">
+                            <div class="info-box-content">
+                                <span class="info-box-text">% de Comisión</span>
+                                <span class="info-box-number"><span id="commission-total" style="font-size:1.6rem;">0%</span> <small id="commission-amount"></small></span>
                             </div>
                         </div>
                     </div>
@@ -101,6 +109,7 @@
     .goal-red { background-color: #dc3545 !important; color: #fff; }
     .goal-yellow { background-color: #ffc107 !important; color: #212529; }
     .goal-green { background-color: #28a745 !important; color: #fff; }
+    .goal-highlight { box-shadow: 0 0 0 3px #155724, 0 0 12px rgba(40,167,69,.8); }
     #days-table tr.today-row { font-weight: bold; background-color: #e9f5ff; }
     #days-table th, #days-table td { vertical-align: middle; }
     #days-table th.text-center, #days-table td.text-center { text-align: center; }

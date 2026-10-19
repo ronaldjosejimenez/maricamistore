@@ -54,22 +54,22 @@ None. The stories share no blocking prerequisites.
 
 **Independent Test**: quickstart §2.
 
-- [ ] T010 [P] [US2] Create `MariCamiStore/Services/SalesGoalCommission.cs`: a static class with `For(decimal basePercentage)` returning `(decimal Rate, string Status)`: `< 85 → (0,"red")`, `< 86 → (2.5m,"yellow")`, `<= 110 → (5,"green")`, else `(6,"green-plus")`. Add `Amount(decimal actual, decimal rate)` returning `Math.Max(0, Math.Round(actual * rate / 100m, 2, MidpointRounding.AwayFromZero))`. Use XML doc comments like the other services.
-- [ ] T011 [US2] In `MariCamiStore/Services/ISalesGoalService.cs` append `decimal CommissionRate, decimal CommissionAmount, string CommissionStatus` to the `GoalDto` and `HistoryRowDto` records.
-- [ ] T012 [US2] In `MariCamiStore/Services/SalesGoalService.cs`:
+- [X] T010 [P] [US2] Create `MariCamiStore/Services/SalesGoalCommission.cs`: a static class with `For(decimal basePercentage)` returning `(decimal Rate, string Status)`: `< 85 → (0,"red")`, `< 86 → (2.5m,"yellow")`, `<= 110 → (5,"green")`, else `(6,"green-plus")`. Add `Amount(decimal actual, decimal rate)` returning `Math.Max(0, Math.Round(actual * rate / 100m, 2, MidpointRounding.AwayFromZero))`. Use XML doc comments like the other services.
+- [X] T011 [US2] In `MariCamiStore/Services/ISalesGoalService.cs` append `decimal CommissionRate, decimal CommissionAmount, string CommissionStatus` to the `GoalDto` and `HistoryRowDto` records.
+- [X] T012 [US2] In `MariCamiStore/Services/SalesGoalService.cs`:
   - Extract `private static decimal TodayPercentage(SalesGoal goal, <today type used in BuildDto> today)` from `BuildDto` (~L209-212) and call it from both `BuildDto` and `GetHistoryAsync`.
   - When building `GoalDto`, set the base = `todayPercentage` if `isCurrent`, else `goal.CompliancePercentage`, and fill the commission fields via `SalesGoalCommission`.
   - In `GetHistoryAsync`, keep the projection, then for the row matching the current Costa Rica year/month load that goal's days and compute today %. Set the commission fields for every row (current → today %, others → `CompliancePercentage`, amount from `ActualAmount`).
   - Fix every other `new GoalDto(`/`new HistoryRowDto(` call site so it compiles.
-- [ ] T013 [P] [US2] In `MariCamiStore/Pages/SalesGoals/Current.cshtml`:
+- [X] T013 [P] [US2] In `MariCamiStore/Pages/SalesGoals/Current.cshtml`:
   - Change the summary row to four `col-md-3` info-boxes.
   - Add a box with `<span class="info-box-text">% de Comisión</span>` and `<span class="info-box-number" id="commission-total" style="font-size:1.6rem;">0%</span> <small id="commission-amount"></small>`.
   - Add the CSS `.goal-highlight { box-shadow: 0 0 0 3px #155724, 0 0 12px rgba(40,167,69,.8); }`.
-- [ ] T014 [US2] In `MariCamiStore/wwwroot/js/pages/sales-goals/current.js` render the commission next to `#today-total`:
+- [X] T014 [US2] In `MariCamiStore/wwwroot/js/pages/sales-goals/current.js` render the commission next to `#today-total`:
   - Text `fmtPct(goal.commissionRate)` and `'(' + sign + ' ' + fmt(goal.commissionAmount) + ')'`.
   - On the closest `.info-box`, remove `goal-red goal-yellow goal-green goal-highlight bg-light`, then add the class for `commissionStatus` (`red → goal-red`, `yellow → goal-yellow`, `green → goal-green`, `green-plus → goal-green goal-highlight`).
-- [ ] T015 [P] [US2] In `MariCamiStore/Pages/SalesGoals/History.cshtml` add `<th class="text-right">% Comisión</th>` after "% Cumplimiento" in `#history-table`, and add the same `.goal-highlight` rule as Current.cshtml for the highlighted state.
-- [ ] T016 [US2] In `MariCamiStore/wwwroot/js/pages/sales-goals/history.js` (~L25) add a cell after compliance containing a badge with `fmtPct(r.commissionRate)` (`badge-danger`/`badge-warning`/`badge-success`; `green-plus` adds the highlight class) followed by `<small> (sign amount)</small>`, using the existing `fmt` helper.
+- [X] T015 [P] [US2] In `MariCamiStore/Pages/SalesGoals/History.cshtml` add `<th class="text-right">% Comisión</th>` after "% Cumplimiento" in `#history-table`, and add the same `.goal-highlight` rule as Current.cshtml for the highlighted state.
+- [X] T016 [US2] In `MariCamiStore/wwwroot/js/pages/sales-goals/history.js` (~L25) add a cell after compliance containing a badge with `fmtPct(r.commissionRate)` (`badge-danger`/`badge-warning`/`badge-success`; `green-plus` adds the highlight class) followed by `<small> (sign amount)</small>`, using the existing `fmt` helper.
 
 **Checkpoint**: US2 is complete and verifiable via quickstart §2.
 

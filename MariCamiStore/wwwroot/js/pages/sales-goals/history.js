@@ -9,6 +9,15 @@ function fmtPct(n) {
     return Number(n || 0).toLocaleString('es-CR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 }
 
+// Badge classes for a commission status; green-plus (> 110%) adds the highlighted frame.
+function commissionBadgeClass(status) {
+    if (status === 'red') return 'badge badge-danger';
+    if (status === 'yellow') return 'badge badge-warning';
+    if (status === 'green') return 'badge badge-success';
+    if (status === 'green-plus') return 'badge badge-success goal-highlight';
+    return 'badge badge-secondary';
+}
+
 function loadList(salespersonId) {
     $('#history-detail-card').hide();
     $('#history-list-card').show();
@@ -23,6 +32,9 @@ function loadList(salespersonId) {
             $tr.append($('<td class="text-right">').text(r.currencySign + ' ' + fmt(r.goalAmount)));
             $tr.append($('<td class="text-right">').text(r.currencySign + ' ' + fmt(r.actualAmount)));
             $tr.append($('<td class="text-right">').text(fmtPct(r.compliancePercentage)));
+            $tr.append($('<td class="text-right">')
+                .append($('<span>').addClass(commissionBadgeClass(r.commissionStatus)).text(fmtPct(r.commissionRate)))
+                .append($('<small>').text(' (' + r.currencySign + ' ' + fmt(r.commissionAmount) + ')')));
             $tr.append($('<td class="text-right">').append(
                 $('<button class="btn btn-xs btn-info">Ver detalle</button>').on('click', function () {
                     loadDetail(r.id);

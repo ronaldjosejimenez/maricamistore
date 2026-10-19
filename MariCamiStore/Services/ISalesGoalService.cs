@@ -23,7 +23,10 @@ public record GoalDto(
     decimal TodayPercentage,
     string TodayStatus,
     bool IsCurrentMonth,
-    List<GoalDayDto> Days)
+    List<GoalDayDto> Days,
+    decimal CommissionRate,
+    decimal CommissionAmount,
+    string CommissionStatus)
 {
     public bool Success => true;
 }
@@ -35,7 +38,10 @@ public record HistoryRowDto(
     decimal GoalAmount,
     decimal ActualAmount,
     decimal CompliancePercentage,
-    string CurrencySign);
+    string CurrencySign,
+    decimal CommissionRate,
+    decimal CommissionAmount,
+    string CommissionStatus);
 
 public record UpdateHeaderRequest(Guid GoalId, decimal GoalAmount, Guid CurrencyId);
 

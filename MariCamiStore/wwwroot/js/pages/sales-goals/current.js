@@ -41,6 +41,12 @@ function statusClass(status) {
     return '';
 }
 
+// Info-box classes for a commission status; green-plus (> 110%) adds the highlighted frame.
+function commissionClass(status) {
+    if (status === 'green-plus') return 'goal-green goal-highlight';
+    return statusClass(status);
+}
+
 function render(goal) {
     currentGoal = goal;
     clearError();
@@ -55,6 +61,10 @@ function render(goal) {
     $('#today-total').text(fmtPct(goal.todayPercentage))
         .closest('.info-box').removeClass('goal-red goal-yellow goal-green bg-light')
         .addClass(statusClass(goal.todayStatus) || 'bg-light');
+    $('#commission-total').text(fmtPct(goal.commissionRate));
+    $('#commission-amount').text('(' + sign + ' ' + fmt(goal.commissionAmount) + ')')
+        .closest('.info-box').removeClass('goal-red goal-yellow goal-green goal-highlight bg-light')
+        .addClass(commissionClass(goal.commissionStatus) || 'bg-light');
 
     renderDistributionBanner(goal, sign);
 
