@@ -89,8 +89,7 @@ public class IndexModel(IOrderService orderService, ICatalogService catalogServi
     {
         "Pending"    => ["Active"],
         "Active"     => ["Delivering", "Voided"],
-        "Delivering" => ["Delivered", "Voided"],
-        "Delivered"  => ["Completed", "Voided"],
+        "Delivering" => ["Completed", "Voided"],
         "Completed"  => [], // final: a completed order cannot be voided
         _            => []
     };

@@ -8,6 +8,10 @@ var selectedImageBase64 = null;
 var customerItems = [];
 var currentItems = [];
 var reasignarCustomers = [];
+var itemViewMode = false;
+
+// Spanish labels for order status keys (includes the legacy 'Delivered' for old history rows).
+var statusLabels = { Pending: 'Pendiente', Active: 'Activa', Delivering: 'Entregando', Delivered: 'Entregada', Completed: 'Completada', Voided: 'Anulada' };
 
 function ajaxPost(handler, data, done, fail) {
     $.ajax({
@@ -179,6 +183,7 @@ function openEditItem(item) {
                 data.forEach(function (p) { ptSel.append($('<option>').val(p.id).text(p.name)); });
                 ptSel.val(item.productTypeId);
             }
+            if (itemViewMode) ptSel.prop('disabled', true);
         });
     }
 
@@ -194,9 +199,33 @@ function openEditItem(item) {
     $('#itemModal').modal('show');
 }
 
+// openViewItem: shows the item modal in read-only mode (orders outside Pending)
+function openViewItem(item) {
+    itemViewMode = true;
+    openEditItem(item);
+    $('#item-modal-title').text('Ver Ítem');
+    $('#itemModal .modal-body').find('input, select, textarea').prop('disabled', true);
+    $('#item-customer').prop('disabled', true);
+    $('#btn-save-item').hide();
+    $('#btn-cancel-item').text('Cerrar');
+}
+
+// Restores the item modal to its editable state after a read-only view
+function restoreItemModalEditable() {
+    itemViewMode = false;
+    $('#itemModal .modal-body').find('input, select, textarea').not('#item-product-type').prop('disabled', false);
+    $('#item-customer').prop('disabled', false);
+    // Keep the product type disabled when it only holds the "no types for this currency" option
+    var ptSel = $('#item-product-type');
+    var noTypes = ptSel.children('option').length > 0 && ptSel.children('option:not(:disabled)').length === 0;
+    ptSel.prop('disabled', noTypes);
+    $('#btn-save-item').show();
+    $('#btn-cancel-item').text('Cancelar');
+}
+
 // ── Custom Table Rendering ────────────────────────────────────────────────────
 
-var isDelivering = orderStatus === 'Delivering' || orderStatus === 'Delivered';
+var isDelivering = orderStatus === 'Delivering';
 
 function renderItemsTable(items) {
     currentItems = items || [];
@@ -276,6 +305,9 @@ function renderItemsTable(items) {
             if (isPending) {
                 $('<button class="btn btn-xs btn-info mr-1">Editar</button>')
                     .on('click', function () { openEditItem(item); }).appendTo($btnTd);
+            } else {
+                $('<button class="btn btn-xs btn-info mr-1">Ver</button>')
+                    .on('click', function () { openViewItem(item); }).appendTo($btnTd);
             }
             if (item.hasImage) {
                 $('<button class="btn btn-xs btn-secondary mr-1">Ver Img</button>')
@@ -474,6 +506,11 @@ $(function () {
         customerItems.forEach(function (c) {
             sel.append($('<option>').val(c.id).text(c.nickName || c.name));
         });
+    });
+
+    // Read-only "Ver" mode must not leak into later add/edit flows
+    $('#itemModal').on('hidden.bs.modal', function () {
+        if (itemViewMode) restoreItemModalEditable();
     });
 
     // T020: Agregar Ítem button
@@ -701,7 +738,7 @@ $(function () {
         var tbody = $('#history-table tbody');
         tbody.empty();
         data.forEach(function (h) {
-            tbody.append('<tr><td>' + h.transitionDate.substr(0, 10) + '</td><td>' + h.fromStatus + '</td><td>' + h.toStatus + '</td><td>' + (h.notes || '') + '</td><td>' + (h.justification || '') + '</td></tr>');
+            tbody.append('<tr><td>' + h.transitionDate.substr(0, 10) + '</td><td>' + (statusLabels[h.fromStatus] || h.fromStatus) + '</td><td>' + (statusLabels[h.toStatus] || h.toStatus) + '</td><td>' + (h.notes || '') + '</td><td>' + (h.justification || '') + '</td></tr>');
         });
     });
 });

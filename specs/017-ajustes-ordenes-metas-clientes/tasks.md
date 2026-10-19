@@ -10,7 +10,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirm the solution builds before changes: run `dotnet build` in `MariCamiStore/` and note any pre-existing warnings
+- [X] T001 Confirm the solution builds before changes: run `dotnet build` in `MariCamiStore/` and note any pre-existing warnings
 
 ## Phase 2: Foundational
 
@@ -24,25 +24,25 @@ None. The stories share no blocking prerequisites.
 
 **Independent Test**: quickstart §1.
 
-- [ ] T002 [US1] In `MariCamiStore/Model/OrderStatus.cs` delete the `Delivered` static field and remove it from `List()`. Keep XML doc comment style, and remove any now-unused references.
-- [ ] T003 [US1] In `MariCamiStore/Services/OrderService.cs`:
+- [X] T002 [US1] In `MariCamiStore/Model/OrderStatus.cs` delete the `Delivered` static field and remove it from `List()`. Keep XML doc comment style, and remove any now-unused references.
+- [X] T003 [US1] In `MariCamiStore/Services/OrderService.cs`:
   - `ValidateTransition`: make the allowed map `Active → [Delivering, Voided]`, `Delivering → [Completed, Voided]`, `Completed → []` and drop the `Delivered` entry. Keep the existing message `Transición 'X' → 'Y' no permitida.`
   - Receipt check (~L169): allow only `OrderStatus.Delivering`, with the message `"Solo se puede marcar recepción en órdenes en estado Entregando."`
   - `ReasignarItemAsync` allowed list: `Active, Delivering, Completed`.
-- [ ] T004 [P] [US1] In `MariCamiStore/Pages/Orders/Index.cshtml.cs` update the next-status map (~L90): `"Delivering" => ["Completed", "Voided"]` and remove the `"Delivered"` entry.
-- [ ] T005 [P] [US1] In `MariCamiStore/wwwroot/js/pages/orders/index.js` (~L85) set the labels to `{ Active: 'Activar', Delivering: 'Iniciar entrega', Completed: 'Completar', Voided: 'Anular' }`.
-- [ ] T006 [US1] Create the data-only EF migration `RemoveDeliveredOrderStatus` in `MariCamiStore/Infrastructure/Persistance/Migrations/`. Generate it with `dotnet ef migrations add RemoveDeliveredOrderStatus` from `MariCamiStore/`; the model snapshot must be unchanged.
+- [X] T004 [P] [US1] In `MariCamiStore/Pages/Orders/Index.cshtml.cs` update the next-status map (~L90): `"Delivering" => ["Completed", "Voided"]` and remove the `"Delivered"` entry.
+- [X] T005 [P] [US1] In `MariCamiStore/wwwroot/js/pages/orders/index.js` (~L85) set the labels to `{ Active: 'Activar', Delivering: 'Iniciar entrega', Completed: 'Completar', Voided: 'Anular' }`.
+- [X] T006 [US1] Create the data-only EF migration `RemoveDeliveredOrderStatus` in `MariCamiStore/Infrastructure/Persistance/Migrations/`. Generate it with `dotnet ef migrations add RemoveDeliveredOrderStatus` from `MariCamiStore/`; the model snapshot must be unchanged.
   - `Up`: the `migrationBuilder.Sql` from plan.md (INSERT into `dbo.OrderStatusHistory` with Notes `N'Migración automática: el estado Entregada fue eliminado (spec 017).'`, then UPDATE `dbo.Orders` Delivered → Completed with `UpdatedAt = SYSUTCDATETIME()`).
   - `Down`: empty, with a comment saying it is an irreversible data fix.
   - For the production run, generate an idempotent script with `dotnet ef migrations script --idempotent` (see the deploy-order note in plan.md).
-- [ ] T007 [US1] In `MariCamiStore/wwwroot/js/pages/orders/items.js`:
+- [X] T007 [US1] In `MariCamiStore/wwwroot/js/pages/orders/items.js`:
   - (a) L199: `var isDelivering = orderStatus === 'Delivering';`
   - (b) History rendering (~L704): map `fromStatus`/`toStatus` through a `statusLabels` map `{ Pending:'Pendiente', Active:'Activa', Delivering:'Entregando', Delivered:'Entregada', Completed:'Completada', Voided:'Anulada' }`, falling back to the raw key.
-- [ ] T008 [US1] In `MariCamiStore/wwwroot/js/pages/orders/items.js`:
+- [X] T008 [US1] In `MariCamiStore/wwwroot/js/pages/orders/items.js`:
   - Add `openViewItem(item)`. It calls `openEditItem(item)`, sets `#item-modal-title` to "Ver Ítem", disables every `input, select, textarea` inside `#itemModal .modal-body` (including select2 `#item-customer` via `.prop('disabled', true)` and `#item-product-type` again after its async load), hides `#btn-save-item`, and changes the Cancel button text to "Cerrar". In `MariCamiStore/Pages/Orders/Items.cshtml` (~L310) add `id="btn-cancel-item"` to the item modal's Cancel button and target it by that id.
   - On `#itemModal` `hidden.bs.modal`, restore the enabled state (respecting the product-type "no types" case), Save visibility, and the "Cancelar" text.
   - In row rendering (~L275), when `!isPending` add `<button class="btn btn-xs btn-info mr-1">Ver</button>` calling `openViewItem(item)` before "Ver Img". Keep "Ver Img" and "Reasignar" unchanged.
-- [ ] T009 [US1] Grep the repo (`*.cs`, `*.cshtml`, `*.js`, excluding Migrations) for remaining `Delivered` references to order status (not `OrderItemStatus`, not `CxPEntryType.AutoDelivered`), fix any leftovers, and run `dotnet build`.
+- [X] T009 [US1] Grep the repo (`*.cs`, `*.cshtml`, `*.js`, excluding Migrations) for remaining `Delivered` references to order status (not `OrderItemStatus`, not `CxPEntryType.AutoDelivered`), fix any leftovers, and run `dotnet build`.
 
 **Checkpoint**: US1 is complete and verifiable via quickstart §1.
 

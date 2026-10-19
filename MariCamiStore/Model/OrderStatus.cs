@@ -14,9 +14,6 @@ public class OrderStatus : Enumeration
     /// <summary>The delivering.</summary>
     public static OrderStatus Delivering = new OrderStatus(nameof(Delivering), "Entregando");
 
-    /// <summary>The delivered.</summary>
-    public static OrderStatus Delivered = new OrderStatus(nameof(Delivered), "Entregada");
-
     /// <summary>The completed.</summary>
     public static OrderStatus Completed = new OrderStatus(nameof(Completed), "Completada");
 
@@ -25,7 +22,7 @@ public class OrderStatus : Enumeration
 
     /// <summary>Enumerates the items in this collection that meet given criteria.</summary>
     /// <returns>An enumerator that allows foreach to be used to process the matched items.</returns>
-    public static IEnumerable<OrderStatus> List() => new[] { Pending, Active, Delivering, Delivered, Completed, Voided };
+    public static IEnumerable<OrderStatus> List() => new[] { Pending, Active, Delivering, Completed, Voided };
 
     /// <summary>Gets the status keys selected by default in the orders filter.</summary>
     public static IReadOnlyList<string> DefaultFilterKeys => new[] { Pending.Key, Active.Key };
