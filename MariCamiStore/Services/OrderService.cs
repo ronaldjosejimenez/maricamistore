@@ -166,8 +166,8 @@ public class OrderService(
         var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == item.OrderId);
         if (order == null) return (false, "Orden no encontrada.");
 
-        if (order.Status != OrderStatus.Delivering.Key && order.Status != OrderStatus.Delivered.Key)
-            return (false, "Solo se puede marcar recepción en órdenes en estado Delivering o Delivered.");
+        if (order.Status != OrderStatus.Delivering.Key)
+            return (false, "Solo se puede marcar recepción en órdenes en estado Entregando.");
 
         item.IsReceived = isReceived;
         item.UpdatedAt = DateTime.UtcNow;
@@ -317,8 +317,7 @@ public class OrderService(
         {
             [OrderStatus.Pending.Key]    = [OrderStatus.Active.Key],
             [OrderStatus.Active.Key]     = [OrderStatus.Delivering.Key, OrderStatus.Voided.Key],
-            [OrderStatus.Delivering.Key] = [OrderStatus.Delivered.Key,  OrderStatus.Voided.Key],
-            [OrderStatus.Delivered.Key]  = [OrderStatus.Completed.Key,  OrderStatus.Voided.Key],
+            [OrderStatus.Delivering.Key] = [OrderStatus.Completed.Key,  OrderStatus.Voided.Key],
             [OrderStatus.Completed.Key]  = [], // final: a completed order cannot be voided
         };
 
@@ -343,8 +342,7 @@ public class OrderService(
         if (order == null) return (false, "Orden no encontrada.");
 
         var allowed = new[] {
-            OrderStatus.Active.Key, OrderStatus.Delivering.Key,
-            OrderStatus.Delivered.Key, OrderStatus.Completed.Key
+            OrderStatus.Active.Key, OrderStatus.Delivering.Key, OrderStatus.Completed.Key
         };
         if (!allowed.Contains(order.Status))
             return (false, $"No se puede reasignar en estado {order.Status}.");
