@@ -81,8 +81,8 @@ None. The stories share no blocking prerequisites.
 
 **Independent Test**: quickstart §3.
 
-- [ ] T017 [P] [US3] In `MariCamiStore/Pages/Customers/Index.cshtml` add above `#jsGrid`: `<input id="customer-search" type="search" class="form-control mb-2" placeholder="Buscar por apodo, nombre, teléfono, email o dirección" autocomplete="off" />`.
-- [ ] T018 [US3] In `MariCamiStore/wwwroot/js/pages/customers/index.js`:
+- [X] T017 [P] [US3] In `MariCamiStore/Pages/Customers/Index.cshtml` add above `#jsGrid`: `<input id="customer-search" type="search" class="form-control mb-2" placeholder="Buscar por apodo, nombre, teléfono, email o dirección" autocomplete="off" />`.
+- [X] T018 [US3] In `MariCamiStore/wwwroot/js/pages/customers/index.js`:
   - Add `var customerCache = null;`, a `norm(s)` helper (NFD, strip `̀-ͯ`, lowercase, trim), and the `SEARCH_FIELDS = ['nickName','name','phoneNumber','email','address']` constant.
   - `loadData(filter)` returns a Deferred: it fetches `?handler=Load` only when the cache is null, then filters so every non-empty column filter (from `filter`) is contained in its field and the global term matches at least one search field.
   - `#customer-search` `input` is debounced 200 ms and triggers `$('#jsGrid').jsGrid('search')`.
