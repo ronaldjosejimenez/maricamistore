@@ -159,9 +159,38 @@ public class SalesGoalService(
             .Where(g => g.SalespersonId == salespersonId)
             .OrderByDescending(g => g.Year).ThenByDescending(g => g.Month)
             .Select(g => new HistoryRowDto(
-                g.Id, g.Month, g.Year, g.GoalAmount, g.ActualAmount, g.CompliancePercentage, g.Currency!.Sign))
+                g.Id, g.Month, g.Year, g.GoalAmount, g.ActualAmount, g.CompliancePercentage, g.Currency!.Sign,
+                0m, 0m, string.Empty))
             .ToListAsync();
-        return rows;
+
+        // The current month (CR time) uses the "% al día de hoy" as commission base; the others use compliance.
+        var today = CostaRicaClock.Today();
+        var current = rows.FirstOrDefault(r => r.Year == today.Year && r.Month == today.Month);
+        decimal? currentTodayPercentage = null;
+        if (current != null)
+        {
+            var currentGoal = await context.SalesGoals
+                .AsNoTracking()
+                .Include(g => g.Days)
+                .FirstAsync(g => g.Id == current.Id);
+            currentTodayPercentage = TodayPercentage(currentGoal, today);
+        }
+
+        return rows
+            .Select(r =>
+            {
+                var basePercentage = current != null && r.Id == current.Id
+                    ? currentTodayPercentage!.Value
+                    : r.CompliancePercentage;
+                var (rate, commissionStatus) = SalesGoalCommission.For(basePercentage);
+                return r with
+                {
+                    CommissionRate = rate,
+                    CommissionAmount = SalesGoalCommission.Amount(r.ActualAmount, rate),
+                    CommissionStatus = commissionStatus,
+                };
+            })
+            .ToList();
     }
 
     public async Task<GoalDto> GetDetailAsync(Guid goalId)
@@ -200,6 +229,16 @@ public class SalesGoalService(
         goal.CompliancePercentage = Percentage(goal.ActualAmount, goal.GoalAmount);
     }
 
+    /// <summary>Compliance percentage accumulated from day 1 up to today (inclusive).</summary>
+    /// <param name="goal">The goal, with its days loaded.</param>
+    /// <param name="today">Today's Costa Rica date.</param>
+    /// <returns>The percentage rounded to 1 decimal; 0 when there is no accumulated goal.</returns>
+    private static decimal TodayPercentage(SalesGoal goal, DateOnly today)
+    {
+        var upToToday = goal.Days.Where(d => d.DayOfMonth <= today.Day).ToList();
+        return Percentage(upToToday.Sum(d => d.ActualAmount), upToToday.Sum(d => d.GoalAmount));
+    }
+
     private static GoalDto BuildDto(SalesGoal goal, DateOnly today)
     {
         var isCurrent = goal.Year == today.Year && goal.Month == today.Month;
@@ -208,12 +247,14 @@ public class SalesGoalService(
         var status = "none";
         if (isCurrent)
         {
-            var upToToday = goal.Days.Where(d => d.DayOfMonth <= today.Day).ToList();
-            todayPercentage = Percentage(upToToday.Sum(d => d.ActualAmount), upToToday.Sum(d => d.GoalAmount));
+            todayPercentage = TodayPercentage(goal, today);
             status = todayPercentage < RedBelow ? "red"
                 : todayPercentage > GreenAbove ? "green"
                 : "yellow";
         }
+
+        var commissionBase = isCurrent ? todayPercentage : goal.CompliancePercentage;
+        var (commissionRate, commissionStatus) = SalesGoalCommission.For(commissionBase);
 
         var days = goal.Days
             .OrderBy(d => d.DayOfMonth)
@@ -245,6 +286,9 @@ public class SalesGoalService(
             todayPercentage,
             status,
             isCurrent,
-            days);
+            days,
+            commissionRate,
+            SalesGoalCommission.Amount(goal.ActualAmount, commissionRate),
+            commissionStatus);
     }
 }

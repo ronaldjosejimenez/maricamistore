@@ -37,7 +37,7 @@ public class IndexModel(IOrderService orderService, ICatalogService catalogServi
         return new JsonResult(orders.Select(o => new
         {
             o.Id, o.NameOfOrder, o.SupplierId, o.CurrencyId, o.Status,
-            StatusLabel = OrderStatus.FromKey(o.Status).Name,
+            StatusLabel = OrderStatus.LabelFor(o.Status),
             o.ExchangeRate, o.TaxPercentage, o.ShippingAmountIntern,
             o.ShippingAmountToCR, o.DiscountAmount, o.TotalWithoutTaxes,
             o.TaxesAmount, o.TotalToPayToSupplier, o.TotalOfTheOrder,
@@ -67,7 +67,7 @@ public class IndexModel(IOrderService orderService, ICatalogService catalogServi
         {
             success = true,
             newStatus = order!.Status,
-            newStatusLabel = OrderStatus.FromKey(order.Status).Name
+            newStatusLabel = OrderStatus.LabelFor(order.Status)
         });
     }
 
@@ -89,8 +89,7 @@ public class IndexModel(IOrderService orderService, ICatalogService catalogServi
     {
         "Pending"    => ["Active"],
         "Active"     => ["Delivering", "Voided"],
-        "Delivering" => ["Delivered", "Voided"],
-        "Delivered"  => ["Completed", "Voided"],
+        "Delivering" => ["Completed", "Voided"],
         "Completed"  => [], // final: a completed order cannot be voided
         _            => []
     };

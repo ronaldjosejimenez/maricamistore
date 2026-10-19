@@ -82,7 +82,7 @@ function loadGrid() {
                         .attr('href', '/Orders/Items?orderId=' + item.id + '&statuses=' + encodeURIComponent(getSelectedStatuses())).appendTo(btns);
                     // Transition buttons
                     (item.nextStatuses || []).forEach(function (s) {
-                        var labels = { Active: 'Activar', Delivering: 'Enviar', Delivered: 'Entregada', Completed: 'Completar', Voided: 'Anular' };
+                        var labels = { Active: 'Activar', Delivering: 'Iniciar entrega', Completed: 'Completar', Voided: 'Anular' };
                         var btnClass = s === 'Voided' ? 'btn-danger' : 'btn-warning';
                         $('<button class="btn btn-xs ' + btnClass + ' mr-1">' + (labels[s] || s) + '</button>')
                             .on('click', (function (status) { return function () { openTransitionModal(item.id, status); }; })(s))

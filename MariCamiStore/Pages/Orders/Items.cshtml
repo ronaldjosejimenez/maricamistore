@@ -46,7 +46,7 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-2"><label>Estado</label><p id="h-status" class="font-weight-bold">@MariCamiStore.Model.OrderStatus.FromKey(order.Status).Name</p></div>
+                <div class="col-md-2"><label>Estado</label><p id="h-status" class="font-weight-bold">@MariCamiStore.Model.OrderStatus.LabelFor(order.Status)</p></div>
 
                 <!-- T023: Editable when Pending, read-only otherwise -->
                 <div class="col-md-2">
@@ -307,7 +307,7 @@
                 <div id="item-modal-error" class="alert alert-danger" style="display:none;"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button id="btn-cancel-item" type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                 <button id="btn-save-item" type="button" class="btn btn-primary">Guardar</button>
             </div>
         </div>
