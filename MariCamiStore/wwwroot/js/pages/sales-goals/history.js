@@ -9,6 +9,11 @@ function fmtPct(n) {
     return Number(n || 0).toLocaleString('es-CR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 }
 
+// Commission rate as defined by the spec ranges: 0%, 2.5%, 5%, 6% (no forced trailing decimal).
+function fmtRate(n) {
+    return Number(n || 0).toLocaleString('es-CR', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + '%';
+}
+
 // Badge classes for a commission status; green-plus (> 110%) adds the highlighted frame.
 function commissionBadgeClass(status) {
     if (status === 'red') return 'badge badge-danger';
@@ -33,7 +38,7 @@ function loadList(salespersonId) {
             $tr.append($('<td class="text-right">').text(r.currencySign + ' ' + fmt(r.actualAmount)));
             $tr.append($('<td class="text-right">').text(fmtPct(r.compliancePercentage)));
             $tr.append($('<td class="text-right">')
-                .append($('<span>').addClass(commissionBadgeClass(r.commissionStatus)).text(fmtPct(r.commissionRate)))
+                .append($('<span>').addClass(commissionBadgeClass(r.commissionStatus)).text(fmtRate(r.commissionRate)))
                 .append($('<small>').text(' (' + r.currencySign + ' ' + fmt(r.commissionAmount) + ')')));
             $tr.append($('<td class="text-right">').append(
                 $('<button class="btn btn-xs btn-info">Ver detalle</button>').on('click', function () {

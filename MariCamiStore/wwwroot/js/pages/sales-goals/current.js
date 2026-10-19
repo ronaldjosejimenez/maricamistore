@@ -13,6 +13,11 @@ function fmtPct(n) {
     return Number(n || 0).toLocaleString('es-CR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 }
 
+// Commission rate as defined by the spec ranges: 0%, 2.5%, 5%, 6% (no forced trailing decimal).
+function fmtRate(n) {
+    return Number(n || 0).toLocaleString('es-CR', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + '%';
+}
+
 function crToday() {
     return new Date().toLocaleDateString('en-GB', { timeZone: 'America/Costa_Rica' });
 }
@@ -61,7 +66,7 @@ function render(goal) {
     $('#today-total').text(fmtPct(goal.todayPercentage))
         .closest('.info-box').removeClass('goal-red goal-yellow goal-green bg-light')
         .addClass(statusClass(goal.todayStatus) || 'bg-light');
-    $('#commission-total').text(fmtPct(goal.commissionRate));
+    $('#commission-total').text(fmtRate(goal.commissionRate));
     $('#commission-amount').text('(' + sign + ' ' + fmt(goal.commissionAmount) + ')')
         .closest('.info-box').removeClass('goal-red goal-yellow goal-green goal-highlight bg-light')
         .addClass(commissionClass(goal.commissionStatus) || 'bg-light');
