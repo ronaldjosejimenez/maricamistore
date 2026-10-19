@@ -119,12 +119,12 @@ El usuario necesita encontrar rápido un cliente en el catálogo: por apodo, nom
 **Metas**
 
 - **FR-013**: El dashboard de Mes Actual MUST mostrar un indicador "% de Comisión" junto a Real, % de cumplimiento y % al día de hoy.
-- **FR-014**: El % de comisión MUST calcularse a partir del porcentaje base P, redondeado a 1 decimal tal como se muestra en pantalla, con estos rangos:
+- **FR-014**: El % de comisión MUST calcularse a partir del porcentaje base P, redondeado a 1 decimal (el .5 redondea hacia arriba, p. ej. 84.95 → 85.0) tal como se muestra en pantalla, tanto en Mes Actual como en Histórico, con estos rangos:
   - P < 85 → 0%, color rojo
   - 85 ≤ P < 86 → 2.5%, color amarillo
   - 86 ≤ P ≤ 110 → 5%, color verde
   - P > 110 → 6%, color verde y marco resaltado del indicador
-- **FR-015**: El porcentaje base P MUST ser el "% al día de hoy" cuando la meta corresponde al mes en curso, y el "% de cumplimiento" del mes en cualquier otro caso.
+- **FR-015**: El porcentaje base P MUST ser el "% al día de hoy" cuando la meta corresponde al mes en curso (según la fecha de Costa Rica), y el "% de cumplimiento" del mes en cualquier otro caso.
 - **FR-016**: Junto al % de comisión, entre paréntesis y en letra más pequeña, MUST mostrarse el monto de comisión = Real acumulado del mes (el valor del indicador "Real") × % de comisión, con el signo de moneda de la meta y el mismo formato numérico que los otros montos. Si el resultado es negativo, se muestra 0.
 - **FR-017**: El indicador MUST recalcularse cada vez que se recalculan los demás indicadores del dashboard (al cambiar la meta o los montos reales).
 - **FR-018**: El listado de Histórico MUST mostrar, en una columna "% Comisión" ubicada después de "% Cumplimiento", para cada mes el % de comisión con su color (y el resaltado cuando corresponda) y el monto equivalente, aplicando FR-014 a FR-016.
