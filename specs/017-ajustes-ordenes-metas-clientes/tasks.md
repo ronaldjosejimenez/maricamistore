@@ -95,8 +95,8 @@ None. The stories share no blocking prerequisites.
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T019 Run `dotnet build` in `MariCamiStore/` with no new warnings or errors.
-- [ ] T020 Walk through `specs/017-ajustes-ordenes-metas-clientes/quickstart.md` statically: cross-check each step against the code and fix gaps.
+- [X] T019 Run `dotnet build` in `MariCamiStore/` with no new warnings or errors.
+- [X] T020 Walk through `specs/017-ajustes-ordenes-metas-clientes/quickstart.md` statically: cross-check each step against the code and fix gaps.
 
 ## Dependencies & Execution Order
 
