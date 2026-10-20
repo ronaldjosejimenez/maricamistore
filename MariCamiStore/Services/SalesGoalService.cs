@@ -163,26 +163,11 @@ public class SalesGoalService(
                 0m, 0m, string.Empty))
             .ToListAsync();
 
-        // The current month (CR time) uses the "% al día de hoy" as commission base; the others use compliance.
-        var today = CostaRicaClock.Today();
-        var current = rows.FirstOrDefault(r => r.Year == today.Year && r.Month == today.Month);
-        decimal? currentTodayPercentage = null;
-        if (current != null)
-        {
-            var currentGoal = await context.SalesGoals
-                .AsNoTracking()
-                .Include(g => g.Days)
-                .FirstAsync(g => g.Id == current.Id);
-            currentTodayPercentage = TodayPercentage(currentGoal, today);
-        }
-
+        // The commission is always based on the month's compliance percentage.
         return rows
             .Select(r =>
             {
-                var basePercentage = current != null && r.Id == current.Id
-                    ? currentTodayPercentage!.Value
-                    : r.CompliancePercentage;
-                var (rate, commissionStatus) = SalesGoalCommission.For(basePercentage);
+                var (rate, commissionStatus) = SalesGoalCommission.For(r.CompliancePercentage);
                 return r with
                 {
                     CommissionRate = rate,
@@ -253,8 +238,7 @@ public class SalesGoalService(
                 : "yellow";
         }
 
-        var commissionBase = isCurrent ? todayPercentage : goal.CompliancePercentage;
-        var (commissionRate, commissionStatus) = SalesGoalCommission.For(commissionBase);
+        var (commissionRate, commissionStatus) = SalesGoalCommission.For(goal.CompliancePercentage);
 
         var days = goal.Days
             .OrderBy(d => d.DayOfMonth)

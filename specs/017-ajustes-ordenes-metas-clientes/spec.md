@@ -12,6 +12,10 @@
 
 ## Clarifications
 
+### Session 2026-10-20 (corrección)
+
+- Corrección del negocio: la comisión se calcula siempre sobre el **% de cumplimiento** del mes, no sobre el "% al día de hoy". Reemplaza lo dicho al respecto en la sesión 2026-10-19 y en el brainstorm.
+
 ### Session 2026-10-19
 
 - Q: ¿Con qué precisión se compara el porcentaje base contra los rangos de comisión? → A: Con el porcentaje tal como se muestra en pantalla, redondeado a 1 decimal (85.0 → 2.5%, 110.0 → 5%, 110.1 → 6%).
@@ -52,17 +56,17 @@ El vendedor y el administrador quieren ver, junto al avance de la meta, qué por
 
 **Why this priority**: da visibilidad inmediata del incentivo sobre información que ya existe; no cambia datos.
 
-**Independent Test**: con una meta del mes en curso cuyo "% al día de hoy" esté en cada rango, verificar el porcentaje, el color y el monto mostrado. En Histórico, verificar la columna de comisión para un mes cerrado.
+**Independent Test**: con una meta cuyo "% de cumplimiento" esté en cada rango, verificar el porcentaje, el color y el monto mostrado. En Histórico, verificar la columna de comisión para un mes cerrado.
 
 **Acceptance Scenarios**:
 
-1. **Given** el dashboard de Mes Actual del mes en curso con "% al día de hoy" = 84.9%, **When** se carga, **Then** "% de Comisión" muestra 0% en rojo, con el monto (0) entre paréntesis.
-2. **Given** "% al día de hoy" = 85.0% o 85.9%, **Then** muestra 2.5% en amarillo.
-3. **Given** "% al día de hoy" = 86.0%, 100.0% o 110.0%, **Then** muestra 5% en verde.
-4. **Given** "% al día de hoy" = 110.1%, **Then** muestra 6% en verde y la caja tiene un marco resaltado.
+1. **Given** el dashboard de Mes Actual del mes en curso con "% de cumplimiento" = 84.9%, **When** se carga, **Then** "% de Comisión" muestra 0% en rojo, con el monto (0) entre paréntesis.
+2. **Given** "% de cumplimiento" = 85.0% o 85.9%, **Then** muestra 2.5% en amarillo.
+3. **Given** "% de cumplimiento" = 86.0%, 100.0% o 110.0%, **Then** muestra 5% en verde.
+4. **Given** "% de cumplimiento" = 110.1%, **Then** muestra 6% en verde y la caja tiene un marco resaltado.
 5. **Given** Real = 1,000,000 y comisión 5%, **Then** al lado del porcentaje se muestra, entre paréntesis y en letra más pequeña, el monto 50,000 con el signo de moneda de la meta.
 6. **Given** el usuario cambia la meta o los montos reales del mes, **When** el dashboard se recalcula, **Then** "% de Comisión" y su monto se actualizan junto con los demás indicadores.
-7. **Given** el listado de Histórico de un vendedor, **When** se carga, **Then** cada mes muestra, en una columna "% Comisión" después de "% Cumplimiento", su % de comisión y el monto equivalente con los mismos rangos y colores, calculados con el % de cumplimiento final del mes; para el mes en curso se usa el "% al día de hoy".
+7. **Given** el listado de Histórico de un vendedor, **When** se carga, **Then** cada mes muestra, en una columna "% Comisión" después de "% Cumplimiento", su % de comisión y el monto equivalente con los mismos rangos y colores, calculados con el % de cumplimiento del mes (también para el mes en curso).
 
 ---
 
@@ -90,7 +94,7 @@ El usuario necesita encontrar rápido un cliente en el catálogo: por apodo, nom
 
 - Orden en Entregada con ítems sin marcar como recibidos al momento de la migración: pasa a Completada igual. La marcación de recepción ya no estará disponible, lo cual se acepta.
 - Orden en Entregada que hubiera sido necesario anular: tras la migración ya no se puede anular, porque Completada es final. Se acepta (ver Assumptions).
-- "% al día de hoy" sin meta acumulada (meta hasta hoy = 0) o meta del mes no definida: el % es 0, así que la comisión es 0% en rojo y el monto es 0.
+- Meta del mes en 0 o no definida: el % es 0, así que la comisión es 0% en rojo y el monto es 0.
 - Real negativo o igual a 0: el monto de comisión se muestra como 0, nunca negativo.
 - Valor exacto en un límite (85.0, 86.0, 110.0): se aplican los rangos inclusivos de FR-014 sobre el porcentaje redondeado a 1 decimal, tal como se muestra.
 - Búsqueda con espacios al inicio o al final: se ignoran.
@@ -124,7 +128,7 @@ El usuario necesita encontrar rápido un cliente en el catálogo: por apodo, nom
   - 85 ≤ P < 86 → 2.5%, color amarillo
   - 86 ≤ P ≤ 110 → 5%, color verde
   - P > 110 → 6%, color verde y marco resaltado del indicador
-- **FR-015**: El porcentaje base P MUST ser el "% al día de hoy" cuando la meta corresponde al mes en curso (según la fecha de Costa Rica), y el "% de cumplimiento" del mes en cualquier otro caso.
+- **FR-015**: El porcentaje base P MUST ser siempre el "% de cumplimiento" del mes (Real acumulado ÷ Meta del mes), tanto en el mes en curso como en meses cerrados.
 - **FR-016**: Junto al % de comisión, entre paréntesis y en letra más pequeña, MUST mostrarse el monto de comisión = Real acumulado del mes (el valor del indicador "Real") × % de comisión, con el signo de moneda de la meta y el mismo formato numérico que los otros montos. Si el resultado es negativo, se muestra 0.
 - **FR-017**: El indicador MUST recalcularse cada vez que se recalculan los demás indicadores del dashboard (al cambiar la meta o los montos reales).
 - **FR-018**: El listado de Histórico MUST mostrar, en una columna "% Comisión" ubicada después de "% Cumplimiento", para cada mes el % de comisión con su color (y el resaltado cuando corresponda) y el monto equivalente, aplicando FR-014 a FR-016.
