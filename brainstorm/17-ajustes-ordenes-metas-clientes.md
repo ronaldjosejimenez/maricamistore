@@ -8,7 +8,7 @@ metadata:
 # Brainstorm: Ajustes en Órdenes, Metas y Clientes
 
 **Date:** 2026-10-19
-**Status:** spec-created (specs/017-ajustes-ordenes-metas-clientes)
+**Status:** implemented (specs/017-ajustes-ordenes-metas-clientes)
 
 ## Problem Framing
 
@@ -81,3 +81,10 @@ Enfoque **A**: un solo spec con tres historias independientes, priorizadas como 
 - ¿Cuántas órdenes hay hoy en estado Delivered? Validarlo antes de migrar, y confirmar que pasarlas a Completed (ya no anulables) es aceptable para todas.
 - En Mes Actual, si se consulta un mes que no es el actual, ¿la comisión usa el % de cumplimiento (igual que Histórico)?
 - ¿El tipo CxP `AutoDelivered` (sin uso) debe limpiarse en un requerimiento futuro?
+
+## Resolution (2026-10-20)
+- Búsqueda de clientes: ignora tildes y mayúsculas; global + filtros por columna combinados (AND), mientras se escribe.
+- Comisión: se calcula **siempre sobre el % de cumplimiento** del mes, en Mes Actual y en Histórico (corrección del negocio posterior a la implementación inicial, que usaba "% al día de hoy").
+- Estado Delivered eliminado; migración `RemoveDeliveredOrderStatus` (Delivered → Completed + registro de historial). Debe aplicarse a producción manualmente antes o junto con el código.
+- Review: corregido XSS almacenado en la tabla de historial de estados; `OrderStatus.LabelFor` evita errores si quedan órdenes sin migrar.
+- Quedan fuera: `OrderItemStatus.Delivered` y el tipo CxP `AutoDelivered` (sin uso).

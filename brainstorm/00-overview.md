@@ -1,6 +1,6 @@
 # Brainstorm Overview
 
-Last updated: 2026-10-19
+Last updated: 2026-10-20
 
 ## Sessions
 
@@ -22,7 +22,7 @@ Last updated: 2026-10-19
 | 14 | 2026-09-28 | cierre-mes-cxp | spec-created | specs/014-cierre-mes-cxp |
 | 15 | 2026-09-29 | filtro-organizacion-pagos | spec-created | specs/015-filtro-organizacion-pagos |
 | 16 | 2026-10-06 | control-metas-ventas | implemented | specs/016-control-metas-ventas |
-| 17 | 2026-10-19 | ajustes-ordenes-metas-clientes | spec-created | specs/017-ajustes-ordenes-metas-clientes |
+| 17 | 2026-10-19 | ajustes-ordenes-metas-clientes | implemented | specs/017-ajustes-ordenes-metas-clientes |
 
 ## Open Threads
 
@@ -33,10 +33,9 @@ Last updated: 2026-10-19
 - ¿El modal "Reasignar" debe validar precio = 0 con confirmación explícita? (from #10)
 - ¿Los totales recalculados (TotalAgreedPriceInLocal, EstimatedProfitInLocal) se persisten inmediatamente o al siguiente guardado manual? (from #10)
 - `GetPeriodIndicatorsAsync` / `UpdatePeriodFieldsAsync` usan `FindAsync` (se salta el filtro de organización); revisar con la autenticación (from #14)
-- ¿La búsqueda de clientes debe ignorar tildes? (from #17)
-- ¿Cuántas órdenes hay hoy en estado Delivered? Validarlo antes de migrar y confirmar que pasarlas a Completed es aceptable (from #17)
-- En Mes Actual, si se consulta un mes que no es el actual, ¿la comisión usa el % de cumplimiento? (from #17)
-- ¿El tipo CxP `AutoDelivered` (sin uso) debe limpiarse en un requerimiento futuro? (from #17)
+- Confirmar que la migración `RemoveDeliveredOrderStatus` se aplicó en producción (0 órdenes en Delivered) (from #17)
+- `GetOrderStatusHistoryAsync` no filtra por organización; revisar con la autenticación (from #17)
+- ¿Limpiar el tipo CxP `AutoDelivered` (sin uso)? (from #17)
 
 ## Parked Ideas
 

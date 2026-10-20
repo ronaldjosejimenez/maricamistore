@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-19
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: Brainstorm `brainstorm/17-ajustes-ordenes-metas-clientes.md`.
 
