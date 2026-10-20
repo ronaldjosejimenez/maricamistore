@@ -8,7 +8,7 @@ metadata:
 # Brainstorm: Ajustes en Órdenes, Metas y Clientes
 
 **Date:** 2026-10-19
-**Status:** spec-created (specs/017-ajustes-ordenes-metas-clientes)
+**Status:** implemented (specs/017-ajustes-ordenes-metas-clientes)
 
 ## Problem Framing
 
@@ -56,15 +56,15 @@ Enfoque **A**: un solo spec con tres historias independientes, priorizadas como 
 
 ### Historia 2: % de Comisión en Metas (P2)
 - Nueva caja **"% de Comisión"** en el dashboard de Mes Actual, junto a Real, % de cumplimiento y % al día de hoy.
-- Se calcula a partir de **"% al día de hoy"** con rangos continuos:
-  | % al día de hoy | Comisión | Estilo |
+- Se calcula a partir del **"% de cumplimiento"** del mes con rangos continuos (corregido el 2026-10-20; originalmente decía "% al día de hoy"):
+  | % de cumplimiento | Comisión | Estilo |
   |---|---|---|
   | < 85 | 0% | Rojo |
   | 85 ≤ x < 86 | 2.5% | Amarillo |
   | 86 ≤ x ≤ 110 | 5% | Verde |
   | > 110 | 6% | Verde con marco resaltado |
 - Al lado del porcentaje, entre paréntesis y en letra más pequeña: el **monto de comisión = Real × % de comisión**, con el signo de moneda de la meta.
-- También se muestra en **Histórico**: para meses cerrados se calcula con el % de cumplimiento final del mes, que equivale al "% al día" del último día.
+- También se muestra en **Histórico**, con el mismo cálculo sobre el % de cumplimiento de cada mes.
 
 ### Historia 3: Buscador de Clientes (P3)
 - **Caja de búsqueda global** arriba del grid: busca el texto en Apodo, Nombre Completo, Teléfono, Email y Dirección a la vez.
@@ -81,3 +81,10 @@ Enfoque **A**: un solo spec con tres historias independientes, priorizadas como 
 - ¿Cuántas órdenes hay hoy en estado Delivered? Validarlo antes de migrar, y confirmar que pasarlas a Completed (ya no anulables) es aceptable para todas.
 - En Mes Actual, si se consulta un mes que no es el actual, ¿la comisión usa el % de cumplimiento (igual que Histórico)?
 - ¿El tipo CxP `AutoDelivered` (sin uso) debe limpiarse en un requerimiento futuro?
+
+## Resolution (2026-10-20)
+- Búsqueda de clientes: ignora tildes y mayúsculas; global + filtros por columna combinados (AND), mientras se escribe.
+- Comisión: se calcula **siempre sobre el % de cumplimiento** del mes, en Mes Actual y en Histórico (corrección del negocio posterior a la implementación inicial, que usaba "% al día de hoy").
+- Estado Delivered eliminado; migración `RemoveDeliveredOrderStatus` (Delivered → Completed + registro de historial). Debe aplicarse a producción manualmente antes o junto con el código.
+- Review: corregido XSS almacenado en la tabla de historial de estados; `OrderStatus.LabelFor` evita errores si quedan órdenes sin migrar.
+- Quedan fuera: `OrderItemStatus.Delivered` y el tipo CxP `AutoDelivered` (sin uso).

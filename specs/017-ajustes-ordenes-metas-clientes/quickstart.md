@@ -18,9 +18,9 @@ dotnet ef database update     # applies RemoveDeliveredOrderStatus
 7. Delivering order: the "Recibido" checkbox works. Completed order: no "Recibido" column.
 
 ## 2. Metas
-1. Mes Actual: four boxes. Adjust a day's actual amounts so "% al día de hoy" hits 84.9 / 85.0 / 85.9 / 86.0 / 110.0 / 110.1, and check the commission shows 0 red / 2.5 yellow / 2.5 yellow / 5 green / 5 green / 6 green with highlight.
+1. Mes Actual: four boxes. Adjust actual amounts so "% de cumplimiento" hits 84.9 / 85.0 / 85.9 / 86.0 / 110.0 / 110.1, and check the commission shows 0 red / 2.5 yellow / 2.5 yellow / 5 green / 5 green / 6 green with highlight.
 2. The amount in parentheses = Real × rate, with the currency sign. It updates right after editing a value.
-3. Histórico: a "% Comisión" column after "% Cumplimiento". Closed months use the final compliance %, and the current month matches Mes Actual.
+3. Histórico: a "% Comisión" column after "% Cumplimiento". Every month (current included) uses its compliance %, matching Mes Actual.
 
 ## 3. Clientes
 1. Type part of a phone number in the global search → the list narrows while you type.
