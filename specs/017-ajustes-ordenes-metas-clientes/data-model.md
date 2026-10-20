@@ -42,7 +42,7 @@ Irreversible: `Down` does nothing.
 
 ## Commission (derived, not persisted)
 
-Input: base % P (already rounded to 1 decimal). P = `TodayPercentage` if the goal is the current month (Costa Rica time), else `CompliancePercentage`.
+Input: base % P (already rounded to 1 decimal). P = `CompliancePercentage` of the month, always (corrected 2026-10-20).
 
 | P | Rate | Status |
 |---|---|---|

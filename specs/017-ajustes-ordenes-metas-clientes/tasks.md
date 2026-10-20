@@ -58,8 +58,8 @@ None. The stories share no blocking prerequisites.
 - [X] T011 [US2] In `MariCamiStore/Services/ISalesGoalService.cs` append `decimal CommissionRate, decimal CommissionAmount, string CommissionStatus` to the `GoalDto` and `HistoryRowDto` records.
 - [X] T012 [US2] In `MariCamiStore/Services/SalesGoalService.cs`:
   - Extract `private static decimal TodayPercentage(SalesGoal goal, <today type used in BuildDto> today)` from `BuildDto` (~L209-212) and call it from both `BuildDto` and `GetHistoryAsync`.
-  - When building `GoalDto`, set the base = `todayPercentage` if `isCurrent`, else `goal.CompliancePercentage`, and fill the commission fields via `SalesGoalCommission`.
-  - In `GetHistoryAsync`, keep the projection, then for the row matching the current Costa Rica year/month load that goal's days and compute today %. Set the commission fields for every row (current → today %, others → `CompliancePercentage`, amount from `ActualAmount`).
+  - When building `GoalDto`, set the base = `goal.CompliancePercentage` (corrected 2026-10-20), and fill the commission fields via `SalesGoalCommission`.
+  - In `GetHistoryAsync`, keep the projection and set the commission fields for every row from `CompliancePercentage` (amount from `ActualAmount`).
   - Fix every other `new GoalDto(`/`new HistoryRowDto(` call site so it compiles.
 - [X] T013 [P] [US2] In `MariCamiStore/Pages/SalesGoals/Current.cshtml`:
   - Change the summary row to four `col-md-3` info-boxes.
