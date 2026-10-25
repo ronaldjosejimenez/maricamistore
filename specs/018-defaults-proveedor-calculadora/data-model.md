@@ -26,7 +26,8 @@ Seeds (`HasData`): los 6 proveedores sembrados agregan los valores nuevos con su
 
 | Propiedad | Tipo C# | Columna | Regla |
 |-----------|---------|---------|-------|
-| **RealPriceInLocal** | decimal | decimal(18,2) NOT NULL DEFAULT 0 | = Round(RealPrice × Order.ExchangeRate, 2); lo calcula siempre el servidor |
+| **RealPriceInLocal** | decimal | decimal(18,2) NOT NULL DEFAULT 0 | = Round(RealPrice × Order.ExchangeRate, 2, AwayFromZero); lo calcula siempre el servidor |
+| **HasLegacyPriceDefaults** | bool | bit NOT NULL DEFAULT 0 | La migración lo pone en 1 una sola vez en todos los ítems existentes; los ítems nuevos quedan en 0. Con 1, RealPrice ≈ ListPrice y Agreed ≈ (Precio+Imp)×TC+Tarifa cuentan como automáticos |
 
 Cadena de cálculo del ítem (moneda de la orden → local):
 

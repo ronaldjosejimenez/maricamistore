@@ -17,6 +17,7 @@ public record OrderItemWithCustomerDto(
     decimal ListPriceTaxWithTax,
     decimal RealPrice,
     decimal RealPriceInLocal,
+    bool HasLegacyPriceDefaults,
     decimal EstimateShipping,
     decimal ServiceFeeInLocal,
     decimal AgreedPriceInLocal,

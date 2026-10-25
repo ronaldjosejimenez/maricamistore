@@ -3,7 +3,7 @@
 **Date:** 2026-10-25
 **Branch:** 018-defaults-proveedor-calculadora
 **Rounds:** 3
-**Gate Outcome:** FAIL (1 Important remaining after round 3)
+**Gate Outcome:** PASS (the remaining Important was resolved after round 3 by user decision, see FINDING-9)
 **Invocation:** superpowers (quality gate from `/speckit-implement`)
 
 ## Summary
@@ -11,9 +11,9 @@
 | Severity | Found | Fixed | Remaining |
 |----------|-------|-------|-----------|
 | Critical | 0 | 0 | 0 |
-| Important | 9 | 8 | 1 |
-| Minor | 22 | 16 | 6 |
-| **Total** | **31** | **24** | **7** |
+| Important | 9 | 9 | 0 |
+| Minor | 22 | 17 | 5 |
+| **Total** | **31** | **26** | **5** |
 
 **Agents completed:** 5/5 + 3 re-review rounds. External tools: none (CodeRabbit and Copilot CLIs are not installed).
 **Agents failed:** none.
@@ -81,13 +81,13 @@
 **What is wrong:** With an Imp-only change, RealPrice and RealPriceInLocal were recalculated but Acordado (never edited by hand) was not. The item was then flagged as edited by hand for good.
 **How it was resolved:** `agreedIsAuto` is computed before the recalculation, and Acordado is recalculated when `exchangeRateChanged || agreedIsAuto`. FR-018a and the quickstart were updated (Imp 13 gives Acordado 10722.00). Verified end to end.
 
-### FINDING-9 — Legacy-item cutoff fixed at the migration date, not the deploy date ⚠️ REMAINING
-- **Severity:** Important · **Confidence:** 75 · **Category:** correctness · **Round found:** 4 (final re-review) · **Resolution:** remaining
+### FINDING-9 — Legacy-item cutoff fixed at the migration date, not the deploy date
+- **Severity:** Important · **Confidence:** 75 · **Category:** correctness · **Round found:** 4 (final re-review) · **Resolution:** fixed after round 3 (user chose option A)
 - **File:** Services/OrderService.cs (`LegacyItemsCutoffUtc`), wwwroot/js/pages/orders/items.js (`legacyItemsCutoff`)
 
 **What is wrong:** The cutoff is 2026-10-25 23:13:21 UTC, when the migration was generated. Production keeps running the old code until the merge and deploy. Items created in that window have the old defaults but will not be treated as legacy.
 **Why this matters:** For those items, Precio Real and Acordado stay frozen as if edited by hand: in Trigger A and in the modal.
-**What needs to happen:** Mark legacy items when the migration runs, not with a constant. For example, add an `OrderItems.HasLegacyPriceDefaults bit` column in the 018 migration with `UPDATE ... SET 1` for every existing row, use it in `RecalcItemsOnOrderSaveAsync`, and expose it in `OrderItemWithCustomerDto` for the JS. A lighter alternative is to update the constant to the actual deploy date.
+**How it was resolved:** New column `OrderItems.HasLegacyPriceDefaults` (bit, default 0). The 018 migration (regenerated as `20261025235125_SupplierDefaultsAndRealPriceInLocal`) sets it to 1 once, for every item that exists when it runs. Items created afterwards stay 0. `RecalcItemsOnOrderSaveAsync` and `isLegacyItem` (JS, through `OrderItemWithCustomerDto`) read the flag. Both cutoff constants were removed. Verified end to end: the new item has flag 0, and the flagged legacy item recalculates (14.30 / 7865.00 / 10865.00).
 
 ### Minor findings
 
@@ -104,7 +104,7 @@
 | M14 | correctness (r3) | Legacy false positive on new items (RealPrice = Lista typed by hand) | fixed: limited by CreatedAt |
 | M15 | correctness (r3) | round2 vs AwayFromZero | fixed partly (see M21) |
 | M16 | correctness (r3) | Header totals rounded ToEven on the server | fixed |
-| M17 | architecture | Calculator namespace and title still say "Shein" | **remaining** (open question for the user) |
+| M17 | architecture | Calculator namespace and title still say "Shein" | fixed: title "Calculadora de precios", namespace `MariCamiStore.Pages.Calculator` |
 | M18 | architecture + production | Reasignar runs 2 extra queries, one of them loading ProductImage | **remaining** |
 | M19 | architecture | `DecimalField` registered globally but defined in one page | **remaining** |
 | M20 | architecture | Shein activated by both seed and SQL (Id vs Name) | **remaining** (intentional: covers a Shein created by hand) |
@@ -142,5 +142,4 @@ It passed in all 3 rounds.
 
 ## Remaining Findings
 
-- **FINDING-9 (Important):** see above. This needs a decision: add a column marked by the migration (recommended), or set the cutoff to the actual deploy date.
-- **M17–M22 (Minor):** non-blocking. M17 depends on a user decision about the calculator title.
+- **M18–M22 (Minor):** non-blocking.

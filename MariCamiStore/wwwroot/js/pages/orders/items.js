@@ -111,12 +111,9 @@ function setPriceFieldsEnabled(enabled) {
         .prop('disabled', !enabled);
 }
 
-// Items created before spec 018 (same cutoff as OrderService.LegacyItemsCutoffUtc) used the old price defaults
-var legacyItemsCutoff = Date.UTC(2026, 9, 25, 23, 13, 21);
+// Items flagged by the 018 migration still carry the old price defaults (see OrderItem.HasLegacyPriceDefaults)
 function isLegacyItem(item) {
-    if (!item.createdAt) return false;
-    var iso = /Z|[+-]\d\d:\d\d$/.test(item.createdAt) ? item.createdAt : item.createdAt + 'Z'; // CreatedAt is stored in UTC
-    return new Date(iso).getTime() < legacyItemsCutoff;
+    return !!item.hasLegacyPriceDefaults;
 }
 
 function hasProductType(id) {

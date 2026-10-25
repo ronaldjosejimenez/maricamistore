@@ -2,7 +2,7 @@ using MariCamiStore.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace MariCamiStore.Pages.SheinCalculator
+namespace MariCamiStore.Pages.Calculator
 {
     public class IndexModel(ICatalogService catalogService) : PageModel
     {

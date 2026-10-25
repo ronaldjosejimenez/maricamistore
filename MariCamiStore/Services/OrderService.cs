@@ -103,8 +103,8 @@ public class OrderService(
         {
             // Spec 018, FR-018a: RealPrice and AgreedPrice follow only if they were not edited by hand.
             // Items saved before 018 had other defaults (RealPrice = ListPrice, Agreed = (Price + Tax) x rate + fee);
-            // those count as automatic only for items created before 018.
-            bool isLegacy = item.CreatedAt < LegacyItemsCutoffUtc;
+            // those count as automatic only for items flagged by the 018 migration.
+            bool isLegacy = item.HasLegacyPriceDefaults;
             var oldAutoRealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
             bool realPriceIsAuto = Math.Abs(item.RealPrice - oldAutoRealPrice) <= 0.01m
                 || (isLegacy && Math.Abs(item.RealPrice - item.ListPrice) <= 0.01m);
@@ -127,9 +127,6 @@ public class OrderService(
 
         await context.SaveChangesAsync();
     }
-
-    // Items created before spec 018 was deployed (migration 20261025231321) used the old price defaults
-    private static readonly DateTime LegacyItemsCutoffUtc = new(2026, 10, 25, 23, 13, 21, DateTimeKind.Utc);
 
     private static void ApplyOrderCalculationSuite(Order order, List<OrderItem> items)
     {
@@ -170,7 +167,7 @@ public class OrderService(
                 displayNames.GetValueOrDefault(i.CustomerId, i.CustomerId.ToString()),
                 i.ProductDescription, i.ProductLink, i.ProductSourceCode, i.Size,
                 i.ProductImage != null, i.ProductTypeId,
-                i.ListPrice, i.ListPriceTaxWithTax, i.RealPrice, i.RealPriceInLocal,
+                i.ListPrice, i.ListPriceTaxWithTax, i.RealPrice, i.RealPriceInLocal, i.HasLegacyPriceDefaults,
                 i.EstimateShipping, i.ServiceFeeInLocal, i.AgreedPriceInLocal,
                 i.IsReceived, i.CreatedAt, i.UpdatedAt))
             .OrderBy(x => x.CustomerDisplayName)

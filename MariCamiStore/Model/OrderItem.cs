@@ -59,6 +59,11 @@ public class OrderItem
     /// <value>The real price in local currency.</value>
     public decimal RealPriceInLocal { get; set; }
 
+    /// <summary>Gets or sets a value indicating whether the item was saved before spec 018,
+    /// when RealPrice defaulted to ListPrice and AgreedPrice to (Price + Tax) x rate + fee.
+    /// Set once by migration SupplierDefaultsAndRealPriceInLocal; new items are always false.</summary>
+    public bool HasLegacyPriceDefaults { get; set; }
+
     /// <summary>Gets or sets the estimate shipping.</summary>
     /// <value>The estimate shipping.</value>
     public decimal EstimateShipping { get; set; }
