@@ -51,6 +51,7 @@
   - En `$(function)`, cargar en paralelo con `$.when` `/Currencies?handler=Load` (mapear a `{id, text: abbreviation, sign}` en `currencyItems`) y `?handler=Configuration` (`cfg`), y después llamar `initGrid()`.
   - Campos nuevos del grid, en este orden después de Nombre: `taxPercentageDefault` ("Impuesto %", number), `currencyIdDefault` ("Moneda", select con `currencyItems`), `exchangeRateDefault` ("Tipo de cambio", number), `shippingCostDefault` ("Envío", number, `itemTemplate` con `formatMoney(val, signo de la moneda del ítem)`) e `isActiveForCalculator` ("Activo calculadora", checkbox).
   - En los 3 campos de defaults, `insertTemplate` llama al template base (`jsGrid.fields.number.prototype.insertTemplate.call(this)` / `select`) y, si existe `cfg`, asigna `cfg.taxPercentage`, `cfg.currencyId` o `cfg.exchangeRate`.
+  - FR-003: `shippingCostDefault` usa `insertTemplate` con valor `0` e `isActiveForCalculator` arranca sin marcar (el default del checkbox de jsGrid).
 
 **Checkpoint**: US1 se puede verificar con el quickstart §1.
 
@@ -143,10 +144,13 @@
   - En la restauración del modo "Ver" (`restoreItemModalEditable`), volver a aplicar `setPriceFieldsEnabled(!!$('#item-product-type').val())` después de habilitar todo.
   - En `openEditItem` (~L153): `userEditedRealPrice = |realPrice − (listPriceTaxWithTax + estimateShipping)| > 0.01` y `userEditedAgreed = |agreedPriceInLocal − (realPriceInLocal + serviceFeeInLocal)| > 0.01`. Mostrar `#item-real-price-in-local` y `#item-total`.
   - Tabla de ítems (~L272): `var total = round2((parseFloat(item.realPriceInLocal) || 0) + (parseFloat(item.serviceFeeInLocal) || 0));`.
-- [ ] T022 [US4] En `MariCamiStore/wwwroot/js/pages/orders/items.js`, encabezado y Reasignar (FR-021, FR-022, FR-023):
-  - En `recalcOrderHeader`, `totalWithoutTaxes = Σ listPrice` (antes realPrice).
-  - En `refreshTotals()`, `if (!isPending) return;` como primera línea (las órdenes no Pendientes muestran los valores que renderiza `Items.cshtml`).
-  - En el success de Reasignar (~L711), después de `loadItems()`, si vienen `r.totalAgreedPriceInLocal` y `r.estimatedProfitInLocal`, actualizar `#order-total-agreed` (`formatMoney` con `localCurrencySign`) y `#h-profit`.
+- [ ] T022 [US4] Encabezado y Reasignar (FR-021, FR-022, FR-023):
+  - En `MariCamiStore/Pages/Orders/Items.cshtml`, junto a `var exchangeRate = ...` (~L371), agregar `var savedTotals = { totalAgreedPriceInLocal: @order.TotalAgreedPriceInLocal, shippingToCR: @order.ShippingAmountToCR, totalWithoutTaxes: @order.TotalWithoutTaxes, taxesAmount: @order.TaxesAmount, totalToSupplier: @order.TotalToPayToSupplier, totalOrder: @order.TotalOfTheOrder, profit: @order.EstimatedProfitInLocal };`. Usar el mismo estilo de emisión que `exchangeRate`, que ya sale en formato invariante.
+  - En `MariCamiStore/wwwroot/js/pages/orders/items.js`:
+    - Separar de `recalcOrderHeader` una función `renderHeader(totals)` con las 7 líneas `$('#...').text(formatMoney(...))`. `recalcOrderHeader` calcula, llama `renderHeader` y devuelve los totales.
+    - En `recalcOrderHeader`, `totalWithoutTaxes = Σ listPrice` (antes realPrice).
+    - `refreshTotals()`: `if (!isPending) { renderHeader(savedTotals); return; }` como primera línea. Solo formatea los valores guardados, sin recalcular ni persistir.
+    - En el success de Reasignar (~L711), después de `loadItems()`, si vienen `r.totalAgreedPriceInLocal` y `r.estimatedProfitInLocal`, asignarlos a `savedTotals.totalAgreedPriceInLocal` y `savedTotals.profit` y llamar `renderHeader(savedTotals)`.
 
 **Checkpoint**: US4 se puede verificar con el quickstart §4.
 
