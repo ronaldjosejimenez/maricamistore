@@ -1,6 +1,6 @@
 # Brainstorm Overview
 
-Last updated: 2026-10-20
+Last updated: 2026-10-25
 
 ## Sessions
 
@@ -23,6 +23,7 @@ Last updated: 2026-10-20
 | 15 | 2026-09-29 | filtro-organizacion-pagos | spec-created | specs/015-filtro-organizacion-pagos |
 | 16 | 2026-10-06 | control-metas-ventas | implemented | specs/016-control-metas-ventas |
 | 17 | 2026-10-19 | ajustes-ordenes-metas-clientes | implemented | specs/017-ajustes-ordenes-metas-clientes |
+| 18 | 2026-10-25 | defaults-proveedor-calculadora | active | - |
 
 ## Open Threads
 
@@ -36,6 +37,11 @@ Last updated: 2026-10-20
 - Confirmar que la migración `RemoveDeliveredOrderStatus` se aplicó en producción (0 órdenes en Delivered) (from #17)
 - `GetOrderStatusHistoryAsync` no filtra por organización; revisar con la autenticación (from #17)
 - ¿Limpiar el tipo CxP `AutoDelivered` (sin uso)? (from #17)
+- Total (calculado) ya incluye la Tarifa; con Precio Acordado = Total + Tarifa se duplicaría (from #18)
+- Precio Real con Envío Est. duplica el "Envío a CR" del encabezado y le aplica impuesto (from #18)
+- ¿Cambiar el proveedor al editar una orden recarga los defaults? (from #18)
+- Moneda del costo de envío por defecto del proveedor (from #18)
+- ¿Precio Real se recalcula al cambiar Envío Est. si fue editado a mano? (from #18)
 
 ## Parked Ideas
 
