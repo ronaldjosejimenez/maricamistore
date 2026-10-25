@@ -88,6 +88,7 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
 - Un ítem existente se abre para editar: su Tipo de Producto ya está seleccionado, así que los campos están habilitados; los valores guardados no se recalculan hasta que el usuario modifique un campo.
 - El usuario editó Precio Real a mano y luego cambia Precio Lista o Envío estimado: Precio Real conserva el valor manual (misma regla que hoy).
 - Modo "Ver" del ítem: todos los campos siguen en solo lectura, como hoy.
+- Órdenes existentes: al abrirlas, el encabezado se recalcula con la regla de FR-021 (Subtotal = Σ Precio Lista) y se guarda, como pasa hoy. En las órdenes donde Precio Real se había ajustado a mano, cambian el Subtotal, los Impuestos, el Total y la Ganancia estimada. Se acepta este recálculo, también para órdenes cerradas.
 
 ## Requirements *(mandatory)*
 
@@ -97,6 +98,7 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
 
 - **FR-001**: Cada proveedor MUST tener: Impuesto default (%), Moneda default, Tipo de cambio default, Costo de envío default y "Activo para la calculadora" (sí/no). Todos son editables desde el catálogo de proveedores.
 - **FR-002**: Al crear un proveedor, el sistema MUST precargar Impuesto default ← Impuesto de la Configuración, Moneda default ← Moneda de orden por defecto de la Configuración y Tipo de cambio default ← Tipo de cambio de la Configuración (se usa el primer registro de Configuración).
+- **FR-002a**: Al guardar un proveedor, el sistema MUST validar: Moneda default obligatoria, Tipo de cambio default > 0, Impuesto default ≥ 0 y Costo de envío default ≥ 0; si algo falla, muestra un mensaje y no guarda.
 - **FR-003**: Un proveedor nuevo MUST arrancar con Costo de envío default = 0 y "Activo para la calculadora" = no, salvo que el usuario cambie esos valores.
 - **FR-004**: La actualización del sistema MUST llenar Impuesto, Moneda y Tipo de cambio default en todos los proveedores existentes con los valores del primer registro de Configuración.
 
@@ -124,11 +126,12 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
 
 - **FR-015**: El modal de ítem MUST mostrar los campos de precio en este orden — Fila 1: Precio Lista, Precio + Imp, Envío estimado, Precio Real. Fila 2: Precio Real en Local, Tarifa Servicio, Total (calculado), Precio Acordado.
 - **FR-016**: La etiqueta "Envío Est." del modal MUST cambiar a "Envío estimado".
-- **FR-017**: Precio Real MUST calcularse como Precio Lista + Impuesto (Precio Lista × Imp% de la orden) + Envío estimado, es decir Precio + Imp + Envío estimado. Se recalcula al cambiar cualquiera de sus componentes mientras el usuario no lo haya editado a mano (regla actual de edición de Precio Real).
+- **FR-017**: Precio Real MUST calcularse como el valor de Precio + Imp más Envío estimado. Precio + Imp sigue siendo Precio Lista × (1 + Imp% de la orden) por defecto y puede editarse a mano; si se edita, Precio Real usa el valor editado. Precio Real se recalcula al cambiar Precio Lista, Precio + Imp o Envío estimado, mientras el usuario no lo haya editado a mano (regla actual de edición de Precio Real).
 - **FR-018**: El ítem MUST tener un campo nuevo, "Precio Real en Local" = Precio Real × Tipo de cambio de la orden. Es de solo lectura, se recalcula siempre que cambie Precio Real y se guarda con el ítem.
 - **FR-019**: Total (calculado) MUST ser Precio Real en Local + Tarifa Servicio (solo lectura).
 - **FR-019a**: Precio Acordado MUST tomar por defecto el valor de Total (calculado) y seguir las reglas actuales: es editable y, una vez editado a mano, ya no se recalcula.
 - **FR-020**: Los campos de precio del modal MUST permanecer deshabilitados hasta que el ítem tenga un Tipo de Producto seleccionado.
+- **FR-020a**: La columna "Total" de la tabla de ítems de la orden MUST mostrar el mismo valor que Total (calculado) del modal (Precio Real en Local + Tarifa Servicio). Al abrir un ítem existente, Precio Acordado se considera editado a mano solo si difiere de ese Total.
 - **FR-021**: Los totales del encabezado de la orden MUST mantener la estructura y el significado actuales, porque el pago al proveedor y el envío son pagos independientes: al proveedor se le paga el precio de lista + impuesto, y el Envío estimado se le paga al transportista.
   - Subtotal = Σ Precio Lista de los ítems (la base sin impuesto ni envío; antes era Σ Precio Real, cuyo valor por defecto era el Precio Lista)
   - Impuestos = (Subtotal − Descuento) × Imp%
@@ -165,4 +168,4 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
 - Los ítems ya guardados no se recalculan de forma masiva; las nuevas fórmulas aplican al crear o editar un ítem. En los ítems existentes, Precio Real en Local se llena con Precio Real × Tipo de cambio de su orden.
 - El redondeo a la centena superior aplica solo al Total de la Calculadora, no a los ítems de orden.
 - La validación de la Calculadora permite Costo envío = 0; los demás campos mantienen sus validaciones actuales.
-- Las demás pantallas que muestran ítems (tabla de ítems, reportes) siguen mostrando los valores guardados; solo cambia el modal.
+- Fuera del modal y de la columna Total de la tabla de ítems (FR-020a), las demás pantallas que muestran ítems (por ejemplo, reportes) siguen mostrando los valores guardados.
