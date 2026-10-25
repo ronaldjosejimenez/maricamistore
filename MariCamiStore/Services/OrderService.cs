@@ -101,16 +101,19 @@ public class OrderService(
 
         foreach (var item in items)
         {
-            // Spec 018, FR-018a: RealPrice follows only if it was not edited by hand
+            // Spec 018, FR-018a: RealPrice follows only if it was not edited by hand.
+            // Items saved before 018 used RealPrice = ListPrice as their default, so that also counts as automatic.
             var oldAutoRealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
-            item.ListPriceTaxWithTax = Math.Round(item.ListPrice + item.ListPrice * (newTaxPercentage / 100), 2);
-            if (Math.Abs(item.RealPrice - oldAutoRealPrice) <= 0.01m)
+            bool realPriceIsAuto = Math.Abs(item.RealPrice - oldAutoRealPrice) <= 0.01m
+                || Math.Abs(item.RealPrice - item.ListPrice) <= 0.01m;
+            item.ListPriceTaxWithTax = Math.Round(item.ListPrice + item.ListPrice * (newTaxPercentage / 100), 2, MidpointRounding.AwayFromZero);
+            if (realPriceIsAuto)
                 item.RealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
             ApplyRealPriceInLocal(item, newExchangeRate);
 
             // FR-020: force-recalculate AgreedPriceInLocal when ExchangeRate changed
             if (exchangeRateChanged)
-                item.AgreedPriceInLocal = Math.Round(item.RealPriceInLocal + item.ServiceFeeInLocal, 2);
+                item.AgreedPriceInLocal = Math.Round(item.RealPriceInLocal + item.ServiceFeeInLocal, 2, MidpointRounding.AwayFromZero);
         }
 
         // Order Calculation Suite — run after item fields are updated
@@ -186,9 +189,10 @@ public class OrderService(
     public Task<OrderItem?> GetOrderItemAsync(Guid itemId) =>
         context.OrderItems.FirstOrDefaultAsync(i => i.Id == itemId);
 
-    // Spec 018, FR-018: RealPriceInLocal is always derived server-side from the order's exchange rate
+    // Spec 018, FR-018: RealPriceInLocal is always derived server-side from the order's exchange rate.
+    // AwayFromZero matches the client's round2 (Math.round), so both sides agree on midpoints.
     private static void ApplyRealPriceInLocal(OrderItem item, decimal exchangeRate) =>
-        item.RealPriceInLocal = Math.Round(item.RealPrice * exchangeRate, 2);
+        item.RealPriceInLocal = Math.Round(item.RealPrice * exchangeRate, 2, MidpointRounding.AwayFromZero);
 
     private async Task ApplyRealPriceInLocalAsync(OrderItem item)
     {

@@ -95,6 +95,7 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
 - La Configuración no existe al crear un proveedor: los tres campos aparecen vacíos y son obligatorios.
 - Un ítem existente se abre para editar: su Tipo de Producto ya está seleccionado, así que los campos están habilitados; los valores guardados no se recalculan hasta que el usuario modifique un campo.
 - El usuario editó Precio Real a mano y luego cambia Precio Lista o Envío estimado: Precio Real conserva el valor manual (misma regla que hoy).
+- Ítems guardados antes de esta funcionalidad: su Precio Real por defecto era el Precio Lista, y su Precio Acordado por defecto era (Precio + Imp) × TC + Tarifa. Esos valores también cuentan como "no editados a mano" (FR-017, FR-018a, FR-019a), así que el ítem sigue recalculándose al editarlo o al cambiar Imp o TC. No se reescriben en lote.
 - Modo "Ver" del ítem: todos los campos siguen en solo lectura, como hoy.
 - Órdenes existentes no Pendientes (Activa, Entregando, Completada, Anulada): al abrirlas no se recalculan ni se guardan sus totales; se muestran los valores guardados (FR-022). Así las órdenes viejas no cambian.
 - Reasignar un ítem en una orden Activa, Entregando o Completada: solo cambian el Precio Acordado del ítem, el Precio Acordado Total y la Ganancia estimada (como hoy); Subtotal, Impuestos, Envío a CR y Total Orden quedan como estaban guardados.

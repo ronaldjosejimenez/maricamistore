@@ -374,8 +374,8 @@
     var isPending = @(isPending ? "true" : "false");
     var canManagePackages = @(canManagePackages ? "true" : "false");
     var orderStatus = '@order.Status';
-    var exchangeRate = @order.ExchangeRate;
-    var taxPercentage = @order.TaxPercentage;
+    var exchangeRate = @order.ExchangeRate.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    var taxPercentage = @order.TaxPercentage.ToString(System.Globalization.CultureInfo.InvariantCulture);
     // Saved header totals; non-pending orders only display these (spec 018, FR-022)
     var savedTotals = {
         totalAgreedPriceInLocal: @order.TotalAgreedPriceInLocal.ToString(System.Globalization.CultureInfo.InvariantCulture),
@@ -386,8 +386,8 @@
         totalOrder: @order.TotalOfTheOrder.ToString(System.Globalization.CultureInfo.InvariantCulture),
         profit: @order.EstimatedProfitInLocal.ToString(System.Globalization.CultureInfo.InvariantCulture)
     };
-    var shippingAmountIntern = @order.ShippingAmountIntern;
-    var discountAmount = @order.DiscountAmount;
+    var shippingAmountIntern = @order.ShippingAmountIntern.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    var discountAmount = @order.DiscountAmount.ToString(System.Globalization.CultureInfo.InvariantCulture);
     var orderCurrencyId = '@order.CurrencyId';
     var localCurrencySign = @Html.Raw(Json.Serialize(ViewData["LocalCurrencySign"]));
     var orderCurrencySign = @Html.Raw(Json.Serialize(ViewData["OrderCurrencySign"]));

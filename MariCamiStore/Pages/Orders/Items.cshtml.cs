@@ -154,6 +154,9 @@ public class ItemsModel(
                 return new JsonResult(new { error = "La imagen supera el límite de 2 MB." });
         }
 
+        if (await orderService.GetOrderAsync(dto.OrderId) == null)
+            return new JsonResult(new { error = "Orden no encontrada." });
+
         var item = new OrderItem
         {
             OrderId = dto.OrderId,
