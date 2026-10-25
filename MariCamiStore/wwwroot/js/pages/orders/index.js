@@ -1,6 +1,7 @@
 var token = $('input[name="__RequestVerificationToken"]').val();
 var userEditedName = false;
 var currencyItems = [];
+var supplierItems = [];
 
 function ajaxPost(handler, data, done, fail) {
     $.ajax({
@@ -138,7 +139,17 @@ $('#btn-new-order').on('click', openNewOrder);
 
 $('#order-name').on('input', function () { userEditedName = true; });
 
+// New orders take exchange rate, tax and currency from the supplier (spec 018, FR-013/FR-014)
+function applySupplierDefaults(supplierId) {
+    var s = supplierItems.find(function (x) { return x.id === supplierId; });
+    if (!s) return;
+    $('#order-exchange-rate').val(s.exchangeRateDefault);
+    $('#order-tax').val(s.taxPercentageDefault);
+    if (s.currencyIdDefault) $('#order-currency').val(s.currencyIdDefault);
+}
+
 $('#order-supplier').on('change', function () {
+    if (!$('#order-id').val()) applySupplierDefaults($(this).val());
     if ($('#order-id').val() || userEditedName) return;
     var supplierName = $(this).find('option:selected').text();
     if (!supplierName) return;
@@ -213,6 +224,7 @@ $('#btn-confirm-transition').on('click', function () {
 $(function () {
     // Load suppliers into dropdown
     $.get('/Suppliers/Index?handler=Load', function (data) {
+        supplierItems = data || [];
         var sel = $('#order-supplier');
         sel.empty();
         data.forEach(function (s) { sel.append($('<option>').val(s.id).text(s.name)); });

@@ -76,6 +76,8 @@ public class OrderService(
     {
         var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == totals.OrderId);
         if (order == null) return;
+        // Only pending orders recalculate their header; older orders keep their saved totals (spec 018, FR-022)
+        if (order.Status != OrderStatus.Pending.Key) return;
 
         order.TotalAgreedPriceInLocal = totals.TotalAgreedPriceInLocal;
         order.ShippingAmountToCR = totals.ShippingAmountToCR;
@@ -99,11 +101,16 @@ public class OrderService(
 
         foreach (var item in items)
         {
+            // Spec 018, FR-018a: RealPrice follows only if it was not edited by hand
+            var oldAutoRealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
             item.ListPriceTaxWithTax = Math.Round(item.ListPrice + item.ListPrice * (newTaxPercentage / 100), 2);
+            if (Math.Abs(item.RealPrice - oldAutoRealPrice) <= 0.01m)
+                item.RealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
+            item.RealPriceInLocal = Math.Round(item.RealPrice * newExchangeRate, 2);
 
             // FR-020: force-recalculate AgreedPriceInLocal when ExchangeRate changed
             if (exchangeRateChanged)
-                item.AgreedPriceInLocal = Math.Round(item.ListPriceTaxWithTax * newExchangeRate + item.ServiceFeeInLocal, 2);
+                item.AgreedPriceInLocal = Math.Round(item.RealPriceInLocal + item.ServiceFeeInLocal, 2);
         }
 
         // Order Calculation Suite — run after item fields are updated
@@ -116,7 +123,8 @@ public class OrderService(
     {
         order.TotalAgreedPriceInLocal = Math.Round(items.Sum(i => i.AgreedPriceInLocal), 2);
         order.ShippingAmountToCR     = Math.Round(items.Sum(i => i.EstimateShipping), 2);
-        order.TotalWithoutTaxes      = Math.Round(items.Sum(i => i.RealPrice), 2);
+        // Spec 018, FR-021: RealPrice now includes tax and shipping, so the subtotal is based on list prices
+        order.TotalWithoutTaxes      = Math.Round(items.Sum(i => i.ListPrice), 2);
         order.TaxesAmount            = Math.Round((order.TotalWithoutTaxes - order.DiscountAmount) * (order.TaxPercentage / 100), 2);
         order.TotalToPayToSupplier   = Math.Round(order.ShippingAmountIntern + order.TotalWithoutTaxes + order.TaxesAmount - order.DiscountAmount, 2);
         order.TotalOfTheOrder        = Math.Round(order.TotalToPayToSupplier + order.ShippingAmountToCR, 2);
@@ -150,7 +158,7 @@ public class OrderService(
                 displayNames.GetValueOrDefault(i.CustomerId, i.CustomerId.ToString()),
                 i.ProductDescription, i.ProductLink, i.ProductSourceCode, i.Size,
                 i.ProductImage != null, i.ProductTypeId,
-                i.ListPrice, i.ListPriceTaxWithTax, i.RealPrice,
+                i.ListPrice, i.ListPriceTaxWithTax, i.RealPrice, i.RealPriceInLocal,
                 i.EstimateShipping, i.ServiceFeeInLocal, i.AgreedPriceInLocal,
                 i.IsReceived, i.CreatedAt, i.UpdatedAt))
             .OrderBy(x => x.CustomerDisplayName)

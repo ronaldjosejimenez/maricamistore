@@ -113,8 +113,12 @@ public class CatalogService(
     public Task<List<Supplier>> GetSuppliersAsync() =>
         context.Suppliers.OrderBy(s => s.Name).ToListAsync();
 
+    public Task<List<Supplier>> GetCalculatorSuppliersAsync() =>
+        context.Suppliers.Where(s => s.IsActiveForCalculator).OrderBy(s => s.Name).ToListAsync();
+
     public async Task<Supplier> CreateSupplierAsync(Supplier supplier)
     {
+        ValidateSupplier(supplier);
         supplier.Id = Guid.NewGuid();
         context.Suppliers.Add(supplier);
         await context.SaveChangesAsync();
@@ -123,6 +127,7 @@ public class CatalogService(
 
     public async Task<Supplier> UpdateSupplierAsync(Supplier supplier)
     {
+        ValidateSupplier(supplier);
         context.Suppliers.Update(supplier);
         await context.SaveChangesAsync();
         return supplier;
@@ -136,6 +141,18 @@ public class CatalogService(
             context.Suppliers.Remove(entity);
             await context.SaveChangesAsync();
         }
+    }
+
+    private static void ValidateSupplier(Supplier supplier)
+    {
+        if (supplier.CurrencyIdDefault is null || supplier.CurrencyIdDefault == Guid.Empty)
+            throw new ArgumentException("La moneda por defecto es obligatoria.");
+        if (supplier.ExchangeRateDefault <= 0)
+            throw new ArgumentException("El tipo de cambio por defecto debe ser mayor a cero.");
+        if (supplier.TaxPercentageDefault < 0)
+            throw new ArgumentException("El impuesto por defecto no puede ser negativo.");
+        if (supplier.ShippingCostDefault < 0)
+            throw new ArgumentException("El costo de envío por defecto no puede ser negativo.");
     }
 
     // ── Customers (global) ────────────────────────────────────────────────────

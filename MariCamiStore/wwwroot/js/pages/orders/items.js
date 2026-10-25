@@ -30,11 +30,14 @@ function ajaxPost(handler, data, done, fail) {
 // ── Calculated field helpers ──────────────────────────────────────────────────
 
 // T026: updated calcItem with listPriceTaxWithTax rename
+// Spec 018: list -> +tax -> +shipping (real) -> x rate (real in local) -> +fee (total)
 function calcItem(item) {
     var listPrice = parseFloat(item.listPrice) || 0;
     var svcFee = parseFloat(item.serviceFeeInLocal) || 0;
     item.listPriceTaxWithTax = round2(listPrice + listPrice * (taxPercentage / 100));
-    item._total = round2(item.listPriceTaxWithTax * exchangeRate + svcFee);
+    item.realPrice = round2(item.listPriceTaxWithTax + (parseFloat(item.estimateShipping) || 0));
+    item.realPriceInLocal = round2(item.realPrice * exchangeRate);
+    item._total = round2(item.realPriceInLocal + svcFee);
     if (!item._agreedManuallyEdited) item.agreedPriceInLocal = item._total;
     return item;
 }
@@ -45,21 +48,26 @@ function round2(v) { return Math.round(v * 100) / 100; }
 function recalcOrderHeader(allItems) {
     var totalAgreedPriceInLocal = round2(allItems.reduce(function (s, i) { return s + (parseFloat(i.agreedPriceInLocal) || 0); }, 0));
     var shippingToCR = round2(allItems.reduce(function (s, i) { return s + (parseFloat(i.estimateShipping) || 0); }, 0));
-    var totalWithoutTaxes = round2(allItems.reduce(function (s, i) { return s + (parseFloat(i.realPrice) || 0); }, 0));
+    // Spec 018, FR-021: realPrice now includes tax and shipping, so the subtotal uses list prices
+    var totalWithoutTaxes = round2(allItems.reduce(function (s, i) { return s + (parseFloat(i.listPrice) || 0); }, 0));
     var taxesAmount = round2((totalWithoutTaxes - discountAmount) * (taxPercentage / 100));
     var totalToSupplier = round2(shippingAmountIntern + totalWithoutTaxes + taxesAmount - discountAmount);
     var totalOrder = round2(totalToSupplier + shippingToCR);
     var profit = round2(totalAgreedPriceInLocal - totalOrder * exchangeRate);
 
-    $('#order-total-agreed').text(formatMoney(totalAgreedPriceInLocal, localCurrencySign));
-    $('#h-subtotal').text(formatMoney(totalWithoutTaxes, orderCurrencySign));
-    $('#h-taxes').text(formatMoney(taxesAmount, orderCurrencySign));
-    $('#h-ship-cr').text(formatMoney(shippingToCR, orderCurrencySign));
-    $('#h-total-supplier').text(formatMoney(totalToSupplier, orderCurrencySign));
-    $('#h-total').text(formatMoney(totalOrder, orderCurrencySign));
-    $('#h-profit').text(formatMoney(profit, localCurrencySign));
+    var totals = { totalAgreedPriceInLocal, shippingToCR, totalWithoutTaxes, taxesAmount, totalToSupplier, totalOrder, profit };
+    renderHeader(totals);
+    return totals;
+}
 
-    return { totalAgreedPriceInLocal, shippingToCR, totalWithoutTaxes, taxesAmount, totalToSupplier, totalOrder, profit };
+function renderHeader(totals) {
+    $('#order-total-agreed').text(formatMoney(totals.totalAgreedPriceInLocal, localCurrencySign));
+    $('#h-subtotal').text(formatMoney(totals.totalWithoutTaxes, orderCurrencySign));
+    $('#h-taxes').text(formatMoney(totals.taxesAmount, orderCurrencySign));
+    $('#h-ship-cr').text(formatMoney(totals.shippingToCR, orderCurrencySign));
+    $('#h-total-supplier').text(formatMoney(totals.totalToSupplier, orderCurrencySign));
+    $('#h-total').text(formatMoney(totals.totalOrder, orderCurrencySign));
+    $('#h-profit').text(formatMoney(totals.profit, localCurrencySign));
 }
 
 // T028: persistTotals with totalAgreedPriceInLocal
@@ -82,28 +90,41 @@ function persistTotals(totals) {
 }
 
 function refreshTotals() {
+    // Spec 018, FR-022: only pending orders recalculate and persist; the rest show the saved totals
+    if (!isPending) { renderHeader(savedTotals); return; }
     var totals = recalcOrderHeader(currentItems);
     persistTotals(totals);
 }
 
 // ── Modal helpers ─────────────────────────────────────────────────────────────
 
-function calcModalFields() {
-    var listPrice = parseFloat($('#item-list-price').val()) || 0;
-    var svcFee = parseFloat($('#item-service-fee-in-local').val()) || 0;
-    var ltpwt = round2(listPrice + listPrice * (taxPercentage / 100));
-    var total = round2(ltpwt * exchangeRate + svcFee);
-    $('#item-list-price-tax-with-tax').val(ltpwt.toFixed(2));
+// Spec 018: recalculates the modal chain. source = 'list' | 'lptwt' | 'shipping' | 'real' | 'fee'
+function recalcModal(source) {
+    var lp = parseFloat($('#item-list-price').val()) || 0;
+    if (source === 'list') {
+        $('#item-list-price-tax-with-tax').val(round2(lp + lp * (taxPercentage / 100)).toFixed(2));
+    }
+    var lptwt = parseFloat($('#item-list-price-tax-with-tax').val()) || 0;
+    var shipping = parseFloat($('#item-estimate-shipping').val()) || 0;
+    if (!userEditedRealPrice && source !== 'real') {
+        $('#item-real-price').val(round2(lptwt + shipping).toFixed(2));
+    }
+    var real = parseFloat($('#item-real-price').val()) || 0;
+    var realLocal = round2(real * exchangeRate);
+    var total = round2(realLocal + (parseFloat($('#item-service-fee-in-local').val()) || 0));
+    $('#item-real-price-in-local').val(realLocal.toFixed(2));
     $('#item-total').val(total.toFixed(2));
     if (!userEditedAgreed) $('#item-agreed-price-in-local').val(total.toFixed(2));
 }
 
-function calcModalFromLptpwt() {
-    var ltpwt = parseFloat($('#item-list-price-tax-with-tax').val()) || 0;
-    var svcFee = parseFloat($('#item-service-fee-in-local').val()) || 0;
-    var total = round2(ltpwt * exchangeRate + svcFee);
-    $('#item-total').val(total.toFixed(2));
-    if (!userEditedAgreed) $('#item-agreed-price-in-local').val(total.toFixed(2));
+// Spec 018, FR-020: price fields stay locked until a product type is chosen
+function setPriceFieldsEnabled(enabled) {
+    $('#item-list-price, #item-list-price-tax-with-tax, #item-estimate-shipping, #item-real-price, #item-service-fee-in-local, #item-agreed-price-in-local')
+        .prop('disabled', !enabled);
+}
+
+function hasProductType(id) {
+    return !!id && id !== '00000000-0000-0000-0000-000000000000';
 }
 
 // T029: openAddItem
@@ -125,10 +146,12 @@ function openAddItem() {
     $('#item-list-price-tax-with-tax').val('0');
     $('#item-real-price').val('0');
     $('#item-estimate-shipping').val('0');
+    $('#item-real-price-in-local').val('0');
     $('#item-service-fee-in-local').val('0');
     $('#item-total').val('0');
     $('#item-agreed-price-in-local').val('0');
     $('#item-modal-error').hide();
+    setPriceFieldsEnabled(false);
 
     // T031: load ProductTypes filtered by order currency
     var ptSel = $('#item-product-type').empty();
@@ -150,9 +173,12 @@ function openAddItem() {
 
 // T029: openEditItem
 function openEditItem(item) {
-    var computed = round2((parseFloat(item.listPriceTaxWithTax) || 0) * exchangeRate + (parseFloat(item.serviceFeeInLocal) || 0));
+    // Spec 018, FR-020a: manual-edit flags compare against the new formulas
+    var realLocal = parseFloat(item.realPriceInLocal) || 0;
+    var computed = round2(realLocal + (parseFloat(item.serviceFeeInLocal) || 0));
     userEditedAgreed = Math.abs((parseFloat(item.agreedPriceInLocal) || 0) - computed) > 0.01;
-    userEditedRealPrice = Math.abs((parseFloat(item.realPrice) || 0) - (parseFloat(item.listPrice) || 0)) > 0.01;
+    userEditedRealPrice = Math.abs((parseFloat(item.realPrice) || 0) -
+        ((parseFloat(item.listPriceTaxWithTax) || 0) + (parseFloat(item.estimateShipping) || 0))) > 0.01;
     selectedImageBase64 = null;
 
     $('#item-id').val(item.id);
@@ -191,8 +217,10 @@ function openEditItem(item) {
     $('#item-list-price-tax-with-tax').val((parseFloat(item.listPriceTaxWithTax) || 0).toFixed(2));
     $('#item-real-price').val((parseFloat(item.realPrice) || 0).toFixed(2));
     $('#item-estimate-shipping').val((parseFloat(item.estimateShipping) || 0).toFixed(2));
+    $('#item-real-price-in-local').val(realLocal.toFixed(2));
     $('#item-service-fee-in-local').val((parseFloat(item.serviceFeeInLocal) || 0).toFixed(2));
     $('#item-total').val(computed.toFixed(2));
+    setPriceFieldsEnabled(hasProductType(item.productTypeId));
     $('#item-agreed-price-in-local').val((parseFloat(item.agreedPriceInLocal) || 0).toFixed(2));
     $('#item-modal-error').hide();
 
@@ -217,6 +245,7 @@ function restoreItemModalEditable() {
     var ptSel = $('#item-product-type');
     var noTypes = ptSel.children('option').length > 0 && ptSel.children('option:not(:disabled)').length === 0;
     ptSel.prop('disabled', noTypes);
+    setPriceFieldsEnabled(hasProductType(ptSel.val()));
     $('#btn-save-item').show();
     $('#btn-cancel-item').text('Cancelar');
 }
@@ -269,7 +298,7 @@ function renderItemsTable(items) {
         );
 
         groupItems.forEach(function (item) {
-            var total = round2((parseFloat(item.listPriceTaxWithTax) || 0) * exchangeRate + (parseFloat(item.serviceFeeInLocal) || 0));
+            var total = round2((parseFloat(item.realPriceInLocal) || 0) + (parseFloat(item.serviceFeeInLocal) || 0));
             groupSubtotal += parseFloat(item.agreedPriceInLocal) || 0;
 
             var $tr = $('<tr>');
@@ -515,21 +544,18 @@ $(function () {
     $('#btn-add-item').on('click', openAddItem);
 
     // T030: Reactive handlers in modal
-    $('#item-list-price').on('input', function () {
-        var lp = parseFloat($(this).val()) || 0;
-        if (!userEditedRealPrice) {
-            $('#item-real-price').val(lp.toFixed(2));
-        }
-        calcModalFields();
+    $('#item-list-price').on('input', function () { recalcModal('list'); });
+
+    $('#item-real-price').on('input', function () {
+        userEditedRealPrice = true;
+        recalcModal('real');
     });
 
-    $('#item-real-price').on('input', function () { userEditedRealPrice = true; });
+    $('#item-list-price-tax-with-tax').on('input', function () { recalcModal('lptwt'); });
 
-    $('#item-list-price-tax-with-tax').on('input', calcModalFromLptpwt);
+    $('#item-estimate-shipping').on('input', function () { recalcModal('shipping'); });
 
-    $('#item-service-fee-in-local').on('input', function () {
-        calcModalFromLptpwt();
-    });
+    $('#item-service-fee-in-local').on('input', function () { recalcModal('fee'); });
 
     $('#item-agreed-price-in-local').on('input', function () {
         userEditedAgreed = true;
@@ -538,12 +564,13 @@ $(function () {
     // T031: ProductType change handler
     $('#item-product-type').on('change', function () {
         var id = $(this).val();
+        setPriceFieldsEnabled(hasProductType(id));
         if (!id) return;
         $.get('?handler=ProductType&id=' + id + '&orderId=' + orderId, function (pt) {
             if (!pt) return;
             $('#item-service-fee-in-local').val((parseFloat(pt.serviceFeeInLocal) || 0).toFixed(2));
             $('#item-estimate-shipping').val((parseFloat(pt.estimateShipping) || 0).toFixed(2));
-            calcModalFromLptpwt();
+            recalcModal('shipping');
         });
     });
 
@@ -711,6 +738,11 @@ $(function () {
             success: function (r) {
                 if (r.success) {
                     $('#modalReasignar').modal('hide');
+                    // Spec 018, FR-023: only these two header totals change on reassignment
+                    if (r.totalAgreedPriceInLocal != null && r.estimatedProfitInLocal != null) {
+                        savedTotals.totalAgreedPriceInLocal = r.totalAgreedPriceInLocal;
+                        savedTotals.profit = r.estimatedProfitInLocal;
+                    }
                     loadItems();
                 } else {
                     $('#reasignar-error').text(r.error || 'Error al reasignar.').show();

@@ -353,6 +353,11 @@ namespace MariCamiStore.Infrastructure.Persistance.Migrations
                     b.Property<decimal>("RealPrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("RealPriceInLocal")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
                     b.Property<decimal>("ServiceFeeInLocal")
                         .HasColumnType("decimal(18,2)");
 
@@ -743,10 +748,33 @@ namespace MariCamiStore.Infrastructure.Persistance.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CurrencyIdDefault")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("ExchangeRateDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<bool>("IsActiveForCalculator")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("ShippingCostDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<decimal>("TaxPercentageDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
 
                     b.HasKey("Id");
 
@@ -756,32 +784,56 @@ namespace MariCamiStore.Infrastructure.Persistance.Migrations
                         new
                         {
                             Id = new Guid("63b4d953-66d5-409e-929d-6036111fb710"),
-                            Name = "Shein"
+                            ExchangeRateDefault = 0m,
+                            IsActiveForCalculator = true,
+                            Name = "Shein",
+                            ShippingCostDefault = 0m,
+                            TaxPercentageDefault = 0m
                         },
                         new
                         {
                             Id = new Guid("63b4d953-66d5-409e-929d-6036111fb711"),
-                            Name = "Adidas"
+                            ExchangeRateDefault = 0m,
+                            IsActiveForCalculator = false,
+                            Name = "Adidas",
+                            ShippingCostDefault = 0m,
+                            TaxPercentageDefault = 0m
                         },
                         new
                         {
                             Id = new Guid("63b4d953-66d5-409e-929d-6036111fb712"),
-                            Name = "Puma"
+                            ExchangeRateDefault = 0m,
+                            IsActiveForCalculator = false,
+                            Name = "Puma",
+                            ShippingCostDefault = 0m,
+                            TaxPercentageDefault = 0m
                         },
                         new
                         {
                             Id = new Guid("63b4d953-66d5-409e-929d-6036111fb713"),
-                            Name = "Amazon"
+                            ExchangeRateDefault = 0m,
+                            IsActiveForCalculator = false,
+                            Name = "Amazon",
+                            ShippingCostDefault = 0m,
+                            TaxPercentageDefault = 0m
                         },
                         new
                         {
                             Id = new Guid("63b4d953-66d5-409e-929d-6036111fb714"),
-                            Name = "Ross y otros"
+                            ExchangeRateDefault = 0m,
+                            IsActiveForCalculator = false,
+                            Name = "Ross y otros",
+                            ShippingCostDefault = 0m,
+                            TaxPercentageDefault = 0m
                         },
                         new
                         {
                             Id = new Guid("63b4d953-66d5-409e-929d-6036111fb715"),
-                            Name = "Otros"
+                            ExchangeRateDefault = 0m,
+                            IsActiveForCalculator = false,
+                            Name = "Otros",
+                            ShippingCostDefault = 0m,
+                            TaxPercentageDefault = 0m
                         });
                 });
 

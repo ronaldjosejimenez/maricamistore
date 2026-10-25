@@ -24,6 +24,7 @@ public interface ICatalogService
 
     // Suppliers
     Task<List<Supplier>> GetSuppliersAsync();
+    Task<List<Supplier>> GetCalculatorSuppliersAsync();
     Task<Supplier> CreateSupplierAsync(Supplier supplier);
     Task<Supplier> UpdateSupplierAsync(Supplier supplier);
     Task DeleteSupplierAsync(Guid id);
