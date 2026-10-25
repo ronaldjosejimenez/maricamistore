@@ -378,13 +378,13 @@
     var taxPercentage = @order.TaxPercentage;
     // Saved header totals; non-pending orders only display these (spec 018, FR-022)
     var savedTotals = {
-        totalAgreedPriceInLocal: @order.TotalAgreedPriceInLocal,
-        shippingToCR: @order.ShippingAmountToCR,
-        totalWithoutTaxes: @order.TotalWithoutTaxes,
-        taxesAmount: @order.TaxesAmount,
-        totalToSupplier: @order.TotalToPayToSupplier,
-        totalOrder: @order.TotalOfTheOrder,
-        profit: @order.EstimatedProfitInLocal
+        totalAgreedPriceInLocal: @order.TotalAgreedPriceInLocal.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        shippingToCR: @order.ShippingAmountToCR.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        totalWithoutTaxes: @order.TotalWithoutTaxes.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        taxesAmount: @order.TaxesAmount.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        totalToSupplier: @order.TotalToPayToSupplier.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        totalOrder: @order.TotalOfTheOrder.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        profit: @order.EstimatedProfitInLocal.ToString(System.Globalization.CultureInfo.InvariantCulture)
     };
     var shippingAmountIntern = @order.ShippingAmountIntern;
     var discountAmount = @order.DiscountAmount;

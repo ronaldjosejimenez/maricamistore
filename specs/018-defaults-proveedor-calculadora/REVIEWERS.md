@@ -62,7 +62,8 @@ Cada proveedor tiene su impuesto, moneda, tipo de cambio y costo de envío por d
 - [ ] Success criteria are achievable
 - [ ] No unstated assumptions
 - [ ] El SQL de la migración corre después de los `UpdateData` de los seeds
-- [ ] Una orden Completada no cambia sus totales al abrirla (quickstart §4.8)
+- [ ] Una orden Completada no cambia sus totales al abrirla (quickstart §4.10)
+- [ ] **Deploy:** ejecutar el script idempotente de la migración en producción ANTES de desplegar el código (el pipeline no aplica migraciones)
 
 ---
 

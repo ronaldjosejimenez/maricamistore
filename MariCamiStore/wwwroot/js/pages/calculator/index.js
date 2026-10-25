@@ -2,6 +2,8 @@
 var suppliers = [];
 var defaults = { serviceCost: 3000 };
 
+function round2(v) { return Math.round(v * 100) / 100; }
+
 function currentSupplier() {
     var id = $('#SupplierId').val();
     return suppliers.find(function (s) { return s.id === id; }) || null;
@@ -33,7 +35,7 @@ function loadSuppliers() {
             $('#NoSuppliersWarning').hide();
         }
         Clean();
-    });
+    }).fail(function (xhr) { alert('Error cargando proveedores: ' + xhr.status); });
 }
 
 function Clean() {
@@ -57,10 +59,10 @@ function Calculate() {
     var exchangeRate = Number($('#ExchangeRate').val());
     var shipping = Number($('#Shipping').val());
     var serviceCost = Number($('#ServiceCost').val());
-    var priceWithVAT = listPrice + listPrice * (vat / 100) + shipping;
-    var priceCOL = priceWithVAT * exchangeRate;
-    // Round to cents first so float noise (e.g. 9700.0000001) does not jump a hundred
-    var subtotal = Math.round((priceCOL + serviceCost) * 100) / 100;
+    // Same rounding steps as the order item chain (FR-010a); cents first so float noise never jumps a hundred
+    var priceWithVAT = round2(round2(listPrice + listPrice * (vat / 100)) + shipping);
+    var priceCOL = round2(priceWithVAT * exchangeRate);
+    var subtotal = round2(priceCOL + serviceCost);
     var total = Math.ceil(subtotal / 100) * 100;
     $('#PriceWithVAT').text(priceWithVAT.toFixed(2));
     $('#PriceCOL').text(priceCOL.toFixed(2));

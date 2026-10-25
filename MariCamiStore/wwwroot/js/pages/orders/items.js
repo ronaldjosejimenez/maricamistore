@@ -29,19 +29,6 @@ function ajaxPost(handler, data, done, fail) {
 
 // ── Calculated field helpers ──────────────────────────────────────────────────
 
-// T026: updated calcItem with listPriceTaxWithTax rename
-// Spec 018: list -> +tax -> +shipping (real) -> x rate (real in local) -> +fee (total)
-function calcItem(item) {
-    var listPrice = parseFloat(item.listPrice) || 0;
-    var svcFee = parseFloat(item.serviceFeeInLocal) || 0;
-    item.listPriceTaxWithTax = round2(listPrice + listPrice * (taxPercentage / 100));
-    item.realPrice = round2(item.listPriceTaxWithTax + (parseFloat(item.estimateShipping) || 0));
-    item.realPriceInLocal = round2(item.realPrice * exchangeRate);
-    item._total = round2(item.realPriceInLocal + svcFee);
-    if (!item._agreedManuallyEdited) item.agreedPriceInLocal = item._total;
-    return item;
-}
-
 function round2(v) { return Math.round(v * 100) / 100; }
 
 // T027: updated recalcOrderHeader with TotalAgreedPriceInLocal + fixed formula

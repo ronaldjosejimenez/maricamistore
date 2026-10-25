@@ -118,6 +118,15 @@ CROSS JOIN (SELECT TOP 1 TaxPercentage, OrderCurrencyIdDefault, ExchangeRate
 
 UPDATE dbo.Suppliers SET IsActiveForCalculator = 1 WHERE Name = N'Shein';
 
+-- Pending orders only: items saved with the old default RealPrice = ListPrice move to the new
+-- default (ListPriceTaxWithTax + EstimateShipping) so they are not treated as manually edited.
+-- Non-pending orders are left untouched on purpose (FR-022).
+UPDATE oi
+SET oi.RealPrice = oi.ListPriceTaxWithTax + oi.EstimateShipping
+FROM dbo.OrderItems oi
+INNER JOIN dbo.Orders o ON o.Id = oi.OrderId
+WHERE o.Status = N'Pending' AND ABS(oi.RealPrice - oi.ListPrice) <= 0.01;
+
 UPDATE oi
 SET oi.RealPriceInLocal = ROUND(oi.RealPrice * o.ExchangeRate, 2)
 FROM dbo.OrderItems oi

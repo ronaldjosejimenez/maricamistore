@@ -20,7 +20,8 @@ function ajaxPost(handler, data, done, fail) {
 // jsGrid's built-in number field uses parseInt; defaults need 2 decimals
 function DecimalField(config) { jsGrid.fields.number.call(this, config); }
 DecimalField.prototype = new jsGrid.fields.number({
-    _parse: function (val) { return val === '' || val == null ? 0 : parseFloat(val); },
+    // Empty stays empty so validate: 'required' can reject it
+    _parse: function (val) { return val === '' || val == null ? undefined : parseFloat(val); },
     insertValue: function () { return this._parse(this.insertControl.val()); },
     editValue: function () { return this._parse(this.editControl.val()); },
     _createTextBox: function () {
@@ -78,7 +79,7 @@ function initGrid() {
             { name: 'id', type: 'text', visible: false },
             { name: 'name', title: 'Nombre', type: 'text', width: 200, validate: 'required' },
             {
-                name: 'taxPercentageDefault', title: 'Impuesto %', type: 'decimal', width: 90,
+                name: 'taxPercentageDefault', title: 'Impuesto %', type: 'decimal', width: 90, validate: 'required',
                 insertTemplate: withInsertDefault('number', function () { return cfg ? cfg.taxPercentage : null; })
             },
             {
@@ -87,13 +88,14 @@ function initGrid() {
                 insertTemplate: withInsertDefault('select', function () { return cfg ? cfg.currencyId : null; })
             },
             {
-                name: 'exchangeRateDefault', title: 'Tipo de cambio', type: 'decimal', width: 110,
+                name: 'exchangeRateDefault', title: 'Tipo de cambio', type: 'decimal', width: 110, validate: 'required',
                 insertTemplate: withInsertDefault('number', function () { return cfg ? cfg.exchangeRate : null; })
             },
             {
                 name: 'shippingCostDefault', title: 'Envío', type: 'decimal', width: 100,
                 insertTemplate: withInsertDefault('number', function () { return 0; }),
-                itemTemplate: function (val, item) { return formatMoney(val, currencySign(item.currencyIdDefault)); }
+                // .text() so a currency sign is never interpreted as HTML
+                itemTemplate: function (val, item) { return $('<span>').text(formatMoney(val, currencySign(item.currencyIdDefault))); }
             },
             { name: 'isActiveForCalculator', title: 'Activo calculadora', type: 'checkbox', width: 90 },
             { type: 'control' }
@@ -109,5 +111,5 @@ $(function () {
         currencyItems = (currRes[0] || []).map(function (c) { return { id: c.id, text: c.abbreviation, sign: c.sign || '' }; });
         cfg = cfgRes[0] || null;
         initGrid();
-    });
+    }).fail(function (xhr) { alert('Error cargando datos: ' + xhr.status); });
 });

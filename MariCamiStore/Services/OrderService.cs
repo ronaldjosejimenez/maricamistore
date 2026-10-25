@@ -106,7 +106,7 @@ public class OrderService(
             item.ListPriceTaxWithTax = Math.Round(item.ListPrice + item.ListPrice * (newTaxPercentage / 100), 2);
             if (Math.Abs(item.RealPrice - oldAutoRealPrice) <= 0.01m)
                 item.RealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
-            item.RealPriceInLocal = Math.Round(item.RealPrice * newExchangeRate, 2);
+            ApplyRealPriceInLocal(item, newExchangeRate);
 
             // FR-020: force-recalculate AgreedPriceInLocal when ExchangeRate changed
             if (exchangeRateChanged)
@@ -186,8 +186,19 @@ public class OrderService(
     public Task<OrderItem?> GetOrderItemAsync(Guid itemId) =>
         context.OrderItems.FirstOrDefaultAsync(i => i.Id == itemId);
 
+    // Spec 018, FR-018: RealPriceInLocal is always derived server-side from the order's exchange rate
+    private static void ApplyRealPriceInLocal(OrderItem item, decimal exchangeRate) =>
+        item.RealPriceInLocal = Math.Round(item.RealPrice * exchangeRate, 2);
+
+    private async Task ApplyRealPriceInLocalAsync(OrderItem item)
+    {
+        var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == item.OrderId);
+        if (order != null) ApplyRealPriceInLocal(item, order.ExchangeRate);
+    }
+
     public async Task<OrderItem> CreateOrderItemAsync(OrderItem item)
     {
+        await ApplyRealPriceInLocalAsync(item);
         item.Id = Guid.NewGuid();
         item.CreatedAt = DateTime.UtcNow;
         item.UpdatedAt = DateTime.UtcNow;
@@ -198,6 +209,7 @@ public class OrderService(
 
     public async Task<OrderItem> UpdateOrderItemAsync(OrderItem item)
     {
+        await ApplyRealPriceInLocalAsync(item);
         item.UpdatedAt = DateTime.UtcNow;
         context.OrderItems.Update(item);
         await context.SaveChangesAsync();

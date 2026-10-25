@@ -154,11 +154,6 @@ public class ItemsModel(
                 return new JsonResult(new { error = "La imagen supera el límite de 2 MB." });
         }
 
-        // RealPriceInLocal is always computed server-side (spec 018, FR-018)
-        var order = await orderService.GetOrderAsync(dto.OrderId);
-        if (order == null)
-            return new JsonResult(new { error = "Orden no encontrada." });
-
         var item = new OrderItem
         {
             OrderId = dto.OrderId,
@@ -172,7 +167,6 @@ public class ItemsModel(
             ListPrice = dto.ListPrice,
             ListPriceTaxWithTax = dto.ListPriceTaxWithTax,
             RealPrice = dto.RealPrice,
-            RealPriceInLocal = Math.Round(dto.RealPrice * order.ExchangeRate, 2),
             EstimateShipping = dto.EstimateShipping,
             ServiceFeeInLocal = dto.ServiceFeeInLocal,
             AgreedPriceInLocal = dto.AgreedPriceInLocal
@@ -233,10 +227,6 @@ public class ItemsModel(
         existing.ListPrice = dto.ListPrice;
         existing.ListPriceTaxWithTax = dto.ListPriceTaxWithTax;
         existing.RealPrice = dto.RealPrice;
-        var order = await orderService.GetOrderAsync(dto.OrderId);
-        if (order == null)
-            return new JsonResult(new { error = "Orden no encontrada." });
-        existing.RealPriceInLocal = Math.Round(dto.RealPrice * order.ExchangeRate, 2);
         existing.EstimateShipping = dto.EstimateShipping;
         existing.ServiceFeeInLocal = dto.ServiceFeeInLocal;
         existing.AgreedPriceInLocal = dto.AgreedPriceInLocal;
