@@ -45,6 +45,8 @@ No quedan `NEEDS CLARIFICATION` en el Technical Context. Estas son las decisione
 
 - **Decision**: `TotalWithoutTaxes = Σ ListPrice` en los dos lugares donde se calcula: `OrderService.ApplyOrderCalculationSuite` (servidor) y `recalcOrderHeader` en `items.js` (cliente). El resto de las fórmulas no cambia.
 - **Rationale**: FR-021. El cliente recalcula y persiste los totales al abrir la orden (`renderItemsTable → refreshTotals`); si no se cambian los dos lugares, divergen.
+- **Solo Pendientes (FR-022)**: `refreshTotals()` recalcula y llama `persistTotals` solo si `isPending`. En otro estado, el encabezado muestra los valores que renderiza el servidor en `Items.cshtml`. Como defensa, `OrderService.UpdateOrderTotalsAsync` ignora la llamada si `order.Status != Pending`.
+- **Reasignar (FR-023)**: el servidor no cambia. `OnPostReasignarAsync` devuelve además `totalAgreedPriceInLocal` y `estimatedProfitInLocal` ya actualizados, y el JS refresca solo `#order-total-agreed` y `#h-profit`, sin llamar `refreshTotals`.
 
 ## R8 — Recálculo al cambiar Impuesto o TC (Trigger A)
 
@@ -59,5 +61,6 @@ No quedan `NEEDS CLARIFICATION` en el Technical Context. Estas son las decisione
   - SQL al final de `Up` (después de cualquier `UpdateData` de los seeds de proveedores):
     - Llenar los 3 defaults de `dbo.Suppliers` desde `TOP 1 dbo.Configurations ORDER BY Id`. Si no hay fila, no cambia nada.
     - Backfill de `dbo.OrderItems.RealPriceInLocal = ROUND(oi.RealPrice * o.ExchangeRate, 2)` con JOIN a `dbo.Orders`.
+  - Shein (seed `63B4D953-66D5-409E-929D-6036111FB710`) queda con `IsActiveForCalculator = true` en `HasData`. Así EF genera el `UpdateData` y el snapshot queda consistente. Para un Shein con otro Id (creado a mano), se agrega `UPDATE dbo.Suppliers SET IsActiveForCalculator = 1 WHERE Name = 'Shein'`.
   - `Down` elimina las columnas.
 - **Rationale**: `Supplier` tiene `HasData`. Agregar propiedades puede hacer que EF genere `UpdateData` para los seeds con valores en 0, y el SQL debe correr después para no quedar sobrescrito.

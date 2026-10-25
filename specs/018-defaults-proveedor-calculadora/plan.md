@@ -97,6 +97,8 @@ MariCamiStore/
 - **openEditItem**: los flags de edición manual se detectan con la fórmula nueva (research R6) y se muestra `realPriceInLocal`.
 - **Tabla**: Total = `realPriceInLocal + serviceFeeInLocal`.
 - **Header**: `totalWithoutTaxes = Σ listPrice` en `recalcOrderHeader` y `ApplyOrderCalculationSuite`.
+- **Solo Pendientes (FR-022)**: `refreshTotals()` sale temprano si `!isPending`. `UpdateOrderTotalsAsync` ignora las órdenes no Pendientes.
+- **Reasignar (FR-023)**: `OnPostReasignarAsync` devuelve los dos totales actualizados y el JS refresca solo Precio Acordado Total y Ganancia.
 - **Servidor**: en Insert y Update, `RealPriceInLocal = Math.Round(dto.RealPrice * order.ExchangeRate, 2)`; la orden se obtiene con `orderService.GetOrderAsync(dto.OrderId)`, como en `OnPostUpdateOrderAsync`. Trigger A según research R8.
 
 ## Complexity Tracking

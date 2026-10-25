@@ -8,6 +8,14 @@
 
 **Input**: User description: "Basado en el brainstorm brainstorm/18-defaults-proveedor-calculadora.md (short name: defaults-proveedor-calculadora). Implementar las fórmulas tal como están en el requerimiento; resolver las Open Questions del brainstorm en el spec."
 
+## Clarifications
+
+### Session 2026-10-25
+
+- Q: ¿Qué órdenes recalculan y guardan los totales del encabezado al abrirse? → A: Solo las Pendientes; las demás muestran lo guardado. Reasignar solo actualiza Precio Acordado Total y Ganancia (FR-022, FR-023).
+- Q: Al cambiar Impuesto o TC en una orden Pendiente, ¿cómo se recalculan los ítems? → A: Precio + Imp siempre; Precio Real solo si no se editó a mano; Precio Real en Local siempre; Precio Acordado se fuerza a recalcular si cambió el TC, aunque se haya editado a mano (FR-018a).
+- Q: ¿Qué proveedores existentes quedan activos para la calculadora tras la migración? → A: Solo Shein; los demás inactivos (FR-004).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Valores por defecto en el catálogo de proveedores (Priority: P1)
@@ -88,7 +96,8 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
 - Un ítem existente se abre para editar: su Tipo de Producto ya está seleccionado, así que los campos están habilitados; los valores guardados no se recalculan hasta que el usuario modifique un campo.
 - El usuario editó Precio Real a mano y luego cambia Precio Lista o Envío estimado: Precio Real conserva el valor manual (misma regla que hoy).
 - Modo "Ver" del ítem: todos los campos siguen en solo lectura, como hoy.
-- Órdenes existentes: al abrirlas, el encabezado se recalcula con la regla de FR-021 (Subtotal = Σ Precio Lista) y se guarda, como pasa hoy. En las órdenes donde Precio Real se había ajustado a mano, cambian el Subtotal, los Impuestos, el Total y la Ganancia estimada. Se acepta este recálculo, también para órdenes cerradas.
+- Órdenes existentes no Pendientes (Activa, Entregando, Completada, Anulada): al abrirlas no se recalculan ni se guardan sus totales; se muestran los valores guardados (FR-022). Así las órdenes viejas no cambian.
+- Reasignar un ítem en una orden Activa, Entregando o Completada: solo cambian el Precio Acordado del ítem, el Precio Acordado Total y la Ganancia estimada (como hoy); Subtotal, Impuestos, Envío a CR y Total Orden quedan como estaban guardados.
 
 ## Requirements *(mandatory)*
 
@@ -100,7 +109,7 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
 - **FR-002**: Al crear un proveedor, el sistema MUST precargar Impuesto default ← Impuesto de la Configuración, Moneda default ← Moneda de orden por defecto de la Configuración y Tipo de cambio default ← Tipo de cambio de la Configuración (se usa el primer registro de Configuración).
 - **FR-002a**: Al guardar un proveedor, el sistema MUST validar: Moneda default obligatoria, Tipo de cambio default > 0, Impuesto default ≥ 0 y Costo de envío default ≥ 0; si algo falla, muestra un mensaje y no guarda.
 - **FR-003**: Un proveedor nuevo MUST arrancar con Costo de envío default = 0 y "Activo para la calculadora" = no, salvo que el usuario cambie esos valores.
-- **FR-004**: La actualización del sistema MUST llenar Impuesto, Moneda y Tipo de cambio default en todos los proveedores existentes con los valores del primer registro de Configuración.
+- **FR-004**: La actualización del sistema MUST llenar Impuesto, Moneda y Tipo de cambio default en todos los proveedores existentes con los valores del primer registro de Configuración. Además, MUST dejar el proveedor **Shein** con "Activo para la calculadora" = sí; los demás proveedores existentes quedan inactivos. Todos quedan con Costo de envío default = 0.
 
 **Calculadora**
 
@@ -128,7 +137,7 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
 - **FR-016**: La etiqueta "Envío Est." del modal MUST cambiar a "Envío estimado".
 - **FR-017**: Precio Real MUST calcularse como el valor de Precio + Imp más Envío estimado. Precio + Imp sigue siendo Precio Lista × (1 + Imp% de la orden) por defecto y puede editarse a mano; si se edita, Precio Real usa el valor editado. Precio Real se recalcula al cambiar Precio Lista, Precio + Imp o Envío estimado, mientras el usuario no lo haya editado a mano (regla actual de edición de Precio Real).
 - **FR-018**: El ítem MUST tener un campo nuevo, "Precio Real en Local" = Precio Real × Tipo de cambio de la orden. Es de solo lectura, se recalcula siempre que cambie Precio Real y se guarda con el ítem.
-- **FR-018a**: Cuando se guarda un cambio de Impuesto o Tipo de cambio en el encabezado de una orden Pendiente, cada ítem MUST recalcularse así: Precio + Imp se recalcula (como hoy); Precio Real se recalcula solo si no había sido editado a mano (es decir, si era igual a Precio + Imp anterior + Envío estimado); Precio Real en Local = Precio Real × nuevo Tipo de cambio; y, si cambió el Tipo de cambio, Precio Acordado = Precio Real en Local + Tarifa Servicio (regla actual de recálculo forzado al cambiar el TC).
+- **FR-018a**: Cuando se guarda un cambio de Impuesto o Tipo de cambio en el encabezado de una orden Pendiente, cada ítem MUST recalcularse así: Precio + Imp se recalcula (como hoy); Precio Real se recalcula solo si no había sido editado a mano (es decir, si era igual a Precio + Imp anterior + Envío estimado); Precio Real en Local = Precio Real × nuevo Tipo de cambio; y, si cambió el Tipo de cambio, Precio Acordado = Precio Real en Local + Tarifa Servicio, aunque se haya editado a mano (regla actual de recálculo forzado al cambiar el TC).
 - **FR-019**: Total (calculado) MUST ser Precio Real en Local + Tarifa Servicio (solo lectura).
 - **FR-019a**: Precio Acordado MUST tomar por defecto el valor de Total (calculado) y seguir las reglas actuales: es editable y, una vez editado a mano, ya no se recalcula.
 - **FR-020**: Los campos de precio del modal MUST permanecer deshabilitados hasta que el ítem tenga un Tipo de Producto seleccionado.
@@ -141,6 +150,8 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
   - Total Orden = Total a Prov. + Envío a CR
   - Ganancia Est. = Precio Acordado Total − Total Orden × TC
   - El nuevo Precio Real (que ya incluye impuesto y envío) MUST NOT usarse como base del encabezado, para no cobrar dos veces el impuesto ni sumar dos veces el envío.
+- **FR-022**: Los totales del encabezado MUST recalcularse y guardarse solo en órdenes Pendientes. En órdenes en cualquier otro estado, abrir la orden o recargar sus ítems MUST NOT recalcular ni guardar los totales; la pantalla muestra los valores guardados.
+- **FR-023**: Reasignar un ítem MUST seguir actualizando solo Precio Acordado Total y Ganancia estimada (Ganancia = Precio Acordado Total − Total Orden guardado × TC), sin tocar Subtotal, Impuestos, Envío a CR, Total a Prov. ni Total Orden. Después de reasignar, la pantalla refresca solo esos dos valores.
 
 ### Key Entities
 
@@ -163,7 +174,7 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
 
 - El "primer registro de Configuración" es la fuente de los defaults aunque la Configuración sea por organización; los proveedores son globales.
 - El costo de envío default del proveedor está en la moneda default del proveedor; en la calculadora se suma antes de convertir con el tipo de cambio, como dice la fórmula.
-- Los proveedores existentes quedan con Costo de envío default = 0 y "Activo para la calculadora" = no; el administrador los activa desde el catálogo.
+- Los proveedores existentes quedan con Costo de envío default = 0. Solo Shein queda activo para la calculadora; el administrador configura su envío y activa los demás desde el catálogo.
 - Costo servicio en la Calculadora conserva su valor inicial actual (3000) y no depende del proveedor.
 - El impuesto de la calculadora se calcula solo sobre el precio de lista, no sobre el envío.
 - Los ítems ya guardados no se recalculan de forma masiva; las nuevas fórmulas aplican al crear o editar un ítem. En los ítems existentes, Precio Real en Local se llena con Precio Real × Tipo de cambio de su orden.
