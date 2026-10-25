@@ -2,7 +2,8 @@
 var suppliers = [];
 var defaults = { serviceCost: 3000 };
 
-function round2(v) { return Math.round(v * 100) / 100; }
+// Half away from zero like the server (MidpointRounding.AwayFromZero); EPSILON absorbs binary float noise
+function round2(v) { return Math.sign(v) * Math.round((Math.abs(v) + Number.EPSILON) * 100) / 100; }
 
 function currentSupplier() {
     var id = $('#SupplierId').val();

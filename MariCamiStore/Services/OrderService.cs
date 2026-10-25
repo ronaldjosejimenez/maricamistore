@@ -101,18 +101,24 @@ public class OrderService(
 
         foreach (var item in items)
         {
-            // Spec 018, FR-018a: RealPrice follows only if it was not edited by hand.
-            // Items saved before 018 used RealPrice = ListPrice as their default, so that also counts as automatic.
+            // Spec 018, FR-018a: RealPrice and AgreedPrice follow only if they were not edited by hand.
+            // Items saved before 018 had other defaults (RealPrice = ListPrice, Agreed = (Price + Tax) x rate + fee);
+            // those count as automatic only for items created before 018.
+            bool isLegacy = item.CreatedAt < LegacyItemsCutoffUtc;
             var oldAutoRealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
             bool realPriceIsAuto = Math.Abs(item.RealPrice - oldAutoRealPrice) <= 0.01m
-                || Math.Abs(item.RealPrice - item.ListPrice) <= 0.01m;
+                || (isLegacy && Math.Abs(item.RealPrice - item.ListPrice) <= 0.01m);
+            var oldAutoAgreed = Math.Round(item.RealPriceInLocal + item.ServiceFeeInLocal, 2, MidpointRounding.AwayFromZero);
+            var legacyAutoAgreed = Math.Round(item.ListPriceTaxWithTax * newExchangeRate + item.ServiceFeeInLocal, 2, MidpointRounding.AwayFromZero);
+            bool agreedIsAuto = Math.Abs(item.AgreedPriceInLocal - oldAutoAgreed) <= 0.01m
+                || (isLegacy && !exchangeRateChanged && Math.Abs(item.AgreedPriceInLocal - legacyAutoAgreed) <= 0.01m);
             item.ListPriceTaxWithTax = Math.Round(item.ListPrice + item.ListPrice * (newTaxPercentage / 100), 2, MidpointRounding.AwayFromZero);
             if (realPriceIsAuto)
                 item.RealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
             ApplyRealPriceInLocal(item, newExchangeRate);
 
-            // FR-020: force-recalculate AgreedPriceInLocal when ExchangeRate changed
-            if (exchangeRateChanged)
+            // FR-020: force-recalculate AgreedPriceInLocal when ExchangeRate changed; otherwise only if it was automatic (FR-019a)
+            if (exchangeRateChanged || agreedIsAuto)
                 item.AgreedPriceInLocal = Math.Round(item.RealPriceInLocal + item.ServiceFeeInLocal, 2, MidpointRounding.AwayFromZero);
         }
 
@@ -122,16 +128,19 @@ public class OrderService(
         await context.SaveChangesAsync();
     }
 
+    // Items created before spec 018 was deployed (migration 20261025231321) used the old price defaults
+    private static readonly DateTime LegacyItemsCutoffUtc = new(2026, 10, 25, 23, 13, 21, DateTimeKind.Utc);
+
     private static void ApplyOrderCalculationSuite(Order order, List<OrderItem> items)
     {
-        order.TotalAgreedPriceInLocal = Math.Round(items.Sum(i => i.AgreedPriceInLocal), 2);
-        order.ShippingAmountToCR     = Math.Round(items.Sum(i => i.EstimateShipping), 2);
+        order.TotalAgreedPriceInLocal = Math.Round(items.Sum(i => i.AgreedPriceInLocal), 2, MidpointRounding.AwayFromZero);
+        order.ShippingAmountToCR     = Math.Round(items.Sum(i => i.EstimateShipping), 2, MidpointRounding.AwayFromZero);
         // Spec 018, FR-021: RealPrice now includes tax and shipping, so the subtotal is based on list prices
-        order.TotalWithoutTaxes      = Math.Round(items.Sum(i => i.ListPrice), 2);
-        order.TaxesAmount            = Math.Round((order.TotalWithoutTaxes - order.DiscountAmount) * (order.TaxPercentage / 100), 2);
-        order.TotalToPayToSupplier   = Math.Round(order.ShippingAmountIntern + order.TotalWithoutTaxes + order.TaxesAmount - order.DiscountAmount, 2);
-        order.TotalOfTheOrder        = Math.Round(order.TotalToPayToSupplier + order.ShippingAmountToCR, 2);
-        order.EstimatedProfitInLocal = Math.Round(order.TotalAgreedPriceInLocal - order.TotalOfTheOrder * order.ExchangeRate, 2);
+        order.TotalWithoutTaxes      = Math.Round(items.Sum(i => i.ListPrice), 2, MidpointRounding.AwayFromZero);
+        order.TaxesAmount            = Math.Round((order.TotalWithoutTaxes - order.DiscountAmount) * (order.TaxPercentage / 100), 2, MidpointRounding.AwayFromZero);
+        order.TotalToPayToSupplier   = Math.Round(order.ShippingAmountIntern + order.TotalWithoutTaxes + order.TaxesAmount - order.DiscountAmount, 2, MidpointRounding.AwayFromZero);
+        order.TotalOfTheOrder        = Math.Round(order.TotalToPayToSupplier + order.ShippingAmountToCR, 2, MidpointRounding.AwayFromZero);
+        order.EstimatedProfitInLocal = Math.Round(order.TotalAgreedPriceInLocal - order.TotalOfTheOrder * order.ExchangeRate, 2, MidpointRounding.AwayFromZero);
         order.UpdatedAt              = DateTime.UtcNow;
     }
 

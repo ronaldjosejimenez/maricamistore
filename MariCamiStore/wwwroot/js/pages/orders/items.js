@@ -29,7 +29,8 @@ function ajaxPost(handler, data, done, fail) {
 
 // ── Calculated field helpers ──────────────────────────────────────────────────
 
-function round2(v) { return Math.round(v * 100) / 100; }
+// Half away from zero like the server (MidpointRounding.AwayFromZero); EPSILON absorbs binary float noise
+function round2(v) { return Math.sign(v) * Math.round((Math.abs(v) + Number.EPSILON) * 100) / 100; }
 
 // T027: updated recalcOrderHeader with TotalAgreedPriceInLocal + fixed formula
 function recalcOrderHeader(allItems) {
@@ -110,6 +111,14 @@ function setPriceFieldsEnabled(enabled) {
         .prop('disabled', !enabled);
 }
 
+// Items created before spec 018 (same cutoff as OrderService.LegacyItemsCutoffUtc) used the old price defaults
+var legacyItemsCutoff = Date.UTC(2026, 9, 25, 23, 13, 21);
+function isLegacyItem(item) {
+    if (!item.createdAt) return false;
+    var iso = /Z|[+-]\d\d:\d\d$/.test(item.createdAt) ? item.createdAt : item.createdAt + 'Z'; // CreatedAt is stored in UTC
+    return new Date(iso).getTime() < legacyItemsCutoff;
+}
+
 function hasProductType(id) {
     return !!id && id !== '00000000-0000-0000-0000-000000000000';
 }
@@ -171,9 +180,11 @@ function openEditItem(item) {
     var computed = round2(realLocal + fee);
     var legacyAgreed = round2(lptwt * exchangeRate + fee);
     var tolerance = 0.011; // 1 cent plus float noise
-    userEditedAgreed = Math.abs(agreed - computed) > tolerance && Math.abs(agreed - legacyAgreed) > tolerance;
+    var isLegacy = isLegacyItem(item);
+    userEditedAgreed = Math.abs(agreed - computed) > tolerance &&
+        !(isLegacy && Math.abs(agreed - legacyAgreed) <= tolerance);
     userEditedRealPrice = Math.abs(real - (lptwt + (parseFloat(item.estimateShipping) || 0))) > tolerance &&
-        Math.abs(real - (parseFloat(item.listPrice) || 0)) > tolerance;
+        !(isLegacy && Math.abs(real - (parseFloat(item.listPrice) || 0)) <= tolerance);
     selectedImageBase64 = null;
 
     $('#item-id').val(item.id);

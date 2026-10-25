@@ -42,8 +42,8 @@ Prerrequisitos: `dotnet build` sin errores y `dotnet ef database update` aplicad
 5. Guardar: la columna Total de la tabla = 10261.00. El encabezado muestra Subtotal = 10 (Σ Lista), Impuestos = 0.70 y Envío a CR = 3.
 6. Cambiar el TC de la orden a 540 y guardar: P. Real en Local = 7398.00 y Acordado = 10398.00 (Trigger A).
 7. Reabrir el ítem: Acordado no aparece como editado a mano (sigue recalculando).
-8. Cambiar el Imp de la orden a 13 (TC sigue en 540) y guardar: Precio + Imp 11.30, Precio Real 14.30, P. Real en Local 7722.00 y Acordado sin cambio (10398.00).
-9. Editar Precio Real a mano a 20.00 y guardar. Cambiar el Imp de la orden a 7: Precio + Imp 10.70, Precio Real se queda en 20.00 y P. Real en Local = 10800.00.
+8. Cambiar el Imp de la orden a 13 (TC sigue en 540) y guardar: Precio + Imp 11.30, Precio Real 14.30, P. Real en Local 7722.00 y Acordado 10722.00 (no fue editado a mano, así que sigue al Total).
+9. Editar Precio Real a mano a 20.00 y guardar. Cambiar el Imp de la orden a 7: Precio + Imp 10.70, Precio Real se queda en 20.00, P. Real en Local = 10800.00 y Acordado = 13800.00.
 10. Anotar en la lista de Órdenes el Total Orden y la Ganancia Est. de una orden **Completada**. Abrirla y volver a la lista: los valores no cambian.
 11. En una orden Activa, Reasignar un ítem con otro precio: cambian solo Precio Acordado Total y Ganancia Est.; Subtotal, Impuestos, Envío a CR y Total Orden quedan iguales.
 12. Abrir un ítem en modo "Ver" (orden no Pendiente): todos los campos están en solo lectura.
