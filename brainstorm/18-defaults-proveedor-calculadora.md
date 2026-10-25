@@ -1,7 +1,7 @@
 # Brainstorm: Defaults por proveedor, calculadora y fórmulas de ítems
 
 **Date:** 2026-10-25
-**Status:** active
+**Status:** spec-created (specs/018-defaults-proveedor-calculadora)
 
 ## Problem Framing
 Cada proveedor tiene su propio impuesto, moneda, tipo de cambio y costo de envío, pero hoy esos valores salen de la Configuración global (o están fijos en la calculadora). Se quiere tener defaults por proveedor, que la Calculadora y la creación de órdenes los usen, y ajustar el orden y las fórmulas de los campos de precio en el modal de ítems.
