@@ -123,6 +123,7 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
   - Precio con impuesto = Precio de lista + (Precio de lista × Impuesto / 100) + Costo envío
   - Precio en colones = Precio con impuesto × Tipo de cambio
   - Total = Precio en colones + Costo servicio, redondeado siempre hacia arriba a la centena (5089 → 5100, 17890 → 17900; un valor que ya es múltiplo de 100 no cambia)
+- **FR-010b**: La Calculadora MUST mostrar, antes del Total y sin negrita, el campo "Total sin redondear" (Precio en colones + Costo servicio, con 2 decimales). El Total redondeado MUST destacarse visualmente (más grande y resaltado).
 - **FR-010a**: Las fórmulas de la Calculadora MUST ser equivalentes a las del ítem de orden: Precio con impuesto ≡ Precio Real, Precio en colones ≡ Precio Real en Local y Total ≡ Total (calculado). La única diferencia es el redondeo a la centena, que aplica solo en la Calculadora.
 - **FR-011**: La Calculadora MUST ignorar cualquier valor recibido en la URL (query string).
 - **FR-012**: "Limpiar" MUST restablecer los campos a los valores del proveedor seleccionado (o vacíos si no hay ninguno), desmarcar el checkbox y poner los resultados en 0.

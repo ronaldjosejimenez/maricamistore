@@ -46,6 +46,7 @@ function Clean() {
     applySupplier();
     $('#PriceWithVAT').text((0).toFixed(2));
     $('#PriceCOL').text((0).toFixed(2));
+    $('#TotalUnrounded').text((0).toFixed(2));
     $('#Total').text((0).toFixed(2));
 }
 
@@ -67,6 +68,7 @@ function Calculate() {
     var total = Math.ceil(subtotal / 100) * 100;
     $('#PriceWithVAT').text(priceWithVAT.toFixed(2));
     $('#PriceCOL').text(priceCOL.toFixed(2));
+    $('#TotalUnrounded').text(subtotal.toFixed(2));
     $('#Total').text(total.toFixed(0));
 }
 

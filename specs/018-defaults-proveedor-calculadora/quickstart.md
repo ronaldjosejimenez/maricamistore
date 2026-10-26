@@ -13,7 +13,7 @@ Prerrequisitos: `dotnet build` sin errores y `dotnet ef database update` aplicad
 ## 2. Calculadora (US2)
 1. Abrir Calculadora: el combo "Proveedores" solo muestra Shein. No están Nombre del cliente, Código de prenda, "Agregar a cuenta", "Nueva cuenta" ni el grid.
 2. Seleccionar Shein (Imp 7, TC 530, Envío 2): se cargan los tres campos.
-3. Precio de lista 10, Costo servicio 3000 → Calcular: Precio con impuesto 12.70, Precio en colones 6731.00, Total **9800**.
+3. Precio de lista 10, Costo servicio 3000 → Calcular: Precio con impuesto 12.70, Precio en colones 6731.00, Total sin redondear 9731.00 (sin negrita) y Total **9800** (destacado).
 4. Marcar "Envío rápido o local": Costo envío = 4. Calcular: 14.70 / 7791.00 / **10800**. Desmarcar: Costo envío = 2.
 5. Abrir `/Calculator?vat=99&exchangeRate=1`: se ignoran los parámetros.
 6. Limpiar: vuelve a los valores de Shein, desmarca el checkbox y pone los resultados en 0.
