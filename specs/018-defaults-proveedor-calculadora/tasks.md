@@ -160,7 +160,7 @@
 
 - [X] T023 Grep en `MariCamiStore/` (`*.cs`, `*.js`, `*.cshtml`, excluyendo Migrations) de los usos restantes de `realPrice`/`RealPrice` en cálculos de totales, y de `calcModalFields`/`calcModalFromLptpwt`/`getUrlParameter`; corregir lo que quede
 - [X] T024 `dotnet build` sin warnings nuevos respecto a T001
-- [ ] T025 Recorrer el `specs/018-defaults-proveedor-calculadora/quickstart.md` completo (§1–§4) en local y confirmar los valores esperados exactos
+- [X] T025 Recorrer el `specs/018-defaults-proveedor-calculadora/quickstart.md` completo (§1–§4) en local y confirmar los valores esperados exactos
 - [X] T026 Generar el script de producción con `dotnet ef migrations script --idempotent` desde `MariCamiStore/` para la migración `SupplierDefaultsAndRealPriceInLocal`
 
 ---
