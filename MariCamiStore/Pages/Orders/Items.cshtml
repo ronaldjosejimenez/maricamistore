@@ -273,18 +273,24 @@
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label>Precio Real</label>
-                            <input id="item-real-price" type="number" step="0.01" class="form-control" value="0" />
+                            <label>Envío estimado</label>
+                            <input id="item-estimate-shipping" type="number" step="0.01" class="form-control" value="0" />
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label>Total (calculado)</label>
-                            <input id="item-total" type="number" step="0.01" class="form-control" value="0" readonly />
+                            <label>Precio Real</label>
+                            <input id="item-real-price" type="number" step="0.01" class="form-control" value="0" />
                         </div>
                     </div>
                 </div>
                 <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Precio Real en Local</label>
+                            <input id="item-real-price-in-local" type="number" step="0.01" class="form-control" value="0" readonly />
+                        </div>
+                    </div>
                     <div class="col-md-3">
                         <div class="form-group">
                             <label>Tarifa Servicio</label>
@@ -293,8 +299,8 @@
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label>Envío Est.</label>
-                            <input id="item-estimate-shipping" type="number" step="0.01" class="form-control" value="0" />
+                            <label>Total (calculado)</label>
+                            <input id="item-total" type="number" step="0.01" class="form-control" value="0" readonly />
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -368,10 +374,20 @@
     var isPending = @(isPending ? "true" : "false");
     var canManagePackages = @(canManagePackages ? "true" : "false");
     var orderStatus = '@order.Status';
-    var exchangeRate = @order.ExchangeRate;
-    var taxPercentage = @order.TaxPercentage;
-    var shippingAmountIntern = @order.ShippingAmountIntern;
-    var discountAmount = @order.DiscountAmount;
+    var exchangeRate = @order.ExchangeRate.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    var taxPercentage = @order.TaxPercentage.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    // Saved header totals; non-pending orders only display these (spec 018, FR-022)
+    var savedTotals = {
+        totalAgreedPriceInLocal: @order.TotalAgreedPriceInLocal.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        shippingToCR: @order.ShippingAmountToCR.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        totalWithoutTaxes: @order.TotalWithoutTaxes.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        taxesAmount: @order.TaxesAmount.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        totalToSupplier: @order.TotalToPayToSupplier.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        totalOrder: @order.TotalOfTheOrder.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        profit: @order.EstimatedProfitInLocal.ToString(System.Globalization.CultureInfo.InvariantCulture)
+    };
+    var shippingAmountIntern = @order.ShippingAmountIntern.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    var discountAmount = @order.DiscountAmount.ToString(System.Globalization.CultureInfo.InvariantCulture);
     var orderCurrencyId = '@order.CurrencyId';
     var localCurrencySign = @Html.Raw(Json.Serialize(ViewData["LocalCurrencySign"]));
     var orderCurrencySign = @Html.Raw(Json.Serialize(ViewData["OrderCurrencySign"]));

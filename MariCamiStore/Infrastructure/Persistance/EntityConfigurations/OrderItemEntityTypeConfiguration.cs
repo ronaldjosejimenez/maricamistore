@@ -70,6 +70,11 @@ public class OrderItemEntityTypeConfiguration : IEntityTypeConfiguration<OrderIt
             .IsRequired()
             .HasColumnType("decimal(18,2)");
 
+        builder.Property(oi => oi.RealPriceInLocal)
+            .IsRequired()
+            .HasColumnType("decimal(18,2)")
+            .HasDefaultValue(0m);
+
         builder.Property(oi => oi.IsReceived)
             .IsRequired()
             .HasDefaultValue(false);

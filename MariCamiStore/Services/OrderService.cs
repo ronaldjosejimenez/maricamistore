@@ -76,6 +76,8 @@ public class OrderService(
     {
         var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == totals.OrderId);
         if (order == null) return;
+        // Only pending orders recalculate their header; older orders keep their saved totals (spec 018, FR-022)
+        if (order.Status != OrderStatus.Pending.Key) return;
 
         order.TotalAgreedPriceInLocal = totals.TotalAgreedPriceInLocal;
         order.ShippingAmountToCR = totals.ShippingAmountToCR;
@@ -99,11 +101,19 @@ public class OrderService(
 
         foreach (var item in items)
         {
-            item.ListPriceTaxWithTax = Math.Round(item.ListPrice + item.ListPrice * (newTaxPercentage / 100), 2);
+            // Spec 018, FR-018a: RealPrice and AgreedPrice follow only if they were not edited by hand
+            var oldAutoRealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
+            bool realPriceIsAuto = Math.Abs(item.RealPrice - oldAutoRealPrice) <= 0.01m;
+            var oldAutoAgreed = Math.Round(item.RealPriceInLocal + item.ServiceFeeInLocal, 2, MidpointRounding.AwayFromZero);
+            bool agreedIsAuto = Math.Abs(item.AgreedPriceInLocal - oldAutoAgreed) <= 0.01m;
+            item.ListPriceTaxWithTax = Math.Round(item.ListPrice + item.ListPrice * (newTaxPercentage / 100), 2, MidpointRounding.AwayFromZero);
+            if (realPriceIsAuto)
+                item.RealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
+            ApplyRealPriceInLocal(item, newExchangeRate);
 
-            // FR-020: force-recalculate AgreedPriceInLocal when ExchangeRate changed
-            if (exchangeRateChanged)
-                item.AgreedPriceInLocal = Math.Round(item.ListPriceTaxWithTax * newExchangeRate + item.ServiceFeeInLocal, 2);
+            // FR-020: force-recalculate AgreedPriceInLocal when ExchangeRate changed; otherwise only if it was automatic (FR-019a)
+            if (exchangeRateChanged || agreedIsAuto)
+                item.AgreedPriceInLocal = Math.Round(item.RealPriceInLocal + item.ServiceFeeInLocal, 2, MidpointRounding.AwayFromZero);
         }
 
         // Order Calculation Suite — run after item fields are updated
@@ -114,13 +124,14 @@ public class OrderService(
 
     private static void ApplyOrderCalculationSuite(Order order, List<OrderItem> items)
     {
-        order.TotalAgreedPriceInLocal = Math.Round(items.Sum(i => i.AgreedPriceInLocal), 2);
-        order.ShippingAmountToCR     = Math.Round(items.Sum(i => i.EstimateShipping), 2);
-        order.TotalWithoutTaxes      = Math.Round(items.Sum(i => i.RealPrice), 2);
-        order.TaxesAmount            = Math.Round((order.TotalWithoutTaxes - order.DiscountAmount) * (order.TaxPercentage / 100), 2);
-        order.TotalToPayToSupplier   = Math.Round(order.ShippingAmountIntern + order.TotalWithoutTaxes + order.TaxesAmount - order.DiscountAmount, 2);
-        order.TotalOfTheOrder        = Math.Round(order.TotalToPayToSupplier + order.ShippingAmountToCR, 2);
-        order.EstimatedProfitInLocal = Math.Round(order.TotalAgreedPriceInLocal - order.TotalOfTheOrder * order.ExchangeRate, 2);
+        order.TotalAgreedPriceInLocal = Math.Round(items.Sum(i => i.AgreedPriceInLocal), 2, MidpointRounding.AwayFromZero);
+        order.ShippingAmountToCR     = Math.Round(items.Sum(i => i.EstimateShipping), 2, MidpointRounding.AwayFromZero);
+        // Spec 018, FR-021: RealPrice now includes tax and shipping, so the subtotal is based on list prices
+        order.TotalWithoutTaxes      = Math.Round(items.Sum(i => i.ListPrice), 2, MidpointRounding.AwayFromZero);
+        order.TaxesAmount            = Math.Round((order.TotalWithoutTaxes - order.DiscountAmount) * (order.TaxPercentage / 100), 2, MidpointRounding.AwayFromZero);
+        order.TotalToPayToSupplier   = Math.Round(order.ShippingAmountIntern + order.TotalWithoutTaxes + order.TaxesAmount - order.DiscountAmount, 2, MidpointRounding.AwayFromZero);
+        order.TotalOfTheOrder        = Math.Round(order.TotalToPayToSupplier + order.ShippingAmountToCR, 2, MidpointRounding.AwayFromZero);
+        order.EstimatedProfitInLocal = Math.Round(order.TotalAgreedPriceInLocal - order.TotalOfTheOrder * order.ExchangeRate, 2, MidpointRounding.AwayFromZero);
         order.UpdatedAt              = DateTime.UtcNow;
     }
 
@@ -150,7 +161,7 @@ public class OrderService(
                 displayNames.GetValueOrDefault(i.CustomerId, i.CustomerId.ToString()),
                 i.ProductDescription, i.ProductLink, i.ProductSourceCode, i.Size,
                 i.ProductImage != null, i.ProductTypeId,
-                i.ListPrice, i.ListPriceTaxWithTax, i.RealPrice,
+                i.ListPrice, i.ListPriceTaxWithTax, i.RealPrice, i.RealPriceInLocal,
                 i.EstimateShipping, i.ServiceFeeInLocal, i.AgreedPriceInLocal,
                 i.IsReceived, i.CreatedAt, i.UpdatedAt))
             .OrderBy(x => x.CustomerDisplayName)
@@ -178,8 +189,20 @@ public class OrderService(
     public Task<OrderItem?> GetOrderItemAsync(Guid itemId) =>
         context.OrderItems.FirstOrDefaultAsync(i => i.Id == itemId);
 
+    // Spec 018, FR-018: RealPriceInLocal is always derived server-side from the order's exchange rate.
+    // AwayFromZero matches the client's round2 (Math.round), so both sides agree on midpoints.
+    private static void ApplyRealPriceInLocal(OrderItem item, decimal exchangeRate) =>
+        item.RealPriceInLocal = Math.Round(item.RealPrice * exchangeRate, 2, MidpointRounding.AwayFromZero);
+
+    private async Task ApplyRealPriceInLocalAsync(OrderItem item)
+    {
+        var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == item.OrderId);
+        if (order != null) ApplyRealPriceInLocal(item, order.ExchangeRate);
+    }
+
     public async Task<OrderItem> CreateOrderItemAsync(OrderItem item)
     {
+        await ApplyRealPriceInLocalAsync(item);
         item.Id = Guid.NewGuid();
         item.CreatedAt = DateTime.UtcNow;
         item.UpdatedAt = DateTime.UtcNow;
@@ -190,6 +213,7 @@ public class OrderService(
 
     public async Task<OrderItem> UpdateOrderItemAsync(OrderItem item)
     {
+        await ApplyRealPriceInLocalAsync(item);
         item.UpdatedAt = DateTime.UtcNow;
         context.OrderItems.Update(item);
         await context.SaveChangesAsync();

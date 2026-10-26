@@ -11,15 +11,39 @@ public class IndexModel(ICatalogService catalogService) : PageModel
 
     public async Task<JsonResult> OnGetLoadAsync() =>
         new JsonResult(await catalogService.GetSuppliersAsync());
-    public async Task<JsonResult> OnPostInsertAsync([FromBody] Supplier item)
+
+    // Defaults for the insert row (spec 018, FR-002)
+    public async Task<JsonResult> OnGetConfigurationAsync()
     {
-        var created = await catalogService.CreateSupplierAsync(item);
-        return new JsonResult(created);
+        var config = await catalogService.GetConfigurationAsync();
+        return new JsonResult(config == null
+            ? null
+            : new { config.TaxPercentage, config.ExchangeRate, CurrencyId = config.OrderCurrencyIdDefault });
     }
-    public async Task<JsonResult> OnPostUpdateAsync([FromBody] Supplier item)
+
+    public async Task<IActionResult> OnPostInsertAsync([FromBody] Supplier item)
     {
-        var updated = await catalogService.UpdateSupplierAsync(item);
-        return new JsonResult(updated);
+        try
+        {
+            var created = await catalogService.CreateSupplierAsync(item);
+            return new JsonResult(created);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    public async Task<IActionResult> OnPostUpdateAsync([FromBody] Supplier item)
+    {
+        try
+        {
+            var updated = await catalogService.UpdateSupplierAsync(item);
+            return new JsonResult(updated);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
     public async Task<JsonResult> OnPostDeleteAsync([FromBody] DeleteRequest request)
     {
@@ -29,4 +53,3 @@ public class IndexModel(ICatalogService catalogService) : PageModel
 
     public record DeleteRequest(Guid Id);
 }
-

@@ -18,8 +18,29 @@ public class SupplierEntityTypeConfiguration : IEntityTypeConfiguration<Supplier
             .IsRequired()
             .HasMaxLength(100);
 
+        builder.Property(c => c.TaxPercentageDefault)
+            .IsRequired()
+            .HasColumnType("decimal(18,2)")
+            .HasDefaultValue(0m);
+
+        builder.Property(c => c.CurrencyIdDefault);
+
+        builder.Property(c => c.ExchangeRateDefault)
+            .IsRequired()
+            .HasColumnType("decimal(18,2)")
+            .HasDefaultValue(0m);
+
+        builder.Property(c => c.ShippingCostDefault)
+            .IsRequired()
+            .HasColumnType("decimal(18,2)")
+            .HasDefaultValue(0m);
+
+        builder.Property(c => c.IsActiveForCalculator)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.HasData(
-            new Supplier { Id = Guid.Parse("63B4D953-66D5-409E-929D-6036111FB710"), Name = "Shein"},
+            new Supplier { Id = Guid.Parse("63B4D953-66D5-409E-929D-6036111FB710"), Name = "Shein", IsActiveForCalculator = true },
             new Supplier { Id = Guid.Parse("63B4D953-66D5-409E-929D-6036111FB711"), Name = "Adidas"},
             new Supplier { Id = Guid.Parse("63B4D953-66D5-409E-929D-6036111FB712"), Name = "Puma" },
             new Supplier { Id = Guid.Parse("63B4D953-66D5-409E-929D-6036111FB713"), Name = "Amazon" },
