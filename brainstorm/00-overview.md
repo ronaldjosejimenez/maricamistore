@@ -1,6 +1,6 @@
 # Brainstorm Overview
 
-Last updated: 2026-10-25
+Last updated: 2026-10-26
 
 ## Sessions
 
@@ -23,7 +23,7 @@ Last updated: 2026-10-25
 | 15 | 2026-09-29 | filtro-organizacion-pagos | spec-created | specs/015-filtro-organizacion-pagos |
 | 16 | 2026-10-06 | control-metas-ventas | implemented | specs/016-control-metas-ventas |
 | 17 | 2026-10-19 | ajustes-ordenes-metas-clientes | implemented | specs/017-ajustes-ordenes-metas-clientes |
-| 18 | 2026-10-25 | defaults-proveedor-calculadora | spec-created | specs/018-defaults-proveedor-calculadora |
+| 18 | 2026-10-25 | defaults-proveedor-calculadora | implemented | specs/018-defaults-proveedor-calculadora |
 
 ## Open Threads
 
@@ -37,6 +37,7 @@ Last updated: 2026-10-25
 - Confirmar que la migración `RemoveDeliveredOrderStatus` se aplicó en producción (0 órdenes en Delivered) (from #17)
 - `GetOrderStatusHistoryAsync` no filtra por organización; revisar con la autenticación (from #17)
 - ¿Limpiar el tipo CxP `AutoDelivered` (sin uso)? (from #17)
+- Confirmar que la migración `SupplierDefaultsAndRealPriceInLocal` se aplicó en producción y revisar las órdenes Pendientes con ítems previos a la 018 (from #18)
 
 ## Parked Ideas
 

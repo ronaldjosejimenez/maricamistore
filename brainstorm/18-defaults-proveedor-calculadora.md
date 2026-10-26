@@ -1,7 +1,7 @@
 # Brainstorm: Defaults por proveedor, calculadora y fórmulas de ítems
 
 **Date:** 2026-10-25
-**Status:** spec-created (specs/018-defaults-proveedor-calculadora)
+**Status:** implemented (specs/018-defaults-proveedor-calculadora)
 
 ## Problem Framing
 Cada proveedor tiene su propio impuesto, moneda, tipo de cambio y costo de envío, pero hoy esos valores salen de la Configuración global (o están fijos en la calculadora). Se quiere tener defaults por proveedor, que la Calculadora y la creación de órdenes los usen, y ajustar el orden y las fórmulas de los campos de precio en el modal de ítems.
@@ -63,3 +63,12 @@ Opción A: un solo spec 018 que cubra los 4 puntos. Las fórmulas se implementan
 - ¿Al editar una orden existente y cambiar el proveedor también se recargan los defaults, o solo al crear?
 - ¿En qué moneda está el costo de envío por defecto del proveedor (se asume su CurrencyIdDefault)?
 - ¿Precio Real se recalcula al cambiar Envío Est. (respetando si el usuario lo editó a mano)?
+
+## Resolution (2026-10-26)
+- Fórmulas del ítem corregidas por el usuario: Precio Real = Precio + Imp + Envío estimado; nuevo **Precio Real en Local** = Precio Real × TC; Total (calculado) = P. Real en Local + Tarifa; Precio Acordado = Total por defecto (mismas reglas de edición). La calculadora usa la misma cadena y redondea el Total a la centena superior; muestra además "Total sin redondear".
+- Encabezado: misma estructura (proveedor y transportista se pagan aparte); Subtotal = Σ Precio Lista. Los totales solo se recalculan y guardan en órdenes **Pendientes**; Reasignar solo actualiza Precio Acordado Total y Ganancia.
+- Defaults del proveedor solo al **crear** la orden; el costo de envío está en la moneda default del proveedor; Precio Real respeta la edición manual.
+- Cambio de Imp/TC (Trigger A): Precio Acordado se fuerza si cambió el TC, o se recalcula si no fue editado a mano.
+- Migración `SupplierDefaultsAndRealPriceInLocal`: defaults de proveedores desde la Configuración, Shein activo para la calculadora, backfill de RealPriceInLocal. El pipeline no aplica migraciones: ejecutar el script antes del código.
+- Riesgo aceptado: ítems creados antes de la 018 en órdenes Pendientes al desplegar se consideran editados a mano (sin campo de marca).
+- Calculadora renombrada a "Calculadora de precios". Merge: PR #38.
