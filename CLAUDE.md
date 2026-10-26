@@ -1,5 +1,5 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan at:
-specs/017-ajustes-ordenes-metas-clientes/plan.md
+specs/018-defaults-proveedor-calculadora/plan.md
 <!-- SPECKIT END -->

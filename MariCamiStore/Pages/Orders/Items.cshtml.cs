@@ -154,6 +154,9 @@ public class ItemsModel(
                 return new JsonResult(new { error = "La imagen supera el límite de 2 MB." });
         }
 
+        if (await orderService.GetOrderAsync(dto.OrderId) == null)
+            return new JsonResult(new { error = "Orden no encontrada." });
+
         var item = new OrderItem
         {
             OrderId = dto.OrderId,
@@ -186,6 +189,7 @@ public class ItemsModel(
             created.ListPrice,
             created.ListPriceTaxWithTax,
             created.RealPrice,
+            created.RealPriceInLocal,
             created.EstimateShipping,
             created.ServiceFeeInLocal,
             created.AgreedPriceInLocal
@@ -245,6 +249,7 @@ public class ItemsModel(
             updated.ListPrice,
             updated.ListPriceTaxWithTax,
             updated.RealPrice,
+            updated.RealPriceInLocal,
             updated.EstimateShipping,
             updated.ServiceFeeInLocal,
             updated.AgreedPriceInLocal
@@ -299,6 +304,18 @@ public class ItemsModel(
     {
         var (success, error) = await orderService.ReasignarItemAsync(
             request.ItemId, request.NewCustomerId, request.NewAgreedPriceInLocal);
-        return new JsonResult(new { success, error });
+        if (!success)
+            return new JsonResult(new { success, error });
+
+        // Only these two header totals change on reassignment (spec 018, FR-023)
+        var item = await orderService.GetOrderItemAsync(request.ItemId);
+        var order = item == null ? null : await orderService.GetOrderAsync(item.OrderId);
+        return new JsonResult(new
+        {
+            success,
+            error,
+            order?.TotalAgreedPriceInLocal,
+            order?.EstimatedProfitInLocal
+        });
     }
 }

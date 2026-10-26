@@ -55,6 +55,10 @@ public class OrderItem
     /// <value>The real price.</value>
     public decimal RealPrice { get; set; }
 
+    /// <summary>Gets or sets the real price converted to local currency.</summary>
+    /// <value>The real price in local currency.</value>
+    public decimal RealPriceInLocal { get; set; }
+
     /// <summary>Gets or sets the estimate shipping.</summary>
     /// <value>The estimate shipping.</value>
     public decimal EstimateShipping { get; set; }
