@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MariCamiStore.Infrastructure.Persistance.Migrations
 {
     [DbContext(typeof(MariCamiStoreContext))]
-    [Migration("20261025235125_SupplierDefaultsAndRealPriceInLocal")]
+    [Migration("20261026004539_SupplierDefaultsAndRealPriceInLocal")]
     partial class SupplierDefaultsAndRealPriceInLocal
     {
         /// <inheritdoc />
@@ -317,11 +317,6 @@ namespace MariCamiStore.Infrastructure.Persistance.Migrations
 
                     b.Property<decimal>("EstimateShipping")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<bool>("HasLegacyPriceDefaults")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsReceived")
                         .ValueGeneratedOnAdd()

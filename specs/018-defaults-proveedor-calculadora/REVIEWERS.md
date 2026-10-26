@@ -63,6 +63,7 @@ Cada proveedor tiene su impuesto, moneda, tipo de cambio y costo de envío por d
 - [ ] No unstated assumptions
 - [ ] El SQL de la migración corre después de los `UpdateData` de los seeds
 - [ ] Una orden Completada no cambia sus totales al abrirla (quickstart §4.10)
+- [ ] **Antes del deploy:** revisar las órdenes Pendientes con ítems creados antes de la 018 (riesgo aceptado: se tratan como editados a mano)
 - [ ] **Deploy:** ejecutar el script idempotente de la migración en producción ANTES de desplegar el código (el pipeline no aplica migraciones)
 
 ---

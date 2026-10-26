@@ -111,11 +111,6 @@ function setPriceFieldsEnabled(enabled) {
         .prop('disabled', !enabled);
 }
 
-// Items flagged by the 018 migration still carry the old price defaults (see OrderItem.HasLegacyPriceDefaults)
-function isLegacyItem(item) {
-    return !!item.hasLegacyPriceDefaults;
-}
-
 function hasProductType(id) {
     return !!id && id !== '00000000-0000-0000-0000-000000000000';
 }
@@ -167,21 +162,14 @@ function openAddItem() {
 // T029: openEditItem
 function openEditItem(item) {
     // Spec 018, FR-020a: manual-edit flags compare against the new formulas
-    // Items saved before 018 used RealPrice = ListPrice and Agreed = (Price + Tax) x rate + fee as defaults;
-    // those still count as automatic so the item keeps recalculating.
+    // Spec 018, FR-020a: manual-edit flags compare against the new formulas
     var realLocal = parseFloat(item.realPriceInLocal) || 0;
     var fee = parseFloat(item.serviceFeeInLocal) || 0;
     var lptwt = parseFloat(item.listPriceTaxWithTax) || 0;
-    var real = parseFloat(item.realPrice) || 0;
-    var agreed = parseFloat(item.agreedPriceInLocal) || 0;
     var computed = round2(realLocal + fee);
-    var legacyAgreed = round2(lptwt * exchangeRate + fee);
     var tolerance = 0.011; // 1 cent plus float noise
-    var isLegacy = isLegacyItem(item);
-    userEditedAgreed = Math.abs(agreed - computed) > tolerance &&
-        !(isLegacy && Math.abs(agreed - legacyAgreed) <= tolerance);
-    userEditedRealPrice = Math.abs(real - (lptwt + (parseFloat(item.estimateShipping) || 0))) > tolerance &&
-        !(isLegacy && Math.abs(real - (parseFloat(item.listPrice) || 0)) <= tolerance);
+    userEditedAgreed = Math.abs((parseFloat(item.agreedPriceInLocal) || 0) - computed) > tolerance;
+    userEditedRealPrice = Math.abs((parseFloat(item.realPrice) || 0) - (lptwt + (parseFloat(item.estimateShipping) || 0))) > tolerance;
     selectedImageBase64 = null;
 
     $('#item-id').val(item.id);

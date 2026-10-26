@@ -315,11 +315,6 @@ namespace MariCamiStore.Infrastructure.Persistance.Migrations
                     b.Property<decimal>("EstimateShipping")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<bool>("HasLegacyPriceDefaults")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
                     b.Property<bool>("IsReceived")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")

@@ -75,10 +75,6 @@ public class OrderItemEntityTypeConfiguration : IEntityTypeConfiguration<OrderIt
             .HasColumnType("decimal(18,2)")
             .HasDefaultValue(0m);
 
-        builder.Property(oi => oi.HasLegacyPriceDefaults)
-            .IsRequired()
-            .HasDefaultValue(false);
-
         builder.Property(oi => oi.IsReceived)
             .IsRequired()
             .HasDefaultValue(false);

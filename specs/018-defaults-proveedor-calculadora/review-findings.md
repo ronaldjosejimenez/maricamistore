@@ -27,7 +27,7 @@
 
 **What is wrong:** Items saved before 018 have RealPrice = ListPrice (the old default). The new "manual edit" check compared against Precio + Imp + Envío, so those items were treated as edited by hand. A TC change then forced Acordado = ListPrice × TC + fee, dropping tax and shipping.
 **Why this matters:** Precio Acordado, Precio Acordado Total and Ganancia would silently drop on pending orders.
-**How it was resolved:** Round 1 rewrote the data in the migration. That contradicted the spec ("no se recalculan en lote"), so round 2 removed it. Instead, the legacy defaults now count as automatic: RealPrice ≈ ListPrice, and Agreed ≈ (Precio + Imp) × TC + fee. Round 3 limited this to items created before 018. The spec documents this edge case.
+**How it was resolved:** Round 1 rewrote the data in the migration, which contradicted the spec. Rounds 2–3 detected legacy defaults instead (first by date, then by a column). In the end the user accepted the risk and dropped legacy detection: old items in Pending orders at deploy time are reviewed by hand. Non-pending orders are never recalculated.
 
 ### FINDING-2 — Dead code `calcItem`
 - **Severity:** Important · **Confidence:** 85 · **Category:** architecture · **Round found:** 1 · **Resolution:** fixed (round 1)
@@ -87,7 +87,7 @@
 
 **What is wrong:** The cutoff is 2026-10-25 23:13:21 UTC, when the migration was generated. Production keeps running the old code until the merge and deploy. Items created in that window have the old defaults but will not be treated as legacy.
 **Why this matters:** For those items, Precio Real and Acordado stay frozen as if edited by hand: in Trigger A and in the modal.
-**How it was resolved:** New column `OrderItems.HasLegacyPriceDefaults` (bit, default 0). The 018 migration (regenerated as `20261025235125_SupplierDefaultsAndRealPriceInLocal`) sets it to 1 once, for every item that exists when it runs. Items created afterwards stay 0. `RecalcItemsOnOrderSaveAsync` and `isLegacyItem` (JS, through `OrderItemWithCustomerDto`) read the flag. Both cutoff constants were removed. Verified end to end: the new item has flag 0, and the flagged legacy item recalculates (14.30 / 7865.00 / 10865.00).
+**How it was resolved:** First fixed with an `OrderItems.HasLegacyPriceDefaults` column marked by the migration. The user then chose to drop the column and all legacy detection, accepting the risk for orders that are Pending at deploy time. The cutoff constants, the column and the legacy branches are gone. Only the new-formula manual-edit checks remain (spec edge case updated).
 
 ### Minor findings
 
@@ -101,7 +101,7 @@
 | M6–M11 | test-quality | Quickstart gaps (rounding boundaries, FR-018a, supplier validations, calculator edge cases, Ver mode, inexact inputs) | fixed |
 | M12 | correctness (r2) | Midpoint: server ToEven vs client half-up | fixed: AwayFromZero |
 | M13 | correctness (r2) | Removed the "Orden no encontrada" check on insert | fixed: restored |
-| M14 | correctness (r3) | Legacy false positive on new items (RealPrice = Lista typed by hand) | fixed: limited by CreatedAt |
+| M14 | correctness (r3) | Legacy false positive on new items (RealPrice = Lista typed by hand) | moot: legacy detection removed |
 | M15 | correctness (r3) | round2 vs AwayFromZero | fixed partly (see M21) |
 | M16 | correctness (r3) | Header totals rounded ToEven on the server | fixed |
 | M17 | architecture | Calculator namespace and title still say "Shein" | fixed: title "Calculadora de precios", namespace `MariCamiStore.Pages.Calculator` |

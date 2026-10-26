@@ -15,6 +15,7 @@
 - Q: ¿Qué órdenes recalculan y guardan los totales del encabezado al abrirse? → A: Solo las Pendientes; las demás muestran lo guardado. Reasignar solo actualiza Precio Acordado Total y Ganancia (FR-022, FR-023).
 - Q: Al cambiar Impuesto o TC en una orden Pendiente, ¿cómo se recalculan los ítems? → A: Precio + Imp siempre; Precio Real solo si no se editó a mano; Precio Real en Local siempre; Precio Acordado se fuerza a recalcular si cambió el TC, aunque se haya editado a mano (FR-018a).
 - Q: ¿Qué proveedores existentes quedan activos para la calculadora tras la migración? → A: Solo Shein; los demás inactivos (FR-004).
+- Q: ¿Se marca en BD qué ítems tienen los valores por defecto anteriores? → A: No; el usuario asume el riesgo de las órdenes Pendientes al desplegar para no tener un campo sin uso futuro.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -95,7 +96,7 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
 - La Configuración no existe al crear un proveedor: los tres campos aparecen vacíos y son obligatorios.
 - Un ítem existente se abre para editar: su Tipo de Producto ya está seleccionado, así que los campos están habilitados; los valores guardados no se recalculan hasta que el usuario modifique un campo.
 - El usuario editó Precio Real a mano y luego cambia Precio Lista o Envío estimado: Precio Real conserva el valor manual (misma regla que hoy).
-- Ítems guardados antes de esta funcionalidad: su Precio Real por defecto era el Precio Lista, y su Precio Acordado por defecto era (Precio + Imp) × TC + Tarifa. Solo en esos ítems (todos los que existen al momento de ejecutar la migración, que los marca una única vez; los creados después nunca se marcan), esos valores también cuentan como "no editados a mano" (FR-017, FR-018a, FR-019a), así que el ítem sigue recalculándose al editarlo o al cambiar Imp o TC. En ítems nuevos, un Precio Real igual al Precio Lista digitado a mano se respeta. No se reescriben en lote.
+- Ítems guardados antes de esta funcionalidad: su Precio Real por defecto era el Precio Lista y su Precio Acordado (Precio + Imp) × TC + Tarifa, así que frente a las fórmulas nuevas se consideran "editados a mano". No se reescriben en lote ni se marcan. En órdenes no Pendientes no tiene efecto (no se recalculan). En las órdenes que estén Pendientes al desplegar, un cambio de TC recalcularía su Acordado desde el Precio Real viejo; el usuario acepta este riesgo y revisa esas órdenes a mano.
 - Modo "Ver" del ítem: todos los campos siguen en solo lectura, como hoy.
 - Órdenes existentes no Pendientes (Activa, Entregando, Completada, Anulada): al abrirlas no se recalculan ni se guardan sus totales; se muestran los valores guardados (FR-022). Así las órdenes viejas no cambian.
 - Reasignar un ítem en una orden Activa, Entregando o Completada: solo cambian el Precio Acordado del ítem, el Precio Acordado Total y la Ganancia estimada (como hoy); Subtotal, Impuestos, Envío a CR y Total Orden quedan como estaban guardados.
@@ -160,7 +161,7 @@ En el modal de ítem de una orden, los campos de precio aparecen en el nuevo ord
 - **Proveedor**: nombre; impuesto default (%); moneda default; tipo de cambio default; costo de envío default (en la moneda default del proveedor); activo para la calculadora.
 - **Configuración**: fuente de los defaults iniciales (impuesto, moneda de orden por defecto, tipo de cambio). Se toma el primer registro.
 - **Orden**: toma tipo de cambio, impuesto y moneda del proveedor al crearse.
-- **Ítem de orden**: Precio Lista, Precio + Imp, Envío estimado, Precio Real (incluye impuesto y envío), Precio Real en Local (nuevo), Tarifa Servicio, Total (calculado), Precio Acordado, Tipo de Producto; marca interna "con valores por defecto anteriores" (la pone la migración en los ítems existentes).
+- **Ítem de orden**: Precio Lista, Precio + Imp, Envío estimado, Precio Real (incluye impuesto y envío), Precio Real en Local (nuevo), Tarifa Servicio, Total (calculado), Precio Acordado, Tipo de Producto.
 
 ## Success Criteria *(mandatory)*
 

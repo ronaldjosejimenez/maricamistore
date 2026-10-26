@@ -57,7 +57,7 @@ No quedan `NEEDS CLARIFICATION` en el Technical Context. Estas son las decisione
 
 - **Decision**: Una sola migración `SupplierDefaultsAndRealPriceInLocal`, generada con `dotnet ef migrations add`, que agrega:
   - `Suppliers`: `TaxPercentageDefault decimal(18,2) NOT NULL DEFAULT 0`, `CurrencyIdDefault uniqueidentifier NULL`, `ExchangeRateDefault decimal(18,2) NOT NULL DEFAULT 0`, `ShippingCostDefault decimal(18,2) NOT NULL DEFAULT 0`, `IsActiveForCalculator bit NOT NULL DEFAULT 0`.
-  - `OrderItems`: `RealPriceInLocal decimal(18,2) NOT NULL DEFAULT 0` y `HasLegacyPriceDefaults bit NOT NULL DEFAULT 0` (la migración lo pone en 1 una sola vez en los ítems existentes).
+  - `OrderItems`: `RealPriceInLocal decimal(18,2) NOT NULL DEFAULT 0`.
   - SQL al final de `Up` (después de cualquier `UpdateData` de los seeds de proveedores):
     - Llenar los 3 defaults de `dbo.Suppliers` desde `TOP 1 dbo.Configurations ORDER BY Id`. Si no hay fila, no cambia nada.
     - Backfill de `dbo.OrderItems.RealPriceInLocal = ROUND(oi.RealPrice * o.ExchangeRate, 2)` con JOIN a `dbo.Orders`.

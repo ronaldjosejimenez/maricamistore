@@ -50,14 +50,6 @@ namespace MariCamiStore.Infrastructure.Persistance.Migrations
                 nullable: false,
                 defaultValue: 0m);
 
-            migrationBuilder.AddColumn<bool>(
-                name: "HasLegacyPriceDefaults",
-                schema: "dbo",
-                table: "OrderItems",
-                type: "bit",
-                nullable: false,
-                defaultValue: false);
-
             migrationBuilder.AddColumn<decimal>(
                 name: "RealPriceInLocal",
                 schema: "dbo",
@@ -114,9 +106,7 @@ namespace MariCamiStore.Infrastructure.Persistance.Migrations
                 column: "CurrencyIdDefault",
                 value: null);
 
-            // Runs after the seed UpdateData above so the filled values are not overwritten (spec 018, FR-004).
-            // HasLegacyPriceDefaults marks every item that exists when the migration runs, exactly once;
-            // items created afterwards keep the column default (false).
+            // Runs after the seed UpdateData above so the filled values are not overwritten (spec 018, FR-004)
             migrationBuilder.Sql(@"
 UPDATE s
 SET s.TaxPercentageDefault = c.TaxPercentage,
@@ -129,8 +119,7 @@ CROSS JOIN (SELECT TOP 1 TaxPercentage, OrderCurrencyIdDefault, ExchangeRate
 UPDATE dbo.Suppliers SET IsActiveForCalculator = 1 WHERE Name = N'Shein';
 
 UPDATE oi
-SET oi.RealPriceInLocal       = ROUND(oi.RealPrice * o.ExchangeRate, 2),
-    oi.HasLegacyPriceDefaults = 1
+SET oi.RealPriceInLocal = ROUND(oi.RealPrice * o.ExchangeRate, 2)
 FROM dbo.OrderItems oi
 INNER JOIN dbo.Orders o ON o.Id = oi.OrderId;");
         }
@@ -162,11 +151,6 @@ INNER JOIN dbo.Orders o ON o.Id = oi.OrderId;");
                 name: "TaxPercentageDefault",
                 schema: "dbo",
                 table: "Suppliers");
-
-            migrationBuilder.DropColumn(
-                name: "HasLegacyPriceDefaults",
-                schema: "dbo",
-                table: "OrderItems");
 
             migrationBuilder.DropColumn(
                 name: "RealPriceInLocal",

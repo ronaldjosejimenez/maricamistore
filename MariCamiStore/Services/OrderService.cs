@@ -101,17 +101,11 @@ public class OrderService(
 
         foreach (var item in items)
         {
-            // Spec 018, FR-018a: RealPrice and AgreedPrice follow only if they were not edited by hand.
-            // Items saved before 018 had other defaults (RealPrice = ListPrice, Agreed = (Price + Tax) x rate + fee);
-            // those count as automatic only for items flagged by the 018 migration.
-            bool isLegacy = item.HasLegacyPriceDefaults;
+            // Spec 018, FR-018a: RealPrice and AgreedPrice follow only if they were not edited by hand
             var oldAutoRealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
-            bool realPriceIsAuto = Math.Abs(item.RealPrice - oldAutoRealPrice) <= 0.01m
-                || (isLegacy && Math.Abs(item.RealPrice - item.ListPrice) <= 0.01m);
+            bool realPriceIsAuto = Math.Abs(item.RealPrice - oldAutoRealPrice) <= 0.01m;
             var oldAutoAgreed = Math.Round(item.RealPriceInLocal + item.ServiceFeeInLocal, 2, MidpointRounding.AwayFromZero);
-            var legacyAutoAgreed = Math.Round(item.ListPriceTaxWithTax * newExchangeRate + item.ServiceFeeInLocal, 2, MidpointRounding.AwayFromZero);
-            bool agreedIsAuto = Math.Abs(item.AgreedPriceInLocal - oldAutoAgreed) <= 0.01m
-                || (isLegacy && !exchangeRateChanged && Math.Abs(item.AgreedPriceInLocal - legacyAutoAgreed) <= 0.01m);
+            bool agreedIsAuto = Math.Abs(item.AgreedPriceInLocal - oldAutoAgreed) <= 0.01m;
             item.ListPriceTaxWithTax = Math.Round(item.ListPrice + item.ListPrice * (newTaxPercentage / 100), 2, MidpointRounding.AwayFromZero);
             if (realPriceIsAuto)
                 item.RealPrice = item.ListPriceTaxWithTax + item.EstimateShipping;
@@ -167,7 +161,7 @@ public class OrderService(
                 displayNames.GetValueOrDefault(i.CustomerId, i.CustomerId.ToString()),
                 i.ProductDescription, i.ProductLink, i.ProductSourceCode, i.Size,
                 i.ProductImage != null, i.ProductTypeId,
-                i.ListPrice, i.ListPriceTaxWithTax, i.RealPrice, i.RealPriceInLocal, i.HasLegacyPriceDefaults,
+                i.ListPrice, i.ListPriceTaxWithTax, i.RealPrice, i.RealPriceInLocal,
                 i.EstimateShipping, i.ServiceFeeInLocal, i.AgreedPriceInLocal,
                 i.IsReceived, i.CreatedAt, i.UpdatedAt))
             .OrderBy(x => x.CustomerDisplayName)
