@@ -239,6 +239,7 @@ public class SalesGoalService(
         }
 
         var (commissionRate, commissionStatus) = SalesGoalCommission.For(goal.CompliancePercentage);
+        var (nextRate, nextMissing) = SalesGoalCommission.Next(goal.GoalAmount, goal.ActualAmount, goal.CompliancePercentage);
 
         var days = goal.Days
             .OrderBy(d => d.DayOfMonth)
@@ -273,6 +274,8 @@ public class SalesGoalService(
             days,
             commissionRate,
             SalesGoalCommission.Amount(goal.ActualAmount, commissionRate),
-            commissionStatus);
+            commissionStatus,
+            nextRate,
+            nextMissing);
     }
 }

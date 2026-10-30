@@ -26,7 +26,9 @@ public record GoalDto(
     List<GoalDayDto> Days,
     decimal CommissionRate,
     decimal CommissionAmount,
-    string CommissionStatus)
+    string CommissionStatus,
+    decimal? NextCommissionRate,
+    decimal? NextCommissionMissing)
 {
     public bool Success => true;
 }

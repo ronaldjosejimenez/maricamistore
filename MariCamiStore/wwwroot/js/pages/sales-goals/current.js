@@ -70,6 +70,7 @@ function render(goal) {
     $('#commission-amount').text('(' + sign + ' ' + fmt(goal.commissionAmount) + ')')
         .closest('.info-box').removeClass('goal-red goal-yellow goal-green goal-highlight bg-light')
         .addClass(commissionClass(goal.commissionStatus) || 'bg-light');
+    renderNextCommission(goal, sign);
 
     renderDistributionBanner(goal, sign);
 
@@ -87,6 +88,19 @@ function render(goal) {
         $tr.append($('<td class="text-center">').html(adjusted ? '<span class="badge badge-warning">Ajustado</span>' : ''));
         $tbody.append($tr);
     });
+}
+
+// Progress towards the next commission level and the amount still missing to reach it.
+function renderNextCommission(goal, sign) {
+    if (goal.nextCommissionRate == null) {
+        $('#commission-progress').css('width', '100%');
+        $('#commission-next').text('Nivel máximo alcanzado');
+        return;
+    }
+    var required = Number(goal.actualAmount) + Number(goal.nextCommissionMissing);
+    var progress = required > 0 ? Math.min(100, Number(goal.actualAmount) / required * 100) : 0;
+    $('#commission-progress').css('width', progress + '%');
+    $('#commission-next').text('Faltan ' + sign + ' ' + fmt(goal.nextCommissionMissing) + ' para ' + fmtRate(goal.nextCommissionRate));
 }
 
 // Compares the sum of the daily goals against the monthly goal and flags any gap.
