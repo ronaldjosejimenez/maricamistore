@@ -27,4 +27,29 @@ public static class SalesGoalCommission
     /// <returns>The amount rounded to 2 decimals; never negative.</returns>
     public static decimal Amount(decimal actual, decimal rate) =>
         Math.Max(0m, Math.Round(actual * rate / 100m, 2, MidpointRounding.AwayFromZero));
+
+    /// <summary>Gets the next commission level and the actual amount still missing to reach it.</summary>
+    /// <param name="goal">The goal amount of the month.</param>
+    /// <param name="actual">The accumulated actual amount of the month.</param>
+    /// <param name="basePercentage">The base percentage, rounded to 1 decimal.</param>
+    /// <returns>
+    /// The next commission rate and the missing amount (rounded up to cents), or <c>null</c> for both when
+    /// the highest level is already reached or there is no goal.
+    /// </returns>
+    public static (decimal? Rate, decimal? Missing) Next(decimal goal, decimal actual, decimal basePercentage)
+    {
+        // Unrounded percentage that rounds (1 decimal, away from zero) to each level's lower limit:
+        // 84.95 → 85.0, 85.95 → 86.0, 110.05 → 110.1.
+        (decimal Rate, decimal RawPercentage)? next = basePercentage switch
+        {
+            < 85m => (2.5m, 84.95m),
+            < 86m => (5m, 85.95m),
+            <= 110m => (6m, 110.05m),
+            _ => null
+        };
+        if (next is null || goal <= 0m) return (null, null);
+
+        var required = Math.Ceiling(goal * next.Value.RawPercentage) / 100m;
+        return (next.Value.Rate, Math.Max(0m, required - actual));
+    }
 }
