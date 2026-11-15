@@ -88,18 +88,18 @@ Tras la anulación, las pantallas de CxP y Payments/Saldos quedan consistentes s
 **Pantalla de ítems**
 
 - **FR-004**: La pantalla de ítems de la orden MUST tener una barra de herramientas oficial que contenga "Volver" y, solo cuando la orden está Activa, un botón rojo "Anular".
-- **FR-005**: Al presionar "Anular", el sistema MUST mostrar una columna de selección en la tabla de ítems, que solo permite marcar ítems Activos, y una forma de continuar o cancelar la selección.
+- **FR-005**: Al presionar "Anular", el sistema MUST mostrar una columna de selección en la tabla de ítems, que solo permite marcar ítems Activos, junto con los botones "Anular seleccionados" (habilitado solo con al menos un ítem marcado; abre la confirmación) y "Cancelar" (oculta la columna y descarta la selección).
 - **FR-006**: La confirmación MUST mostrar el mensaje "¿Está seguro que desea anular los ítems seleccionados?", la lista de ítems seleccionados con su descripción, su cliente y el campo editable "Monto a devolver por el proveedor" (en la moneda de la orden, precargado con el precio de lista con impuesto del ítem), un campo de justificación obligatorio y los botones "Cancelar" y "Continuar con la anulación".
-- **FR-007**: La confirmación MUST mostrar la comparativa Antes/Después de Precio Acordado Total, SubTotal, Impuestos, Envío a CR, Total a Proveedor, Total Orden y Ganancia Est. El Después aplica las reglas de cálculo vigentes de la orden sobre los ítems que quedarían activos. El descuento y el envío interno de la orden no cambian.
+- **FR-007**: La confirmación MUST mostrar la comparativa Antes/Después de Precio Acordado Total, SubTotal, Impuestos, Envío a CR, Total a Proveedor, Total Orden y Ganancia Est. El Antes son los totales guardados actualmente en la orden. El Después aplica las reglas de cálculo vigentes de la orden sobre los ítems que quedarían activos. El descuento y el envío interno de la orden no cambian.
 - **FR-008**: La confirmación MUST mostrar el Ajuste financiero (suma de los montos a devolver), la diferencia teórica (Total a Proveedor Antes − Después) y la diferencia entre ambos, y actualizarlos al editar cualquier monto.
 - **FR-009**: Si la selección cubre todos los ítems Activos de la orden, la confirmación MUST deshabilitar "Continuar con la anulación" e indicar que se use la anulación de la orden.
-- **FR-010**: Tras una anulación exitosa, la tabla de ítems MUST refrescarse, y los ítems Anulados MUST mostrarse con fondo rojo pastel claro.
+- **FR-010**: Tras una anulación exitosa, la tabla de ítems MUST refrescarse, y los ítems Anulados MUST mostrarse con fondo rojo pastel claro y una etiqueta de estado "Anulado".
 
 **Procesamiento**
 
 - **FR-011**: El sistema MUST validar, antes de aplicar cualquier cambio, que la orden esté Activa, que todos los ítems pertenezcan a la orden y estén Activos, que quede al menos un ítem Activo, que la justificación no esté vacía, que cada monto a devolver sea ≥ 0 y que exista un período CxP abierto. Si alguna validación falla, se rechaza con un mensaje claro y no se modifica nada.
 - **FR-012**: Al confirmar, el sistema MUST cambiar a Anulado el estado de cada ítem seleccionado.
-- **FR-013**: Por cada ítem anulado, el sistema MUST registrar una transacción de anulación (monto positivo, tipo Anulación) al cliente actual del ítem, por su precio acordado actual, en la moneda y organización de la orden. La descripción incluye la justificación.
+- **FR-013**: Por cada ítem anulado, el sistema MUST registrar una transacción de anulación (monto positivo, tipo Anulación) al cliente actual del ítem, por su precio acordado actual, en la moneda local (la misma de los cargos al cliente), en la organización de la orden y con la fecha y hora actual de Costa Rica, igual que las anulaciones de la orden completa. La descripción incluye la justificación.
 - **FR-014**: El sistema MUST recalcular y guardar los totales de la orden (Precio Acordado Total, SubTotal, Impuestos, Envío a CR, Total a Proveedor, Total Orden, Ganancia Est.) excluyendo los ítems Anulados, con los mismos valores mostrados en el Después de la confirmación.
 - **FR-015**: El sistema MUST registrar un único movimiento CxP por anulación, en el período abierto y en la moneda de la orden, de un tipo nuevo "Anulación de ítems" que reduce la deuda. Su monto se guarda **positivo** e igual al Ajuste financiero, y lleva la referencia a la orden y la justificación.
 - **FR-016**: Todos los cálculos que agregan movimientos CxP (Por pagar por moneda, Por pagar en colones, Deuda, Posición, vista previa y cierre de mes, saldo anterior) MUST restar los movimientos de tipo "Anulación de ítems" en lugar de sumarlos.
@@ -137,6 +137,7 @@ Tras la anulación, las pantallas de CxP y Payments/Saldos quedan consistentes s
 - El monto a devolver por el proveedor se mide contra Total a Proveedor (precio de lista con impuesto), no contra Total Orden: la CxP se registró con Total a Proveedor, y el envío a CR se corrige solo al recalcular la orden (decisión del brainstorm 19).
 - No hay operación para revertir una anulación de ítems. Si el monto devuelto real cambia después, se corrige con un movimiento CxP manual.
 - El descuento y el envío interno de la orden no cambian al anular ítems.
+- En órdenes activadas antes de la 018 (totales guardados con fórmulas anteriores), el Después recalcula todo con las reglas actuales. La diferencia teórica puede incluir ese efecto además de los ítems anulados; se acepta, y el Ajuste financiero sigue siendo lo que manda para la CxP.
 - Las Metas de Ventas no se ven afectadas: su monto real se ingresa manualmente.
 - Los movimientos "Anulación de ítems" siguen las mismas reglas de eliminación que el resto de movimientos CxP en un período abierto.
 - Fuera de alcance: migrar "Reverso Paquete" (hoy con monto negativo) al esquema de tipo que resta, y revertir el movimiento AutoActiva al anular la orden completa. Quedan como temas abiertos del brainstorm 19.
