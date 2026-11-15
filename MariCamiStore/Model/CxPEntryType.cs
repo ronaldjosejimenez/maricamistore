@@ -20,4 +20,14 @@ public static class CxPEntryType
 
     /// <summary>(Immutable) negative entry created when a shipping package is deleted.</summary>
     public const string ReversoPaquete = "ReversoPaquete";
+
+    /// <summary>Items voided from an active order. Stored with a positive amount; the type is what subtracts.</summary>
+    public const string AnulacionItems = "AnulacionItems";
+
+    /// <summary>Gets the amount with the sign this entry type has when added up (negative for the types that subtract).</summary>
+    /// <param name="type">The entry type.</param>
+    /// <param name="amount">The stored amount.</param>
+    /// <returns>The amount to add to the totals.</returns>
+    public static decimal SignedAmount(string type, decimal amount) =>
+        type == AnulacionItems ? -amount : amount;
 }

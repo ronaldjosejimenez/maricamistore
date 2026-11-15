@@ -231,7 +231,7 @@ public class CxPService(
         foreach (var group in entries.GroupBy(e => e.CurrencyId))
         {
             currencyMap.TryGetValue(group.Key, out var currency);
-            var total = group.Sum(e => e.Amount);
+            var total = group.Sum(e => CxPEntryType.SignedAmount(e.Type, e.Amount));
             porPagarPorMoneda[group.Key.ToString()] = new CxPCurrencyBalance(
                 currency?.Name ?? group.Key.ToString(),
                 currency?.Sign ?? string.Empty,

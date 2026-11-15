@@ -22,7 +22,18 @@ public record OrderItemWithCustomerDto(
     decimal AgreedPriceInLocal,
     bool IsReceived,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    string Status);
+
+/// <summary>The monetary totals of an order, computed from its active items.</summary>
+public record OrderTotals(
+    decimal TotalAgreedPriceInLocal,
+    decimal ShippingAmountToCR,
+    decimal TotalWithoutTaxes,
+    decimal TaxesAmount,
+    decimal TotalToPayToSupplier,
+    decimal TotalOfTheOrder,
+    decimal EstimatedProfitInLocal);
 
 public record OrderTotalsDto(
     Guid OrderId,

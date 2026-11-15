@@ -368,6 +368,13 @@ namespace MariCamiStore.Infrastructure.Persistance.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasDefaultValue("N/A");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Active");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 

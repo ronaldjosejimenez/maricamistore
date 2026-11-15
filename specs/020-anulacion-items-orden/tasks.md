@@ -10,7 +10,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirmar que la solución compila antes de los cambios: correr `dotnet build` en `MariCamiStore/` y anotar los warnings que ya existen
+- [X] T001 Confirmar que la solución compila antes de los cambios: correr `dotnet build` en `MariCamiStore/` y anotar los warnings que ya existen
 
 ---
 
@@ -18,15 +18,15 @@
 
 **Purpose**: estado del ítem, tipo CxP que resta y cálculo puro de totales (research R1, R2, R3; data-model.md).
 
-- [ ] T002 [P] En `MariCamiStore/Model/OrderItemStatus.cs` dejar solo `Active` ("Activo") y `Voided` ("Anulado"): eliminar `Pending`, `Checked` y `Delivered`, actualizar `List()` a `new[] { Active, Voided }` y corregir los comentarios XML copiados de OrderStatus ("An order item status", etc.)
-- [ ] T003 [P] En `MariCamiStore/Model/OrderItem.cs` agregar `public string Status { get; set; } = OrderItemStatus.Active.Key;` con comentario XML, después de `IsReceived`
-- [ ] T004 [P] En `MariCamiStore/Model/CxPEntryType.cs` agregar `public const string AnulacionItems = "AnulacionItems";` y `public static decimal SignedAmount(string type, decimal amount) => type == AnulacionItems ? -amount : amount;`, con un comentario que explique que el monto se guarda positivo y es el tipo el que resta
-- [ ] T005 En `MariCamiStore/Infrastructure/Persistance/EntityConfigurations/OrderItemEntityTypeConfiguration.cs` mapear `Status` con `IsRequired().HasMaxLength(20).HasDefaultValue(OrderItemStatus.Active.Key)`, junto a `IsReceived`
-- [ ] T006 Generar la migración con `dotnet ef migrations add AddOrderItemStatus` desde `MariCamiStore/` (queda en `MariCamiStore/Infrastructure/Persistance/Migrations/`). Revisar que `Up` solo agregue `Status nvarchar(20) NOT NULL DEFAULT 'Active'` en `OrderItems` y que el snapshot no tenga más cambios. Correr `dotnet ef database update` en local
-- [ ] T007 En `MariCamiStore/Services/CxPService.cs` `GetPeriodIndicatorsAsync` cambiar `group.Sum(e => e.Amount)` por `group.Sum(e => CxPEntryType.SignedAmount(e.Type, e.Amount))`. La vista previa y el cierre (`GetClosePreviewAsync` y `ClosePeriodAsync`) ya usan estos indicadores; confirmar que no haya otra suma de `CxPEntries`
-- [ ] T008 En `MariCamiStore/Pages/CxP/Index.cshtml.cs` (requiere T004) `OnGetEntriesAsync` exponer por fila `Amount = CxPEntryType.SignedAmount(e.Type, e.Amount)` y calcular `total` con la misma función
-- [ ] T009 En `MariCamiStore/Services/IOrderService.cs` agregar `public record OrderTotals(decimal TotalAgreedPriceInLocal, decimal ShippingAmountToCR, decimal TotalWithoutTaxes, decimal TaxesAmount, decimal TotalToPayToSupplier, decimal TotalOfTheOrder, decimal EstimatedProfitInLocal);` y agregar `string Status` al final de `OrderItemWithCustomerDto`
-- [ ] T010 En `MariCamiStore/Services/OrderService.cs`:
+- [X] T002 [P] En `MariCamiStore/Model/OrderItemStatus.cs` dejar solo `Active` ("Activo") y `Voided` ("Anulado"): eliminar `Pending`, `Checked` y `Delivered`, actualizar `List()` a `new[] { Active, Voided }` y corregir los comentarios XML copiados de OrderStatus ("An order item status", etc.)
+- [X] T003 [P] En `MariCamiStore/Model/OrderItem.cs` agregar `public string Status { get; set; } = OrderItemStatus.Active.Key;` con comentario XML, después de `IsReceived`
+- [X] T004 [P] En `MariCamiStore/Model/CxPEntryType.cs` agregar `public const string AnulacionItems = "AnulacionItems";` y `public static decimal SignedAmount(string type, decimal amount) => type == AnulacionItems ? -amount : amount;`, con un comentario que explique que el monto se guarda positivo y es el tipo el que resta
+- [X] T005 En `MariCamiStore/Infrastructure/Persistance/EntityConfigurations/OrderItemEntityTypeConfiguration.cs` mapear `Status` con `IsRequired().HasMaxLength(20).HasDefaultValue(OrderItemStatus.Active.Key)`, junto a `IsReceived`
+- [X] T006 Generar la migración con `dotnet ef migrations add AddOrderItemStatus` desde `MariCamiStore/` (queda en `MariCamiStore/Infrastructure/Persistance/Migrations/`). Revisar que `Up` solo agregue `Status nvarchar(20) NOT NULL DEFAULT 'Active'` en `OrderItems` y que el snapshot no tenga más cambios. Correr `dotnet ef database update` en local
+- [X] T007 En `MariCamiStore/Services/CxPService.cs` `GetPeriodIndicatorsAsync` cambiar `group.Sum(e => e.Amount)` por `group.Sum(e => CxPEntryType.SignedAmount(e.Type, e.Amount))`. La vista previa y el cierre (`GetClosePreviewAsync` y `ClosePeriodAsync`) ya usan estos indicadores; confirmar que no haya otra suma de `CxPEntries`
+- [X] T008 En `MariCamiStore/Pages/CxP/Index.cshtml.cs` (requiere T004) `OnGetEntriesAsync` exponer por fila `Amount = CxPEntryType.SignedAmount(e.Type, e.Amount)` y calcular `total` con la misma función
+- [X] T009 En `MariCamiStore/Services/IOrderService.cs` agregar `public record OrderTotals(decimal TotalAgreedPriceInLocal, decimal ShippingAmountToCR, decimal TotalWithoutTaxes, decimal TaxesAmount, decimal TotalToPayToSupplier, decimal TotalOfTheOrder, decimal EstimatedProfitInLocal);` y agregar `string Status` al final de `OrderItemWithCustomerDto`
+- [X] T010 En `MariCamiStore/Services/OrderService.cs`:
   - Extraer de `ApplyOrderCalculationSuite` un `private static OrderTotals ComputeOrderTotals(Order order, IEnumerable<OrderItem> items)` con las mismas fórmulas y el mismo redondeo `AwayFromZero`.
   - `ApplyOrderCalculationSuite` pasa a llamarla con `items.Where(i => i.Status == OrderItemStatus.Active.Key)`, asigna los 7 campos y actualiza `UpdatedAt`.
   - `GetOrderItemsWithCustomerAsync` llena `Status`.

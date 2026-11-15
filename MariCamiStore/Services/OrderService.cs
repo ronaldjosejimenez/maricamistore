@@ -124,15 +124,33 @@ public class OrderService(
 
     private static void ApplyOrderCalculationSuite(Order order, List<OrderItem> items)
     {
-        order.TotalAgreedPriceInLocal = Math.Round(items.Sum(i => i.AgreedPriceInLocal), 2, MidpointRounding.AwayFromZero);
-        order.ShippingAmountToCR     = Math.Round(items.Sum(i => i.EstimateShipping), 2, MidpointRounding.AwayFromZero);
+        var totals = ComputeOrderTotals(order, items.Where(i => i.Status == OrderItemStatus.Active.Key));
+        order.TotalAgreedPriceInLocal = totals.TotalAgreedPriceInLocal;
+        order.ShippingAmountToCR      = totals.ShippingAmountToCR;
+        order.TotalWithoutTaxes       = totals.TotalWithoutTaxes;
+        order.TaxesAmount             = totals.TaxesAmount;
+        order.TotalToPayToSupplier    = totals.TotalToPayToSupplier;
+        order.TotalOfTheOrder         = totals.TotalOfTheOrder;
+        order.EstimatedProfitInLocal  = totals.EstimatedProfitInLocal;
+        order.UpdatedAt               = DateTime.UtcNow;
+    }
+
+    /// <summary>Computes the order totals from the given items, using the order's tax, rate, discount and internal shipping. Pure: it does not modify the order.</summary>
+    /// <param name="order">The order.</param>
+    /// <param name="items">The items that count towards the order (callers pass only the active ones).</param>
+    /// <returns>The totals.</returns>
+    private static OrderTotals ComputeOrderTotals(Order order, IEnumerable<OrderItem> items)
+    {
+        var list = items.ToList();
+        var totalAgreed = Math.Round(list.Sum(i => i.AgreedPriceInLocal), 2, MidpointRounding.AwayFromZero);
+        var shippingToCR = Math.Round(list.Sum(i => i.EstimateShipping), 2, MidpointRounding.AwayFromZero);
         // Spec 018, FR-021: RealPrice now includes tax and shipping, so the subtotal is based on list prices
-        order.TotalWithoutTaxes      = Math.Round(items.Sum(i => i.ListPrice), 2, MidpointRounding.AwayFromZero);
-        order.TaxesAmount            = Math.Round((order.TotalWithoutTaxes - order.DiscountAmount) * (order.TaxPercentage / 100), 2, MidpointRounding.AwayFromZero);
-        order.TotalToPayToSupplier   = Math.Round(order.ShippingAmountIntern + order.TotalWithoutTaxes + order.TaxesAmount - order.DiscountAmount, 2, MidpointRounding.AwayFromZero);
-        order.TotalOfTheOrder        = Math.Round(order.TotalToPayToSupplier + order.ShippingAmountToCR, 2, MidpointRounding.AwayFromZero);
-        order.EstimatedProfitInLocal = Math.Round(order.TotalAgreedPriceInLocal - order.TotalOfTheOrder * order.ExchangeRate, 2, MidpointRounding.AwayFromZero);
-        order.UpdatedAt              = DateTime.UtcNow;
+        var totalWithoutTaxes = Math.Round(list.Sum(i => i.ListPrice), 2, MidpointRounding.AwayFromZero);
+        var taxes = Math.Round((totalWithoutTaxes - order.DiscountAmount) * (order.TaxPercentage / 100), 2, MidpointRounding.AwayFromZero);
+        var toSupplier = Math.Round(order.ShippingAmountIntern + totalWithoutTaxes + taxes - order.DiscountAmount, 2, MidpointRounding.AwayFromZero);
+        var totalOrder = Math.Round(toSupplier + shippingToCR, 2, MidpointRounding.AwayFromZero);
+        var profit = Math.Round(totalAgreed - totalOrder * order.ExchangeRate, 2, MidpointRounding.AwayFromZero);
+        return new OrderTotals(totalAgreed, shippingToCR, totalWithoutTaxes, taxes, toSupplier, totalOrder, profit);
     }
 
     // ── Order Items ───────────────────────────────────────────────────────────
@@ -163,7 +181,7 @@ public class OrderService(
                 i.ProductImage != null, i.ProductTypeId,
                 i.ListPrice, i.ListPriceTaxWithTax, i.RealPrice, i.RealPriceInLocal,
                 i.EstimateShipping, i.ServiceFeeInLocal, i.AgreedPriceInLocal,
-                i.IsReceived, i.CreatedAt, i.UpdatedAt))
+                i.IsReceived, i.CreatedAt, i.UpdatedAt, i.Status))
             .OrderBy(x => x.CustomerDisplayName)
             .ThenByDescending(x => x.CreatedAt)
             .ToList();

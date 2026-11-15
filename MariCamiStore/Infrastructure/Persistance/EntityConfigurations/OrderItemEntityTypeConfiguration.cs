@@ -79,6 +79,11 @@ public class OrderItemEntityTypeConfiguration : IEntityTypeConfiguration<OrderIt
             .IsRequired()
             .HasDefaultValue(false);
 
+        builder.Property(oi => oi.Status)
+            .IsRequired()
+            .HasMaxLength(20)
+            .HasDefaultValue(OrderItemStatus.Active.Key);
+
         builder.Property(oi => oi.CreatedAt)
             .IsRequired();
 
