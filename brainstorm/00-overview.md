@@ -1,6 +1,6 @@
 # Brainstorm Overview
 
-Last updated: 2026-10-26
+Last updated: 2026-11-15
 
 ## Sessions
 
@@ -24,6 +24,7 @@ Last updated: 2026-10-26
 | 16 | 2026-10-06 | control-metas-ventas | implemented | specs/016-control-metas-ventas |
 | 17 | 2026-10-19 | ajustes-ordenes-metas-clientes | implemented | specs/017-ajustes-ordenes-metas-clientes |
 | 18 | 2026-10-25 | defaults-proveedor-calculadora | implemented | specs/018-defaults-proveedor-calculadora |
+| 19 | 2026-11-15 | anulacion-items-orden | active | - |
 
 ## Open Threads
 
@@ -38,6 +39,11 @@ Last updated: 2026-10-26
 - `GetOrderStatusHistoryAsync` no filtra por organización; revisar con la autenticación (from #17)
 - ¿Limpiar el tipo CxP `AutoDelivered` (sin uso)? (from #17)
 - Confirmar que la migración `SupplierDefaultsAndRealPriceInLocal` se aplicó en producción y revisar las órdenes Pendientes con ítems previos a la 018 (from #18)
+- ¿Migrar `ReversoPaquete` (monto negativo) al esquema "tipo que resta" con monto positivo? (from #19)
+- ¿`ShippingAmountIntern` y `DiscountAmount` quedan intactos al anular ítems? (from #19)
+- ¿Los ítems anulados restan de la venta en Metas de Ventas / comisiones? (from #19)
+- Anular la orden completa no revierte la entrada CxP `AutoActiva`: ¿alinear con el nuevo tipo que resta? (from #19)
+- ¿El tipo CxP nuevo de anulación de ítems se puede eliminar manualmente desde la UI de CxP? (from #19)
 
 ## Parked Ideas
 
