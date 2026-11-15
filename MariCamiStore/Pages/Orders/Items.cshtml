@@ -17,9 +17,17 @@
                 <h1>Items: @order.NameOfOrder</h1>
             </div>
             <div class="col-sm-6 text-right">
-                <a href="@(ViewData["ReturnStatuses"] is string rs ? "/Orders?statuses=" + Uri.EscapeDataString(rs) : "/Orders")" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-arrow-left"></i> Volver
-                </a>
+                <div class="btn-toolbar justify-content-end">
+                    <a href="@(ViewData["ReturnStatuses"] is string rs ? "/Orders?statuses=" + Uri.EscapeDataString(rs) : "/Orders")" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                    @if (order.Status == MariCamiStore.Model.OrderStatus.Active.Key)
+                    {
+                        <button id="btn-void-items" type="button" class="btn btn-danger btn-sm ml-1">
+                            <i class="fas fa-ban"></i> Anular
+                        </button>
+                    }
+                </div>
             </div>
         </div>
     </div>
@@ -128,6 +136,12 @@
             {
                 <div class="alert alert-info">La orden no está en estado Pendiente — solo lectura.</div>
             }
+            <div id="void-select-bar" class="mb-2" style="display:none;">
+                <button id="btn-void-selected" type="button" class="btn btn-sm btn-danger" disabled>
+                    <i class="fas fa-ban"></i> Anular seleccionados
+                </button>
+                <button id="btn-void-cancel" type="button" class="btn btn-sm btn-secondary">Cancelar</button>
+            </div>
             <div id="items-table-container"><div class="text-center text-muted py-3">Cargando...</div></div>
         </div>
     </div>
@@ -368,6 +382,73 @@
         </div>
     </div>
 </div>
+
+<!-- Modal: Anular ítems (spec 020) -->
+<div class="modal fade" id="modalVoidItems" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Anular ítems</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="font-weight-bold">¿Está seguro que desea anular los ítems seleccionados?</p>
+
+                <table class="table table-sm table-bordered" id="void-items-table">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Descripción</th>
+                            <th>Cliente</th>
+                            <th class="text-right">Acordado</th>
+                            <th style="width:200px;">Monto a devolver por el proveedor</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <div id="void-comparison">
+                    <table class="table table-sm table-bordered">
+                        <thead class="thead-light">
+                            <tr><th>Concepto</th><th class="text-right">Antes</th><th class="text-right">Después</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Precio Acordado Total</td><td class="text-right" id="vc-agreed-before"></td><td class="text-right" id="vc-agreed-after"></td></tr>
+                            <tr><td>SubTotal</td><td class="text-right" id="vc-subtotal-before"></td><td class="text-right" id="vc-subtotal-after"></td></tr>
+                            <tr><td>Impuestos</td><td class="text-right" id="vc-taxes-before"></td><td class="text-right" id="vc-taxes-after"></td></tr>
+                            <tr><td>Envío a CR</td><td class="text-right" id="vc-shipcr-before"></td><td class="text-right" id="vc-shipcr-after"></td></tr>
+                            <tr><td>Total a Proveedor</td><td class="text-right" id="vc-supplier-before"></td><td class="text-right" id="vc-supplier-after"></td></tr>
+                            <tr><td>Total Orden</td><td class="text-right" id="vc-total-before"></td><td class="text-right" id="vc-total-after"></td></tr>
+                            <tr><td>Ganancia Est.</td><td class="text-right" id="vc-profit-before"></td><td class="text-right" id="vc-profit-after"></td></tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-sm table-borderless w-auto">
+                        <tr><td>Ajuste financiero (suma de lo que devuelve el proveedor)</td><td class="text-right font-weight-bold" id="void-adjustment"></td></tr>
+                        <tr><td>Diferencia teórica (Total a Proveedor antes − después)</td><td class="text-right" id="void-theoretical"></td></tr>
+                        <tr><td>Diferencia (ajuste − teórica)</td><td class="text-right" id="void-difference"></td></tr>
+                    </table>
+                </div>
+
+                <div class="form-group">
+                    <label for="void-justification">Justificación <span class="text-danger">*</span></label>
+                    <textarea id="void-justification" class="form-control" rows="2" maxlength="1000"></textarea>
+                </div>
+
+                <div id="void-all-warning" class="alert alert-warning" style="display:none;">
+                    Se seleccionaron todos los ítems; use la anulación de la orden.
+                </div>
+                <div id="void-error" class="alert alert-danger" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" id="btn-void-confirm" class="btn btn-danger" disabled>Continuar con la anulación</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-voided, .table-voided > td { background-color: #f8d7da; }
+</style>
 
 <script>
     var orderId = '@order.Id';

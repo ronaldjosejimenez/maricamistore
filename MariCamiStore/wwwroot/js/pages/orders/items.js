@@ -9,6 +9,8 @@ var customerItems = [];
 var currentItems = [];
 var reasignarCustomers = [];
 var itemViewMode = false;
+var voidSelectMode = false;
+var voidPreview = null;
 
 // Spanish labels for order status keys (includes the legacy 'Delivered' for old history rows).
 var statusLabels = { Pending: 'Pendiente', Active: 'Activa', Delivering: 'Entregando', Delivered: 'Entregada', Completed: 'Completada', Voided: 'Anulada' };
@@ -247,7 +249,8 @@ var isDelivering = orderStatus === 'Delivering';
 
 function renderItemsTable(items) {
     currentItems = items || [];
-    $('#item-count-badge').text(currentItems.length);
+    // Voided items (spec 020) stay visible but do not count
+    $('#item-count-badge').text(currentItems.filter(function (i) { return i.status !== 'Voided'; }).length);
 
     var $container = $('#items-table-container');
     if (!currentItems.length) {
@@ -265,6 +268,7 @@ function renderItemsTable(items) {
     });
 
     var headerCols = ['Cliente', 'Descripción', 'Cód.', 'Link', 'P.Lista', 'P+Imp', 'Servicio', 'Total', 'P.Acordado', 'P.Real', 'Envío Est.'];
+    if (voidSelectMode) headerCols.unshift('');
     if (isDelivering) headerCols.push('Recibido');
     headerCols.push('Acciones');
 
@@ -289,14 +293,26 @@ function renderItemsTable(items) {
         );
 
         groupItems.forEach(function (item) {
+            var isVoided = item.status === 'Voided';
             var total = round2((parseFloat(item.realPriceInLocal) || 0) + (parseFloat(item.serviceFeeInLocal) || 0));
-            groupSubtotal += parseFloat(item.agreedPriceInLocal) || 0;
+            if (!isVoided) groupSubtotal += parseFloat(item.agreedPriceInLocal) || 0;
 
             var $tr = $('<tr>');
-            if (item.isReceived) $tr.addClass('table-success');
+            if (isVoided) $tr.addClass('table-voided');
+            else if (item.isReceived) $tr.addClass('table-success');
+
+            if (voidSelectMode) {
+                var $sel = $('<td class="text-center">');
+                if (!isVoided) {
+                    $('<input type="checkbox" class="void-chk">').attr('data-item-id', item.id).appendTo($sel);
+                }
+                $tr.append($sel);
+            }
 
             $tr.append($('<td>').text(item.customerDisplayName || ''));
-            $tr.append($('<td>').text(item.productDescription));
+            var $descTd = $('<td>').text(item.productDescription);
+            if (isVoided) $descTd.append($('<span class="badge badge-danger ml-1">').text('Anulado'));
+            $tr.append($descTd);
             $tr.append($('<td>').text(item.productSourceCode || ''));
 
             var $linkTd = $('<td style="min-width:250px;">');
@@ -314,9 +330,13 @@ function renderItemsTable(items) {
             $tr.append($('<td>').text(formatMoney(item.estimateShipping, orderCurrencySign)));
 
             if (isDelivering) {
-                var $chk = $('<input type="checkbox" class="is-received-chk">').attr('data-item-id', item.id);
-                if (item.isReceived) $chk.prop('checked', true);
-                $tr.append($('<td class="text-center">').append($chk));
+                var $recvTd = $('<td class="text-center">');
+                if (!isVoided) {
+                    var $chk = $('<input type="checkbox" class="is-received-chk">').attr('data-item-id', item.id);
+                    if (item.isReceived) $chk.prop('checked', true);
+                    $recvTd.append($chk);
+                }
+                $tr.append($recvTd);
             }
 
             var $btnTd = $('<td>');
@@ -334,7 +354,7 @@ function renderItemsTable(items) {
                         $('#imagePreviewModal').modal('show');
                     }).appendTo($btnTd);
             }
-            if (!isPending && orderStatus !== 'Voided') {
+            if (!isPending && orderStatus !== 'Voided' && !isVoided) {
                 $('<button class="btn btn-xs btn-warning mr-1">Reasignar</button>')
                     .on('click', function () { openReasignar(item); }).appendTo($btnTd);
             }
@@ -376,6 +396,117 @@ function renderItemsTable(items) {
 function loadItems() {
     $.get('?handler=Load&orderId=' + orderId, function (data) {
         renderItemsTable(data || []);
+    });
+}
+
+// ── Void items (spec 020) ─────────────────────────────────────────────────────
+
+function setVoidSelectMode(on) {
+    voidSelectMode = on;
+    $('#void-select-bar').toggle(on);
+    $('#btn-void-items').toggle(!on);
+    $('#btn-void-selected').prop('disabled', true);
+    renderItemsTable(currentItems);
+}
+
+function selectedVoidItemIds() {
+    return $('.void-chk:checked').map(function () { return $(this).attr('data-item-id'); }).get();
+}
+
+function openVoidModal() {
+    var ids = selectedVoidItemIds();
+    if (!ids.length) return;
+    ajaxPost('VoidItemsPreview', { orderId: orderId, itemIds: ids }, function (r) {
+        if (!r.success) { alert(r.error || 'No se pudo preparar la anulación.'); return; }
+        voidPreview = r;
+
+        var $tbody = $('#void-items-table tbody').empty();
+        r.items.forEach(function (it) {
+            var $input = $('<input type="number" class="form-control form-control-sm void-refund" min="0" step="0.01">')
+                .attr('data-item-id', it.id).val(it.defaultRefund);
+            $tbody.append($('<tr>').append(
+                $('<td>').text(it.productDescription),
+                $('<td>').text(it.customerDisplayName),
+                $('<td class="text-right">').text(formatMoney(it.agreedPriceInLocal, localCurrencySign)),
+                $('<td>').append($input)));
+        });
+
+        renderVoidComparison(r.before, r.after);
+        $('#void-justification').val('');
+        $('#void-error').text('').hide();
+        $('#void-all-warning').toggle(!!r.allSelected);
+        recalcVoidAdjustment();
+        $('#modalVoidItems').modal('show');
+    });
+}
+
+function renderVoidComparison(before, after) {
+    var rows = [
+        ['agreed', 'totalAgreedPriceInLocal', localCurrencySign],
+        ['subtotal', 'totalWithoutTaxes', orderCurrencySign],
+        ['taxes', 'taxesAmount', orderCurrencySign],
+        ['shipcr', 'shippingAmountToCR', orderCurrencySign],
+        ['supplier', 'totalToPayToSupplier', orderCurrencySign],
+        ['total', 'totalOfTheOrder', orderCurrencySign],
+        ['profit', 'estimatedProfitInLocal', localCurrencySign]
+    ];
+    rows.forEach(function (row) {
+        $('#vc-' + row[0] + '-before').text(formatMoney(before[row[1]], row[2]));
+        $('#vc-' + row[0] + '-after').text(formatMoney(after[row[1]], row[2]));
+    });
+}
+
+// Sum of the refund inputs; null when any input is empty or negative
+function voidRefundTotal() {
+    var total = 0;
+    var valid = true;
+    $('.void-refund').each(function () {
+        var v = parseFloat($(this).val());
+        if (isNaN(v) || v < 0) { valid = false; return; }
+        total += v;
+    });
+    return valid ? round2(total) : null;
+}
+
+function recalcVoidAdjustment() {
+    var adjustment = voidRefundTotal();
+    var theoretical = voidPreview ? voidPreview.theoreticalRefund : 0;
+    $('#void-adjustment').text(adjustment === null ? '—' : formatMoney(adjustment, orderCurrencySign));
+    $('#void-theoretical').text(formatMoney(theoretical, orderCurrencySign));
+    $('#void-difference').text(adjustment === null ? '—' : formatMoney(round2(adjustment - theoretical), orderCurrencySign));
+    updateVoidConfirmState();
+}
+
+function updateVoidConfirmState() {
+    var blocked = !voidPreview
+        || voidPreview.allSelected
+        || $.trim($('#void-justification').val()) === ''
+        || voidRefundTotal() === null;
+    $('#btn-void-confirm').prop('disabled', blocked);
+}
+
+function confirmVoidItems() {
+    var items = $('.void-refund').map(function () {
+        return { itemId: $(this).attr('data-item-id'), refundAmount: parseFloat($(this).val()) };
+    }).get();
+
+    $('#void-error').hide();
+    $('#btn-void-confirm').prop('disabled', true);
+    ajaxPost('VoidItems', {
+        orderId: orderId,
+        justification: $.trim($('#void-justification').val()),
+        items: items
+    }, function (r) {
+        if (r.success) {
+            // Reload so the grid and the saved header totals reflect the voided items
+            location.reload();
+        } else {
+            $('#void-error').text(r.error || 'Error al anular.').show();
+            updateVoidConfirmState();
+        }
+    }, function (msg) {
+        $('#void-error').text(msg).show();
+        updateVoidConfirmState();
     });
 }
 
@@ -744,6 +875,18 @@ $(function () {
             }
         });
     });
+
+    // ── Void items handlers (spec 020) ────────────────────────────────────────
+
+    $('#btn-void-items').on('click', function () { setVoidSelectMode(true); });
+    $('#btn-void-cancel').on('click', function () { setVoidSelectMode(false); });
+    $(document).on('change', '.void-chk', function () {
+        $('#btn-void-selected').prop('disabled', selectedVoidItemIds().length === 0);
+    });
+    $('#btn-void-selected').on('click', openVoidModal);
+    $(document).on('input', '.void-refund', recalcVoidAdjustment);
+    $('#void-justification').on('input', updateVoidConfirmState);
+    $('#btn-void-confirm').on('click', confirmVoidItems);
 
     loadItems();
 

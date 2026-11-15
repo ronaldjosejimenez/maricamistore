@@ -41,44 +41,44 @@
 
 **Independent Test**: quickstart §1, §3 (sin validar todavía la comparativa) y §5.
 
-- [ ] T011 [US1] En `MariCamiStore/Services/IOrderService.cs` agregar los records y las firmas:
+- [X] T011 [US1] En `MariCamiStore/Services/IOrderService.cs` agregar los records y las firmas:
   - `VoidItemLine(Guid ItemId, decimal RefundAmount)`
   - `VoidPreviewItemDto(Guid Id, string ProductDescription, string CustomerDisplayName, decimal AgreedPriceInLocal, decimal DefaultRefund)`
   - `VoidItemsPreviewDto(bool AllSelected, OrderTotals Before, OrderTotals After, decimal TheoreticalRefund, List<VoidPreviewItemDto> Items)`
   - `Task<(VoidItemsPreviewDto? Preview, string? Error)> PreviewVoidItemsAsync(Guid orderId, IReadOnlyList<Guid> itemIds)`
   - `Task<(bool Success, string? Error)> VoidItemsAsync(Guid orderId, string? justification, IReadOnlyList<VoidItemLine> items)`
-- [ ] T012 [US1] En `MariCamiStore/Services/OrderService.cs` implementar `PreviewVoidItemsAsync`:
+- [X] T012 [US1] En `MariCamiStore/Services/OrderService.cs` implementar `PreviewVoidItemsAsync`:
   - Valida (mensajes de contracts/ui-handlers.md): orden existe y está Active, lista no vacía y todos los ids son ítems Active de la orden.
   - `Before` = un `OrderTotals` con los campos guardados de la orden; `After` = `ComputeOrderTotals(order, activos que no están seleccionados)`.
   - `TheoreticalRefund = Before.TotalToPayToSupplier - After.TotalToPayToSupplier`; `AllSelected` = la selección cubre todos los Active.
   - Por ítem: `DefaultRefund = ListPriceTaxWithTax` y el nombre del cliente con el mismo criterio que `GetOrderItemsWithCustomerAsync` (NickName o Name).
-- [ ] T013 [US1] En `MariCamiStore/Services/OrderService.cs` implementar `VoidItemsAsync` (research R4, R5; plan Design Notes):
+- [X] T013 [US1] En `MariCamiStore/Services/OrderService.cs` implementar `VoidItemsAsync` (research R4, R5; plan Design Notes):
   - Validaciones en el orden del contrato: orden Active, ≥1 ítem, justificación no vacía y ≤ 1000, montos ≥ 0, ítems Active de la orden, no todos y período abierto (`cxpService.GetOpenPeriodAsync()`).
   - Por ítem: `Status = Voided`, `UpdatedAt` y un `Transaction` Void. Este usa `CustomerId` del ítem, `AgreedPriceInLocal`, `LocalCurrencyId` de la Configuración, fecha `Central America Standard Time`, `Applied`, `Source = OrderItem` y la descripción `Anulación de ítem – {desc≤100} – Orden {NameOfOrder} – {justificación}`, truncada al largo de la columna (verificar en `TransactionEntityTypeConfiguration.cs`).
   - `ApplyOrderCalculationSuite(order, todosLosItems)`.
   - `context.CxPEntries.Add` con `Type = CxPEntryType.AnulacionItems`, `Amount = Σ RefundAmount`, `CurrencyId = order.CurrencyId`, `OrderId`, `PeriodControlId` y `Reference` = `Anulación ítems: {NameOfOrder} – {justificación}`, truncada al largo de `CxPEntryEntityTypeConfiguration`.
   - `context.OrderStatusHistories.Add` con From/To = Active, `TransitionDate` = fecha CR, `Notes = $"Anulación parcial: {n} ítem(s) – ajuste {sign}{monto:N2}"` y `Justification`. El `sign` sale de `(await context.Currencies.FirstOrDefaultAsync(c => c.Id == order.CurrencyId))?.Sign ?? string.Empty`.
   - **Un solo** `SaveChangesAsync`.
-- [ ] T014 [US1] En `MariCamiStore/Services/OrderService.cs` aplicar las exclusiones de research R6:
+- [X] T014 [US1] En `MariCamiStore/Services/OrderService.cs` aplicar las exclusiones de research R6:
   - `GetOrderItemCountsAsync` cuenta solo los Active.
   - `ReasignarItemAsync` devuelve "No se puede reasignar un ítem anulado." si está Voided, y `otherTotal` suma solo los Active.
   - `ToggleIsReceivedAsync` devuelve "No se puede modificar un ítem anulado." si está Voided.
   - `TransitionOrderAsync`, en la rama Voided, genera `Void` solo para los Active.
-- [ ] T015 [US1] En `MariCamiStore/Pages/Orders/Items.cshtml.cs`:
+- [X] T015 [US1] En `MariCamiStore/Pages/Orders/Items.cshtml.cs`:
   - Agregar `public record VoidItemsPreviewRequest(Guid OrderId, List<Guid> ItemIds)` y `public record VoidItemsRequest(Guid OrderId, string? Justification, List<VoidItemLine> Items)`.
   - Agregar `OnPostVoidItemsPreviewAsync`, que devuelve `{ success, error, allSelected, before, after, theoreticalRefund, items }`, y `OnPostVoidItemsAsync`, que devuelve `{ success, error }`.
   - En `OnPostUpdateAsync`, si `existing.Status == Voided`, devolver `{ error = "No se puede modificar un ítem anulado." }`.
-- [ ] T016 [US1] En `MariCamiStore/Pages/Orders/Items.cshtml`:
+- [X] T016 [US1] En `MariCamiStore/Pages/Orders/Items.cshtml`:
   - Cambiar la columna derecha del header a `div.btn-toolbar.justify-content-end`, con "Volver" y, si `order.Status == OrderStatus.Active.Key`, `<button id="btn-void-items" class="btn btn-danger btn-sm ml-1"><i class="fas fa-ban"></i> Anular</button>`.
   - Agregar encima de `#items-table-container` un `#void-select-bar` oculto, con "Anular seleccionados" (`#btn-void-selected`, disabled) y "Cancelar" (`#btn-void-cancel`).
   - Agregar el modal `#modalVoidItems` (`modal-lg`) con: el texto "¿Está seguro que desea anular los ítems seleccionados?"; una tabla `#void-items-table` (Descripción, Cliente, Acordado, Monto a devolver por el proveedor); un contenedor `#void-comparison` (lo llena US2); `#void-justification` (textarea, maxlength 1000, requerido); `#void-all-warning` (alert-warning oculto: "Se seleccionaron todos los ítems; use la anulación de la orden."); `#void-error` (alert-danger oculto); y los botones "Cancelar" y `#btn-void-confirm` "Continuar con la anulación" (btn-danger).
   - Agregar `<style>.table-voided, .table-voided > td { background-color: #f8d7da; }</style>`.
-- [ ] T017 [US1] En `MariCamiStore/wwwroot/js/pages/orders/items.js`, modo selección y render de anulados:
+- [X] T017 [US1] En `MariCamiStore/wwwroot/js/pages/orders/items.js`, modo selección y render de anulados:
   - Variable `voidSelectMode`. `#btn-void-items` la activa, muestra `#void-select-bar` y re-renderiza; `#btn-void-cancel` la desactiva y re-renderiza.
   - En `renderItemsTable`, si `voidSelectMode`, agregar al principio la columna de selección (encabezado vacío): `input.void-chk[data-item-id]` solo en las filas `status === 'Active'`. El `change` habilita `#btn-void-selected` cuando hay ≥1 marcado.
   - Filas `status === 'Voided'`: `addClass('table-voided')`, un `<span class="badge badge-danger ml-1">Anulado</span>` después de la descripción, sin Reasignar ni checkbox Recibido (celda vacía si `isDelivering`). No suman en `groupSubtotal` ni en `grandTotal`.
   - `#item-count-badge` cuenta solo los Active.
-- [ ] T018 [US1] En `MariCamiStore/wwwroot/js/pages/orders/items.js`, el flujo del modal:
+- [X] T018 [US1] En `MariCamiStore/wwwroot/js/pages/orders/items.js`, el flujo del modal:
   - `#btn-void-selected` llama a `ajaxPost('VoidItemsPreview', { orderId, itemIds })`. Si hay error, `alert`. Si no, guardar `voidPreview` y llenar `#void-items-table` con un `input.void-refund` (type number, min 0, step 0.01, value `defaultRefund`); mostrar u ocultar `#void-all-warning` según `allSelected`; limpiar la justificación y `#void-error`; y abrir el modal.
   - `updateVoidConfirmState()` deshabilita `#btn-void-confirm` si `allSelected`, si la justificación está vacía (trim) o si algún monto es vacío, NaN o < 0. Se llama en el `input` de `.void-refund` y de `#void-justification`.
   - `#btn-void-confirm` hace POST `VoidItems` con `{ orderId, justification, items: [{ itemId, refundAmount }] }`. Si tiene éxito, `location.reload()`; si falla, muestra el error en `#void-error`.
@@ -93,10 +93,10 @@
 
 **Independent Test**: quickstart §2.
 
-- [ ] T019 [US2] En `MariCamiStore/Pages/Orders/Items.cshtml`, dentro de `#void-comparison`, agregar:
+- [X] T019 [US2] En `MariCamiStore/Pages/Orders/Items.cshtml`, dentro de `#void-comparison`, agregar:
   - una tabla `table-sm` con las columnas Concepto / Antes / Después y las filas Precio Acordado Total, SubTotal, Impuestos, Envío a CR, Total a Proveedor, Total Orden y Ganancia Est.;
   - un bloque con `#void-adjustment` (Ajuste financiero), `#void-theoretical` (Total a Proveedor Antes − Después) y `#void-difference` (Ajuste − Teórico).
-- [ ] T020 [US2] En `MariCamiStore/wwwroot/js/pages/orders/items.js`:
+- [X] T020 [US2] En `MariCamiStore/wwwroot/js/pages/orders/items.js`:
   - `renderVoidComparison(before, after)` llena la tabla con `formatMoney`, usando `localCurrencySign` para Acordado y Ganancia, y `orderCurrencySign` para el resto (como `renderHeader`). Se llama al abrir el modal.
   - `recalcVoidAdjustment()` suma los `.void-refund` válidos con `round2`, muestra el Ajuste, el Teórico (`voidPreview.theoreticalRefund`) y la Diferencia con `orderCurrencySign`. Se llama al abrir el modal y en el `input` de `.void-refund`, junto con `updateVoidConfirmState()`.
 
@@ -110,8 +110,8 @@
 
 **Independent Test**: quickstart §3 (parte CxP), §4 y §5.6–5.7.
 
-- [ ] T021 [P] [US3] En `MariCamiStore/wwwroot/js/pages/cxp/index.js` agregar `'AnulacionItems': 'Anulación de ítems'` a `TYPE_LABELS`. El monto ya llega con signo (T008), así que `formatSignedMoneyHtml` lo pinta en rojo con "−"
-- [ ] T022 [US3] Revisar en `MariCamiStore/Services/CxPService.cs` que `GetClosePreviewAsync` y `ClosePeriodAsync` calculen el saldo anterior solo a partir de `GetPeriodIndicatorsAsync` (heredan el signo de T007) y que `DeleteEntryAsync` no necesite cambios (Clarifications: se permite eliminar)
+- [X] T021 [P] [US3] En `MariCamiStore/wwwroot/js/pages/cxp/index.js` agregar `'AnulacionItems': 'Anulación de ítems'` a `TYPE_LABELS`. El monto ya llega con signo (T008), así que `formatSignedMoneyHtml` lo pinta en rojo con "−"
+- [X] T022 [US3] Revisar en `MariCamiStore/Services/CxPService.cs` que `GetClosePreviewAsync` y `ClosePeriodAsync` calculen el saldo anterior solo a partir de `GetPeriodIndicatorsAsync` (heredan el signo de T007) y que `DeleteEntryAsync` no necesite cambios (Clarifications: se permite eliminar)
 
 **Checkpoint**: quickstart §4 cuadra en los 3 escenarios.
 

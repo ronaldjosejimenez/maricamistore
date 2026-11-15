@@ -45,6 +45,25 @@ public record OrderTotalsDto(
     decimal TotalOfTheOrder,
     decimal EstimatedProfitInLocal);
 
+/// <summary>One item to void, with the amount the supplier refunds for it (in the order currency).</summary>
+public record VoidItemLine(Guid ItemId, decimal RefundAmount);
+
+/// <summary>An item shown in the void confirmation.</summary>
+public record VoidPreviewItemDto(
+    Guid Id,
+    string ProductDescription,
+    string CustomerDisplayName,
+    decimal AgreedPriceInLocal,
+    decimal DefaultRefund);
+
+/// <summary>The before/after comparison shown before voiding items.</summary>
+public record VoidItemsPreviewDto(
+    bool AllSelected,
+    OrderTotals Before,
+    OrderTotals After,
+    decimal TheoreticalRefund,
+    List<VoidPreviewItemDto> Items);
+
 public record TransitionOrderDto(
     Guid OrderId,
     string ToStatus,
@@ -75,4 +94,7 @@ public interface IOrderService
     Task<List<OrderStatusHistory>> GetOrderStatusHistoryAsync(Guid orderId);
     Task<(bool Success, string? Error)> DeleteOrderAsync(Guid orderId);
     Task<(bool Success, string? Error)> ReasignarItemAsync(Guid itemId, Guid newCustomerId, decimal newAgreedPriceInLocal);
+
+    Task<(VoidItemsPreviewDto? Preview, string? Error)> PreviewVoidItemsAsync(Guid orderId, IReadOnlyList<Guid> itemIds);
+    Task<(bool Success, string? Error)> VoidItemsAsync(Guid orderId, string? justification, IReadOnlyList<VoidItemLine> items);
 }

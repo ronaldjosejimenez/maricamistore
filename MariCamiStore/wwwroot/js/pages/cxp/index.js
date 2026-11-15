@@ -8,7 +8,8 @@ var TYPE_LABELS = {
     'SaldoAnterior': 'Saldo Anterior',
     'Manual': 'Manual',
     'AutoPaquete': 'Auto-Paquete',
-    'ReversoPaquete': 'Reverso Paquete'
+    'ReversoPaquete': 'Reverso Paquete',
+    'AnulacionItems': 'Anulación de ítems'
 };
 
 // Negative amounts (e.g. package reversals) are shown in red with a leading minus sign.
