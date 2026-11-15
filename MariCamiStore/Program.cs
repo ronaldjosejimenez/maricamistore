@@ -53,7 +53,7 @@ try
         .AddNewtonsoftJson();
 
     builder.Services.AddServices();
-
+       dfdfd
     builder.Services.AddDbContext<MariCamiStoreContext>(options =>
     {
         options.UseSqlServer(builder.Configuration["ConnectionString"]);
