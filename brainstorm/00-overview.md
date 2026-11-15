@@ -24,7 +24,7 @@ Last updated: 2026-11-15
 | 16 | 2026-10-06 | control-metas-ventas | implemented | specs/016-control-metas-ventas |
 | 17 | 2026-10-19 | ajustes-ordenes-metas-clientes | implemented | specs/017-ajustes-ordenes-metas-clientes |
 | 18 | 2026-10-25 | defaults-proveedor-calculadora | implemented | specs/018-defaults-proveedor-calculadora |
-| 19 | 2026-11-15 | anulacion-items-orden | active | - |
+| 19 | 2026-11-15 | anulacion-items-orden | implemented | specs/020-anulacion-items-orden |
 
 ## Open Threads
 

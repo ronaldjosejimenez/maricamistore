@@ -119,10 +119,10 @@
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T023 Correr `dotnet build` en `MariCamiStore/`: cero errores y ningún warning nuevo respecto a T001
+- [X] T023 Correr `dotnet build` en `MariCamiStore/`: cero errores y ningún warning nuevo respecto a T001
 - [ ] T024 Ejecutar el [quickstart.md](quickstart.md) completo (§1–§5) en local y verificar SC-005 en la BD: `SELECT COUNT(*) FROM dbo.Transactions WHERE TransactionAmount < 0 AND TransactionDescription LIKE N'Anulación de ítem%'` y `SELECT COUNT(*) FROM dbo.CxPEntries WHERE Type = 'AnulacionItems' AND Amount < 0` deben dar 0
-- [ ] T025 Generar el script idempotente para producción con `dotnet ef migrations script --idempotent` (desde la migración anterior, `SupplierDefaultsAndRealPriceInLocal`, hasta `AddOrderItemStatus`) y adjuntarlo en la descripción del PR, con la nota de ejecutarlo antes del deploy
-- [ ] T026 [P] En `brainstorm/19-anulacion-items-orden.md` cambiar el `Status` a `spec-created (specs/020-anulacion-items-orden)`, y en `brainstorm/00-overview.md` poner `specs/020-anulacion-items-orden` en la fila 19
+- [X] T025 Generar el script idempotente para producción con `dotnet ef migrations script --idempotent` (desde la migración anterior, `SupplierDefaultsAndRealPriceInLocal`, hasta `AddOrderItemStatus`) y adjuntarlo en la descripción del PR, con la nota de ejecutarlo antes del deploy
+- [X] T026 [P] En `brainstorm/19-anulacion-items-orden.md` cambiar el `Status` a `spec-created (specs/020-anulacion-items-orden)`, y en `brainstorm/00-overview.md` poner `specs/020-anulacion-items-orden` en la fila 19
 
 ---
 

@@ -1,7 +1,7 @@
 # Brainstorm: Anulación parcial de ítems de una orden activa
 
 **Date:** 2026-11-15
-**Status:** active
+**Status:** implemented (specs/020-anulacion-items-orden)
 
 ## Problem Framing
 Hoy solo se puede anular la orden completa. Se necesita anular ítems específicos de una orden `Active` (el pedido ya fue enviado al proveedor), dejando la orden como si esos ítems nunca hubieran existido, pero reflejando lo que el proveedor realmente devuelve (que puede ser menos, o raramente más, que lo que costó el ítem). La diferencia nunca se le cobra al cliente. Saldos, CxP y Payments deben quedar contablemente consistentes.
