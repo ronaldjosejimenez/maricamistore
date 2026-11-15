@@ -24,7 +24,7 @@
 - [ ] T005 En `MariCamiStore/Infrastructure/Persistance/EntityConfigurations/OrderItemEntityTypeConfiguration.cs` mapear `Status` con `IsRequired().HasMaxLength(20).HasDefaultValue(OrderItemStatus.Active.Key)`, junto a `IsReceived`
 - [ ] T006 Generar la migración con `dotnet ef migrations add AddOrderItemStatus` desde `MariCamiStore/` (queda en `MariCamiStore/Infrastructure/Persistance/Migrations/`). Revisar que `Up` solo agregue `Status nvarchar(20) NOT NULL DEFAULT 'Active'` en `OrderItems` y que el snapshot no tenga más cambios. Correr `dotnet ef database update` en local
 - [ ] T007 En `MariCamiStore/Services/CxPService.cs` `GetPeriodIndicatorsAsync` cambiar `group.Sum(e => e.Amount)` por `group.Sum(e => CxPEntryType.SignedAmount(e.Type, e.Amount))`. La vista previa y el cierre (`GetClosePreviewAsync` y `ClosePeriodAsync`) ya usan estos indicadores; confirmar que no haya otra suma de `CxPEntries`
-- [ ] T008 [P] En `MariCamiStore/Pages/CxP/Index.cshtml.cs` `OnGetEntriesAsync` exponer por fila `Amount = CxPEntryType.SignedAmount(e.Type, e.Amount)` y calcular `total` con la misma función
+- [ ] T008 En `MariCamiStore/Pages/CxP/Index.cshtml.cs` (requiere T004) `OnGetEntriesAsync` exponer por fila `Amount = CxPEntryType.SignedAmount(e.Type, e.Amount)` y calcular `total` con la misma función
 - [ ] T009 En `MariCamiStore/Services/IOrderService.cs` agregar `public record OrderTotals(decimal TotalAgreedPriceInLocal, decimal ShippingAmountToCR, decimal TotalWithoutTaxes, decimal TaxesAmount, decimal TotalToPayToSupplier, decimal TotalOfTheOrder, decimal EstimatedProfitInLocal);` y agregar `string Status` al final de `OrderItemWithCustomerDto`
 - [ ] T010 En `MariCamiStore/Services/OrderService.cs`:
   - Extraer de `ApplyOrderCalculationSuite` un `private static OrderTotals ComputeOrderTotals(Order order, IEnumerable<OrderItem> items)` con las mismas fórmulas y el mismo redondeo `AwayFromZero`.
@@ -57,7 +57,7 @@
   - Por ítem: `Status = Voided`, `UpdatedAt` y un `Transaction` Void. Este usa `CustomerId` del ítem, `AgreedPriceInLocal`, `LocalCurrencyId` de la Configuración, fecha `Central America Standard Time`, `Applied`, `Source = OrderItem` y la descripción `Anulación de ítem – {desc≤100} – Orden {NameOfOrder} – {justificación}`, truncada al largo de la columna (verificar en `TransactionEntityTypeConfiguration.cs`).
   - `ApplyOrderCalculationSuite(order, todosLosItems)`.
   - `context.CxPEntries.Add` con `Type = CxPEntryType.AnulacionItems`, `Amount = Σ RefundAmount`, `CurrencyId = order.CurrencyId`, `OrderId`, `PeriodControlId` y `Reference` = `Anulación ítems: {NameOfOrder} – {justificación}`, truncada al largo de `CxPEntryEntityTypeConfiguration`.
-  - `context.OrderStatusHistories.Add` con From/To = Active, `TransitionDate` = fecha CR, `Notes = $"Anulación parcial: {n} ítem(s) – ajuste {sign}{monto:N2}"` (signo de la moneda de la orden) y `Justification`.
+  - `context.OrderStatusHistories.Add` con From/To = Active, `TransitionDate` = fecha CR, `Notes = $"Anulación parcial: {n} ítem(s) – ajuste {sign}{monto:N2}"` y `Justification`. El `sign` sale de `(await context.Currencies.FirstOrDefaultAsync(c => c.Id == order.CurrencyId))?.Sign ?? string.Empty`.
   - **Un solo** `SaveChangesAsync`.
 - [ ] T014 [US1] En `MariCamiStore/Services/OrderService.cs` aplicar las exclusiones de research R6:
   - `GetOrderItemCountsAsync` cuenta solo los Active.
@@ -120,7 +120,7 @@
 ## Phase 6: Polish & Cross-Cutting
 
 - [ ] T023 Correr `dotnet build` en `MariCamiStore/`: cero errores y ningún warning nuevo respecto a T001
-- [ ] T024 Ejecutar el [quickstart.md](quickstart.md) completo (§1–§5) en local
+- [ ] T024 Ejecutar el [quickstart.md](quickstart.md) completo (§1–§5) en local y verificar SC-005 en la BD: `SELECT COUNT(*) FROM dbo.Transactions WHERE TransactionAmount < 0 AND TransactionDescription LIKE N'Anulación de ítem%'` y `SELECT COUNT(*) FROM dbo.CxPEntries WHERE Type = 'AnulacionItems' AND Amount < 0` deben dar 0
 - [ ] T025 Generar el script idempotente para producción con `dotnet ef migrations script --idempotent` (desde la migración anterior, `SupplierDefaultsAndRealPriceInLocal`, hasta `AddOrderItemStatus`) y adjuntarlo en la descripción del PR, con la nota de ejecutarlo antes del deploy
 - [ ] T026 [P] En `brainstorm/19-anulacion-items-orden.md` cambiar el `Status` a `spec-created (specs/020-anulacion-items-orden)`, y en `brainstorm/00-overview.md` poner `specs/020-anulacion-items-orden` en la fila 19
 
@@ -130,13 +130,14 @@
 
 - **Phase 1 → Phase 2 → US1 → US2**. US2 extiende el modal y el JS de US1 (mismos archivos `Items.cshtml` e `items.js`), así que va después.
 - **US3** depende solo de la Phase 2. T021 se puede hacer en paralelo con US1. La verificación de los escenarios (quickstart §4) necesita US1.
-- Dentro de la Phase 2: T002, T003, T004 y T008 son [P] (archivos distintos). T005 depende de T003; T006 de T002–T005; T007 de T004; T010 de T009.
+- Dentro de la Phase 2: T002, T003 y T004 son [P] (archivos distintos). T005 depende de T003; T006 de T002–T005; T007 y T008 de T004 (y entre ellas son paralelas); T010 de T009.
 - Dentro de US1: T011 → T012 → T013 → T014 (mismo archivo, en secuencia) → T015 → T016 → T017 → T018.
 
 ## Parallel Example
 
 ```text
-Phase 2: T002 OrderItemStatus.cs | T003 OrderItem.cs | T004 CxPEntryType.cs | T008 CxP/Index.cshtml.cs
+Phase 2: T002 OrderItemStatus.cs | T003 OrderItem.cs | T004 CxPEntryType.cs
+Después de T004: T007 CxPService.cs | T008 CxP/Index.cshtml.cs
 Con US1 en curso: T021 cxp/index.js | T026 brainstorm docs
 ```
 
