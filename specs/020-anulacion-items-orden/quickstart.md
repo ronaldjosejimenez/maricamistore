@@ -46,7 +46,7 @@ Repetir con órdenes equivalentes:
 
 ## 5. Bordes
 1. Cerrar el período CxP (o probar sin período abierto) e intentar anular: aparece "No hay un período CxP abierto" y no cambia nada (ítems, transacciones y totales intactos).
-2. Reasignar o Ver en el ítem anulado: no está disponible. Por API, `Update` y `Reasignar` sobre B devuelven error.
+2. En el ítem anulado no aparece Reasignar ni el checkbox Recibido; "Ver" y "Ver Img" siguen disponibles (solo lectura). Por API, `Update`, `Reasignar` y `ToggleReceived` sobre B devuelven error.
 3. Anular después la orden completa: solo se generan `Anulación` para A y C (no un segundo para B).
 4. Pasar una orden con un ítem anulado a Entregando: el ítem anulado no muestra el checkbox Recibido.
 5. Listado de órdenes: el conteo de ítems excluye los anulados.
