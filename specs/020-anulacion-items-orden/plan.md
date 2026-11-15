@@ -87,7 +87,10 @@ MariCamiStore/
   2. Por ítem: `Status = Voided`, `UpdatedAt` y un `Transaction` Void (R5).
   3. Totales: `ApplyOrderCalculationSuite(order, todosLosItems)`, que ya filtra los Active.
   4. CxP: `context.CxPEntries.Add(new CxPEntry { Type = AnulacionItems, Amount = Σ refund, CurrencyId = order.CurrencyId, OrderId, Reference })`.
-  5. Un solo `SaveChangesAsync`.
+  5. Historial (FR-015a): `context.OrderStatusHistories.Add(...)` con `FromStatus = ToStatus = Active`, `TransitionDate` = fecha CR, `Notes = "Anulación parcial: N ítem(s) – ajuste {sign}{monto}"` y `Justification`.
+  6. Un solo `SaveChangesAsync`.
+- La justificación se valida ≤ 1000 caracteres (el límite de `OrderStatusHistory.Justification`).
+- El movimiento `AnulacionItems` se puede eliminar desde CxP como cualquier otro (Clarifications). No se agrega ningún guard en `DeleteEntryAsync`.
 - **`TransitionOrderAsync`** al pasar a Voided: `items.Where(i => i.Status == Active)`.
 - **`ReasignarItemAsync`**, **`ToggleIsReceivedAsync`** y **`GetOrderItemCountsAsync`**: aplican los filtros y guards de R6.
 

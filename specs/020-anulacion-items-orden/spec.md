@@ -8,6 +8,13 @@
 
 **Input**: User description: "Anulación parcial de ítems de una orden activa (issue #43). Fuente: brainstorm/19-anulacion-items-orden.md."
 
+## Clarifications
+
+### Session 2026-11-15
+
+- Q: ¿El movimiento CxP "Anulación de ítems" se puede eliminar desde la pantalla de CxP? → A: Sí, como el resto de movimientos de un período abierto.
+- Q: ¿La anulación parcial queda registrada en el Historial de la orden? → A: Sí, como una entrada Activa → Activa con una nota de los ítems y el ajuste, más la justificación.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Anular ítems seleccionados de una orden activa (Priority: P1)
@@ -67,12 +74,13 @@ Tras la anulación, las pantallas de CxP y Payments/Saldos quedan consistentes s
 
 - **Todos los ítems restantes seleccionados**: si la selección cubre todos los ítems no anulados de la orden, la confirmación bloquea "Continuar con la anulación" e indica que se debe usar la anulación de la orden.
 - **Sin período CxP abierto**: la anulación se rechaza con el mensaje "No hay un período CxP abierto" y no se modifica nada.
-- **Justificación vacía**: no se permite continuar.
+- **Justificación vacía o de más de 1000 caracteres**: no se permite continuar.
 - **Monto a devolver negativo o vacío**: no se permite continuar. Se permite 0 (el proveedor no devuelve nada).
 - **Ítem ya anulado**: no se puede seleccionar de nuevo. Si llega uno por una solicitud concurrente, la operación se rechaza completa.
 - **La orden cambió de estado mientras la confirmación estaba abierta**: se rechaza si la orden ya no está Activa.
 - **Ítem reasignado antes de anularlo**: la anulación de cobro se hace al cliente actual del ítem, por su precio acordado actual.
 - **Anular la orden completa después de una anulación parcial**: solo se generan anulaciones de cobro para los ítems que siguen sin anular. Los ya anulados no se anulan dos veces.
+- **Se elimina desde CxP el movimiento "Anulación de ítems"**: se permite (período abierto). Los ítems siguen anulados y los cobros al cliente siguen revertidos; la CxP vuelve a reflejar la deuda completa hasta que el usuario registre la corrección que corresponda.
 - **Falla a mitad de proceso**: ningún cambio queda aplicado parcialmente (todo o nada).
 
 ## Requirements *(mandatory)*
@@ -97,14 +105,15 @@ Tras la anulación, las pantallas de CxP y Payments/Saldos quedan consistentes s
 
 **Procesamiento**
 
-- **FR-011**: El sistema MUST validar, antes de aplicar cualquier cambio, que la orden esté Activa, que todos los ítems pertenezcan a la orden y estén Activos, que quede al menos un ítem Activo, que la justificación no esté vacía, que cada monto a devolver sea ≥ 0 y que exista un período CxP abierto. Si alguna validación falla, se rechaza con un mensaje claro y no se modifica nada.
+- **FR-011**: El sistema MUST validar, antes de aplicar cualquier cambio, que la orden esté Activa, que todos los ítems pertenezcan a la orden y estén Activos, que quede al menos un ítem Activo, que la justificación no esté vacía ni supere 1000 caracteres, que cada monto a devolver sea ≥ 0 y que exista un período CxP abierto. Si alguna validación falla, se rechaza con un mensaje claro y no se modifica nada.
 - **FR-012**: Al confirmar, el sistema MUST cambiar a Anulado el estado de cada ítem seleccionado.
 - **FR-013**: Por cada ítem anulado, el sistema MUST registrar una transacción de anulación (monto positivo, tipo Anulación) al cliente actual del ítem, por su precio acordado actual, en la moneda local (la misma de los cargos al cliente), en la organización de la orden y con la fecha y hora actual de Costa Rica, igual que las anulaciones de la orden completa. La descripción incluye la justificación.
 - **FR-014**: El sistema MUST recalcular y guardar los totales de la orden (Precio Acordado Total, SubTotal, Impuestos, Envío a CR, Total a Proveedor, Total Orden, Ganancia Est.) excluyendo los ítems Anulados, con los mismos valores mostrados en el Después de la confirmación.
 - **FR-015**: El sistema MUST registrar un único movimiento CxP por anulación, en el período abierto y en la moneda de la orden, de un tipo nuevo "Anulación de ítems" que reduce la deuda. Su monto se guarda **positivo** e igual al Ajuste financiero, y lleva la referencia a la orden y la justificación.
+- **FR-015a**: El sistema MUST registrar una entrada en el Historial de la orden con estado anterior y nuevo = Activa, la fecha actual, la nota "Anulación parcial: N ítem(s) – ajuste {monto con signo de moneda}" y la justificación (máximo 1000 caracteres).
 - **FR-016**: Todos los cálculos que agregan movimientos CxP (Por pagar por moneda, Por pagar en colones, Deuda, Posición, vista previa y cierre de mes, saldo anterior) MUST restar los movimientos de tipo "Anulación de ítems" en lugar de sumarlos.
 - **FR-017**: La pantalla de CxP MUST mostrar los movimientos "Anulación de ítems" con su etiqueta de tipo y presentarlos como reducción, igual que se presentan hoy las reversiones.
-- **FR-018**: Todo el procesamiento de FR-012 a FR-015 MUST ser atómico: o se aplica completo o no se aplica nada.
+- **FR-018**: Todo el procesamiento de FR-012 a FR-015a MUST ser atómico: o se aplica completo o no se aplica nada.
 
 **Ítems anulados en el resto del sistema**
 

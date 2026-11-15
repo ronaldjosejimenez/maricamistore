@@ -36,6 +36,7 @@ Anular B con 21.40 y la justificación "Cliente desistió".
 - El header muestra los totales "Después".
 - Transacciones: un `Anulación` de ₡15 000 a Beto, con fecha de hoy. El saldo de Beto baja ₡15 000.
 - CxP: una fila "Anulación de ítems" de $21.40, en rojo con "−". Por pagar USD = $42.80.
+- Historial de la orden: una nueva fila Activa → Activa con la nota "Anulación parcial: 1 ítem(s) – ajuste $21.40" y la justificación.
 - Shipping CR pendiente baja $2 × 500 = ₡1 000. Saldos por cobrar baja ₡15 000. La Posición queda igual a la de una orden creada solo con A y C.
 
 ## 4. Escenarios B y C (US3)
@@ -50,3 +51,4 @@ Repetir con órdenes equivalentes:
 4. Pasar una orden con un ítem anulado a Entregando: el ítem anulado no muestra el checkbox Recibido.
 5. Listado de órdenes: el conteo de ítems excluye los anulados.
 6. Cierre de mes con una "Anulación de ítems" en el período: el saldo anterior refleja la resta.
+7. Eliminar desde CxP la fila "Anulación de ítems": se permite, y Por pagar vuelve a sumar los $21.40. Los ítems y los cobros al cliente siguen anulados.

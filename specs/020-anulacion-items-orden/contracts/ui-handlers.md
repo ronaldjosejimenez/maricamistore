@@ -38,7 +38,7 @@ Response:
 Validaciones del servidor (FR-011), en este orden, con mensajes:
 - "Orden no encontrada." / "Solo se pueden anular ítems de órdenes en estado Activa."
 - "Seleccione al menos un ítem."
-- "Se requiere justificación para anular ítems."
+- "Se requiere justificación para anular ítems." / "La justificación no puede superar 1000 caracteres."
 - "El monto a devolver no puede ser negativo."
 - "Hay ítems que no pertenecen a la orden o ya están anulados."
 - "No se pueden anular todos los ítems; use la anulación de la orden."
