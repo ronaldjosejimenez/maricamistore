@@ -37,7 +37,7 @@ En "Saldos de clientes" (Pagos), todos los deudores muestran la misma etiqueta, 
 - Se carga Saldos de clientes, para los clientes con saldo pendiente positivo que tienen ítems en órdenes Activas o Entregando.
 
 **Does not apply when**:
-- El saldo viene solo de transacciones manuales u órdenes Completadas: no hay etiqueta, porque las etiquetas solo miran órdenes en curso.
+- "Productos en camino" y "Sugerir adelanto" solo miran órdenes Activas o Entregando. Un saldo que viene solo de órdenes Completadas o de transacciones manuales muestra "Entregado – por cobrar".
 - El cliente tiene saldo a favor: solo se muestra "Crédito a favor", como hoy.
 - Se calcula el saldo en sí, que no cambia.
 
@@ -48,7 +48,7 @@ En "Saldos de clientes" (Pagos), todos los deudores muestran la misma etiqueta, 
 3. **Dos migraciones reversibles.** El issue pide separar datos y esquema. Con ese orden, el rollback también recupera `IsReceived`.
 4. **El contrato del checkbox no cambia.** `isReceived` pasa a significar "estado deseado". Así no hay cambios visibles y la operación es idempotente.
 5. **Las reglas de las etiquetas van en el servidor y después del saldo.** La alternativa era calcularlas en JS, lo que habría llevado ítems al navegador y reglas de negocio a la UI. FR-012 exige no tocar el cálculo del saldo.
-6. **"Entregado – por cobrar" tiene prioridad sobre "Sugerir adelanto".** Con la regla literal, un cliente que ya recibió todo también calificaba para adelanto, lo que es contradictorio (decisión del usuario en la revisión de la spec).
+6. **"Entregado – por cobrar" es la regla literal del issue: saldo positivo y ningún ítem Activo en órdenes en curso.** No exige ítems Recibidos, así que cubre a los clientes con órdenes Completadas o con saldo manual (caso real detectado después del primer PR). "Sugerir adelanto" exige tener ítems Activos, por lo que nunca coincide con ella.
 
 ## Areas Needing Attention
 

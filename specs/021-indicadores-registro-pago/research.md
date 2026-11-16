@@ -51,11 +51,11 @@
                 && (i.Order.Status == Active || i.Order.Status == Delivering)
                 && (organizationId == null || i.Order.OrganizationId == organizationId))
        .GroupBy(i => i.CustomerId)
-       .Select(g => new { CustomerId, InTransit = g.Count(Active), Received = g.Count(Received), Sum = g.Sum(AgreedPriceInLocal) })
+       .Select(g => new { CustomerId, InTransit = g.Count(Active), Sum = g.Sum(AgreedPriceInLocal) })
      ```
   3. Por cliente:
-     - `deliveredToCollect = Received > 0 && InTransit == 0`;
-     - `suggestAdvance = !deliveredToCollect && Sum >= Balance && (InTransit + Received) > 0`;
+     - `deliveredToCollect = Balance > 0 && InTransit == 0` (un deudor sin ítems en curso también cuenta);
+     - `suggestAdvance = InTransit > 0 && Sum >= Balance`;
      - `itemsInTransit = InTransit`.
 - **Rationale**:
   - `IgnoreQueryFilters` + `organizationId` replica exactamente el alcance que usa el saldo, tanto con "Ver saldo completo" como sin él (FR-013).
