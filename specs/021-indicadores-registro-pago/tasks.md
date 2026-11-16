@@ -105,7 +105,7 @@
   - si no, concatenar `itemsInTransit > 0` → `badge-primary` "Productos en camino (n)", `suggestAdvance` → `badge-warning` "Sugerir adelanto" y `deliveredToCollect` → `badge-danger` "Entregado – por cobrar".
 
   Eliminar "Saldo pendiente". Mantener la fila `table-success` para el saldo a favor.
-- [ ] T018 [US3] Ejecutar el quickstart §3, casos a–h, con y sin "Ver saldo completo", y medir la carga de Saldos (< 2 s, SC-006).
+- [X] T018 [US3] Ejecutar el quickstart §3, casos a–h, con y sin "Ver saldo completo", y medir la carga de Saldos (< 2 s, SC-006).
 
 **Checkpoint**: quickstart §3 completo.
 
@@ -116,7 +116,7 @@
 - [X] T019 Correr `dotnet build` en `MariCamiStore/`: cero errores y ningún warning nuevo respecto a T001
 - [X] T020 Generar el script de producción desde `MariCamiStore/` con `dotnet ef migrations script AddOrderItemStatus DropOrderItemIsReceived --idempotent -o ../specs/021-indicadores-registro-pago/migration.sql`. Incluye `MigrateIsReceivedToStatus` y `DropOrderItemIsReceived`. Adjuntarlo en la descripción del PR con la nota "ejecutar antes del deploy"
 - [X] T021 Probar el rollback en local: `dotnet ef database update AddOrderItemStatus` debe recrear `IsReceived` con los N ítems en 1 y `Status` en Active. Volver a `dotnet ef database update`
-- [ ] T022 Ejecutar el [quickstart.md](quickstart.md) completo (§0–§3)
+- [X] T022 Ejecutar el [quickstart.md](quickstart.md) completo (§0–§3)
 - [X] T023 [P] El PR debe decir "Closes #44, closes #48" (#44 y #48 ya se cerraron con los PRs anteriores)
 
 ---
