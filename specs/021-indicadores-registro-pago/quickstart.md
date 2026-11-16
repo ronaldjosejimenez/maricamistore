@@ -36,9 +36,9 @@ Para cada caso, abrir Pagos → Saldos de clientes.
 | Caso | Situación | Etiquetas esperadas |
 |------|-----------|---------------------|
 | a | Cliente con saldo a favor | Solo "Crédito a favor" (verde) |
-| b | Saldo ₡50 000, 3 ítems Activos en órdenes Activa/Entregando que suman ₡60 000 | "Productos en camino (3)" (azul) + "Sugerir adelanto" (amarillo) |
-| c | Igual que b, pero los ítems suman exactamente ₡50 000 | "Productos en camino (3)" + "Sugerir adelanto" |
-| d | Saldo ₡50 000, 1 ítem Activo de ₡40 000 | Solo "Productos en camino (1)" |
+| b | Saldo ₡50 000, 3 ítems Activos en órdenes Activa/Entregando que suman ₡50 000 | "Productos en camino (3)" (azul) + "Sugerir adelanto" (amarillo) |
+| c | Igual que b, pero los ítems suman ₡60 000 (ya aportó parte) | Solo "Productos en camino (3)" |
+| d | Saldo ₡50 000, 1 ítem Activo de ₡40 000 | "Productos en camino (1)" + "Sugerir adelanto" |
 | e | Saldo ₡50 000, todos sus ítems de órdenes Entregando Recibidos (suman ₡100 000) | Solo "Entregado – por cobrar" (rojo). **No** aparece "Sugerir adelanto" |
 | f | 1 ítem Activo en una orden Activa + 1 Recibido en una orden Entregando | "Productos en camino (1)", sin "Entregado – por cobrar" |
 | g | Saldo que solo viene de órdenes Completadas (todos sus ítems Recibidos) o de una transacción manual | Solo "Entregado – por cobrar" (rojo) |

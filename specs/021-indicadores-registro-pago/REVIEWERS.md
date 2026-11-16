@@ -54,7 +54,7 @@ En "Saldos de clientes" (Pagos), todos los deudores muestran la misma etiqueta, 
 
 - **Orden de las migraciones y del deploy.** `MigrateIsReceivedToStatus` tiene que generarse con `IsReceived` todavía en el modelo. Revisar que el snapshot y el Designer no tengan cambios inesperados. En producción, ejecutar el script idempotente antes de desplegar.
 - **Anulación de la orden completa desde Entregando.** Es el cambio con impacto en dinero. Verificar que los ítems Recibidos generan su `Void` (quickstart §2.3).
-- **"Sugerir adelanto" suma Activos y Recibidos.** Así lo dice la regla literal del issue. Se compara contra el saldo total del cliente, que puede incluir deudas de órdenes Completadas o manuales.
+- **"Sugerir adelanto" suma Activos y Recibidos y exige saldo >= suma.** Significa que el cliente aún no ha aportado nada (la regla se corrigió tras el primer PR: estaba invertida). Se compara contra el saldo total del cliente, que puede incluir deudas de órdenes Completadas o manuales.
 - **Alcance de organización de las etiquetas.** Replica el del saldo, tanto con "Ver saldo completo" como sin él. Revisar el caso h del quickstart.
 - **Color azul.** Se usa `badge-primary`, porque `badge-info` en Bootstrap 4 es cian.
 
