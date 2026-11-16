@@ -27,6 +27,9 @@ namespace MariCamiStore.Infrastructure.Persistance.Migrations
                 type: "bit",
                 nullable: false,
                 defaultValue: false);
+
+            // Rebuild the flag from Status so reverting only this migration does not lose which items were received.
+            migrationBuilder.Sql("UPDATE dbo.OrderItems SET IsReceived = 1 WHERE Status = 'Received';");
         }
     }
 }
