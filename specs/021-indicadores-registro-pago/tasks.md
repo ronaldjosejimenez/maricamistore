@@ -81,7 +81,7 @@
 
 - [X] T012 [P] [US2] En `MariCamiStore/Services/IOrderService.cs`, cambiar el XML de `OrderTotals` de "computed from its active items" a "computed from its non-voided (Active and Received) items". En `MariCamiStore/Services/OrderService.cs`, cambiar el `<param name="items">` de `ComputeOrderTotals` para que diga que se ignoran los Voided y se cuentan los Active y los Received.
 - [X] T013 [US2] En `MariCamiStore/wwwroot/js/pages/orders/items.js` definir `var COUNTED_STATUSES = ['Active', 'Received'];` y `function isCounted(item)`, y usarlos en el conteo `#item-count-badge` y en los subtotales (`groupSubtotal`), en lugar de `status !== 'Voided'` / `!isVoided`. Revisar también `MariCamiStore/wwwroot/js/pages/orders/index.js`. Las comparaciones con `'Voided'` que son propias de una fila anulada (clase, badge, sin botones) se mantienen.
-- [ ] T014 [US2] Ejecutar el quickstart §2 (totales sin cambio al marcar; Reasignar incluye a los Recibidos; anular una orden Entregando genera el Void de A, B y C).
+- [X] T014 [US2] Ejecutar el quickstart §2 (totales sin cambio al marcar; Reasignar incluye a los Recibidos; anular una orden Entregando genera el Void de A, B y C).
 
 **Checkpoint**: SC-002 y SC-003 verificados.
 
