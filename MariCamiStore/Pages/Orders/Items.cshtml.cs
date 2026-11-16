@@ -207,6 +207,8 @@ public class ItemsModel(
             .FirstOrDefault(i => i.Id == dto.Id);
         if (existing == null)
             return new JsonResult(new { error = "Artículo no encontrado." });
+        if (existing.Status == OrderItemStatus.Voided.Key)
+            return new JsonResult(new { error = "No se puede modificar un ítem anulado." });
 
         byte[]? imageBytes = existing.ProductImage;
         if (dto.ProductImageBase64 == string.Empty)
@@ -219,9 +221,6 @@ public class ItemsModel(
             if (imageBytes.Length > 2097152)
                 return new JsonResult(new { error = "La imagen supera el límite de 2 MB." });
         }
-
-        if (existing.Status == OrderItemStatus.Voided.Key)
-            return new JsonResult(new { error = "No se puede modificar un ítem anulado." });
 
         existing.CustomerId = dto.CustomerId;
         existing.ProductDescription = dto.ProductDescription;
@@ -305,8 +304,11 @@ public class ItemsModel(
 
     public record VoidItemsRequest(Guid OrderId, string? Justification, List<VoidItemLine>? Items);
 
-    public async Task<JsonResult> OnPostVoidItemsPreviewAsync([FromBody] VoidItemsPreviewRequest request)
+    public async Task<JsonResult> OnPostVoidItemsPreviewAsync([FromBody] VoidItemsPreviewRequest? request)
     {
+        if (request == null)
+            return new JsonResult(new { success = false, error = "Solicitud inválida." });
+
         var (preview, error) = await orderService.PreviewVoidItemsAsync(request.OrderId, request.ItemIds ?? []);
         if (preview == null)
             return new JsonResult(new { success = false, error });
@@ -323,8 +325,11 @@ public class ItemsModel(
         });
     }
 
-    public async Task<JsonResult> OnPostVoidItemsAsync([FromBody] VoidItemsRequest request)
+    public async Task<JsonResult> OnPostVoidItemsAsync([FromBody] VoidItemsRequest? request)
     {
+        if (request == null)
+            return new JsonResult(new { success = false, error = "Solicitud inválida." });
+
         var (success, error) = await orderService.VoidItemsAsync(
             request.OrderId, request.Justification, request.Items ?? []);
         return new JsonResult(new { success, error });

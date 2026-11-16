@@ -18,7 +18,7 @@ public static class CxPEntryType
     /// <summary>(Immutable) entry created automatically when a shipping package is added to an order.</summary>
     public const string AutoPaquete = "AutoPaquete";
 
-    /// <summary>(Immutable) negative entry created when a shipping package is deleted.</summary>
+    /// <summary>(Immutable) negative entry created when a shipping package is deleted. Unlike <see cref="AnulacionItems"/>, it is stored with a NEGATIVE amount.</summary>
     public const string ReversoPaquete = "ReversoPaquete";
 
     /// <summary>Items voided from an active order. Stored with a positive amount; the type is what subtracts.</summary>

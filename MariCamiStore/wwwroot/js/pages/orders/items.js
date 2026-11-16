@@ -505,7 +505,9 @@ function confirmVoidItems() {
             updateVoidConfirmState();
         }
     }, function (msg) {
-        $('#void-error').text(msg).show();
+        // A server error page (HTML) is not a message for the user
+        var text = (msg && String(msg).charAt(0) !== '<' && String(msg).length < 300) ? msg : 'No se pudo completar la anulación.';
+        $('#void-error').text(text).show();
         updateVoidConfirmState();
     });
 }

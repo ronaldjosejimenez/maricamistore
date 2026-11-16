@@ -1,4 +1,3 @@
-using MariCamiStore.Model;
 using MariCamiStore.Pages.Shared;
 using MariCamiStore.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -64,10 +63,10 @@ public class IndexModel(
                     e.Id,
                     e.Reference,
                     e.Type,
-                    Amount = CxPEntryType.SignedAmount(e.Type, e.Amount),
+                    e.Amount,
                     e.CreatedAt
                 }),
-                total = g.Sum(e => CxPEntryType.SignedAmount(e.Type, e.Amount))
+                total = g.Sum(e => e.Amount)
             });
 
         return new JsonResult(grouped);

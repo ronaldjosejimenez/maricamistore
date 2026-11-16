@@ -124,7 +124,7 @@ public class OrderService(
 
     private static void ApplyOrderCalculationSuite(Order order, List<OrderItem> items)
     {
-        var totals = ComputeOrderTotals(order, items.Where(i => i.Status == OrderItemStatus.Active.Key));
+        var totals = ComputeOrderTotals(order, items);
         order.TotalAgreedPriceInLocal = totals.TotalAgreedPriceInLocal;
         order.ShippingAmountToCR      = totals.ShippingAmountToCR;
         order.TotalWithoutTaxes       = totals.TotalWithoutTaxes;
@@ -137,11 +137,12 @@ public class OrderService(
 
     /// <summary>Computes the order totals from the given items, using the order's tax, rate, discount and internal shipping. Pure: it does not modify the order.</summary>
     /// <param name="order">The order.</param>
-    /// <param name="items">The items that count towards the order (callers pass only the active ones).</param>
+    /// <param name="items">The order items; voided ones are ignored here.</param>
     /// <returns>The totals.</returns>
+    /// <remarks>The client mirrors this formula in <c>recalcOrderHeader</c> (items.js), used only for Pending orders: keep both in sync.</remarks>
     private static OrderTotals ComputeOrderTotals(Order order, IEnumerable<OrderItem> items)
     {
-        var list = items.ToList();
+        var list = items.Where(i => i.Status == OrderItemStatus.Active.Key).ToList();
         var totalAgreed = Math.Round(list.Sum(i => i.AgreedPriceInLocal), 2, MidpointRounding.AwayFromZero);
         var shippingToCR = Math.Round(list.Sum(i => i.EstimateShipping), 2, MidpointRounding.AwayFromZero);
         // Spec 018, FR-021: RealPrice now includes tax and shipping, so the subtotal is based on list prices
@@ -487,6 +488,9 @@ public class OrderService(
     private const int VoidTextMaxLength = 500;
     private const int VoidJustificationMaxLength = 1000;
 
+    // Sanity cap per refund line: far above any real refund, far below the decimal(18,2) column limit
+    private const decimal VoidRefundMaxAmount = 1_000_000_000m;
+
     private static string TruncateText(string text, int max) =>
         text.Length > max ? text[..max] : text;
 
@@ -547,6 +551,7 @@ public class OrderService(
         if (reason.Length > VoidJustificationMaxLength)
             return (false, $"La justificación no puede superar {VoidJustificationMaxLength} caracteres.");
         if (lines.Any(l => l.RefundAmount < 0)) return (false, "El monto a devolver no puede ser negativo.");
+        if (lines.Any(l => l.RefundAmount > VoidRefundMaxAmount)) return (false, "El monto a devolver es demasiado grande.");
 
         var items = await context.OrderItems.Where(i => i.OrderId == orderId).ToListAsync();
         var active = items.Where(i => i.Status == OrderItemStatus.Active.Key).ToList();
@@ -560,7 +565,6 @@ public class OrderService(
         var period = await cxpService.GetOpenPeriodAsync();
         if (period == null) return (false, "No hay un período CxP abierto.");
 
-        var config = await context.Configurations.FirstOrDefaultAsync();
         var currency = await context.Currencies.FirstOrDefaultAsync(c => c.Id == order.CurrencyId);
         var now = DateTime.UtcNow;
         var txDate = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(now, "Central America Standard Time");
@@ -570,21 +574,9 @@ public class OrderService(
             item.Status = OrderItemStatus.Voided.Key;
             item.UpdatedAt = now;
 
+            // Same transaction as a full-order void (BuildTransaction), with the justification in the description
             var description = $"Anulación de ítem – {TruncateText(item.ProductDescription, 100)} – Orden {order.NameOfOrder} – {reason}";
-            context.Transactions.Add(new Transaction
-            {
-                Id = Guid.NewGuid(),
-                OrganizationId = order.OrganizationId,
-                SourceId = item.Id,
-                Source = TransactionSource.OrderItem.Key,
-                CustomerId = item.CustomerId,
-                TransactionType = TransactionType.Void.Key,
-                TransactionDescription = TruncateText(description, VoidTextMaxLength),
-                TransactionAmount = item.AgreedPriceInLocal,
-                TransactionDate = txDate,
-                Status = TransactionStatus.Applied.Key,
-                CurrencyId = config?.LocalCurrencyId ?? Guid.Empty
-            });
+            context.Transactions.Add(BuildTransaction(order, item, TransactionType.Void.Key, TruncateText(description, VoidTextMaxLength)));
         }
 
         ApplyOrderCalculationSuite(order, items);
@@ -616,13 +608,17 @@ public class OrderService(
 
         // Single SaveChanges: items, transactions, totals, CxP entry and history are persisted atomically.
         await context.SaveChangesAsync();
+
+        logger.LogInformation(
+            "Voided {Count} item(s) of order {OrderId} ({Items}); supplier refund {Refund} {Currency}; CxP period {PeriodId}.",
+            selected.Count, order.Id, string.Join(",", selected.Select(i => i.Id)), refundTotal, currency?.Sign, period.Id);
         return (true, null);
     }
 
-    private Transaction BuildTransaction(Order order, OrderItem item, string type)
+    private Transaction BuildTransaction(Order order, OrderItem item, string type, string? description = null)
     {
         var config = context.Configurations.FirstOrDefault();
-        var description = type == TransactionType.Charge.Key
+        description ??= type == TransactionType.Charge.Key
             ? $"Cargo – {item.ProductDescription} – Orden {order.NameOfOrder}"
             : $"Anulación – {item.ProductDescription} – Orden {order.NameOfOrder}";
 

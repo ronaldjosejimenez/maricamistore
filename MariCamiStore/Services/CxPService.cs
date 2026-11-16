@@ -329,7 +329,7 @@ public class CxPService(
                 CurrencyId: e.CurrencyId,
                 CurrencyName: currency?.Name ?? e.CurrencyId.ToString(),
                 Sign: currency?.Sign ?? string.Empty,
-                Amount: e.Amount,
+                Amount: CxPEntryType.SignedAmount(e.Type, e.Amount),
                 Reference: e.Reference,
                 Type: e.Type,
                 OrderId: e.OrderId,
