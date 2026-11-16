@@ -65,7 +65,7 @@ public class ItemsModel(
 
     public async Task<JsonResult> OnPostToggleReceivedAsync([FromBody] ToggleReceivedRequest request)
     {
-        var (success, error) = await orderService.ToggleIsReceivedAsync(request.ItemId, request.IsReceived);
+        var (success, error) = await orderService.SetItemReceivedAsync(request.ItemId, request.IsReceived);
         return new JsonResult(new { success, error });
     }
 

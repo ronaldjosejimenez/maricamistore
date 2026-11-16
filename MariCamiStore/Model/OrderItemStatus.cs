@@ -5,15 +5,21 @@ namespace MariCamiStore.Model;
 /// <summary>An order item status.</summary>
 public class OrderItemStatus : Enumeration
 {
-    /// <summary>The item is valid and counts towards the order.</summary>
+    /// <summary>The item is valid, counts towards the order and is pending reception.</summary>
     public static OrderItemStatus Active = new OrderItemStatus(nameof(Active), "Activo");
+
+    /// <summary>The item was received by the customer; it still counts towards the order.</summary>
+    public static OrderItemStatus Received = new OrderItemStatus(nameof(Received), "Recibido");
 
     /// <summary>The item was voided; it is kept but no longer counts towards the order.</summary>
     public static OrderItemStatus Voided = new OrderItemStatus(nameof(Voided), "Anulado");
 
+    /// <summary>Statuses that count towards the order (totals, counts, charges, voiding the whole order). Listed explicitly on purpose: a new status does not count until it is added here.</summary>
+    public static readonly string[] CountedKeys = { Active.Key, Received.Key };
+
     /// <summary>Enumerates the items in this collection that meet given criteria.</summary>
     /// <returns>An enumerator that allows foreach to be used to process the matched items.</returns>
-    public static IEnumerable<OrderItemStatus> List() => new[] { Active, Voided };
+    public static IEnumerable<OrderItemStatus> List() => new[] { Active, Received, Voided };
 
     /// <summary>Constructor.</summary>
     /// <param name="key">The key.</param>

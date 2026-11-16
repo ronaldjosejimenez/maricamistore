@@ -7,6 +7,9 @@ var orderDirty = false;
 var selectedImageBase64 = null;
 var customerItems = [];
 var currentItems = [];
+// Item statuses that count towards the order (mirror of OrderItemStatus.CountedKeys); a new status must be added on purpose
+var COUNTED_STATUSES = ['Active', 'Received'];
+function isCounted(item) { return COUNTED_STATUSES.indexOf(item.status) >= 0; }
 var reasignarCustomers = [];
 var itemViewMode = false;
 var voidSelectMode = false;
@@ -250,7 +253,7 @@ var isDelivering = orderStatus === 'Delivering';
 function renderItemsTable(items) {
     currentItems = items || [];
     // Voided items (spec 020) stay visible but do not count
-    $('#item-count-badge').text(currentItems.filter(function (i) { return i.status !== 'Voided'; }).length);
+    $('#item-count-badge').text(currentItems.filter(isCounted).length);
 
     var $container = $('#items-table-container');
     if (!currentItems.length) {
@@ -295,11 +298,11 @@ function renderItemsTable(items) {
         groupItems.forEach(function (item) {
             var isVoided = item.status === 'Voided';
             var total = round2((parseFloat(item.realPriceInLocal) || 0) + (parseFloat(item.serviceFeeInLocal) || 0));
-            if (!isVoided) groupSubtotal += parseFloat(item.agreedPriceInLocal) || 0;
+            if (isCounted(item)) groupSubtotal += parseFloat(item.agreedPriceInLocal) || 0;
 
             var $tr = $('<tr>');
             if (isVoided) $tr.addClass('table-voided');
-            else if (item.isReceived) $tr.addClass('table-success');
+            else if (item.status === 'Received') $tr.addClass('table-success');
 
             if (voidSelectMode) {
                 var $sel = $('<td class="text-center">');
@@ -333,7 +336,7 @@ function renderItemsTable(items) {
                 var $recvTd = $('<td class="text-center">');
                 if (!isVoided) {
                     var $chk = $('<input type="checkbox" class="is-received-chk">').attr('data-item-id', item.id);
-                    if (item.isReceived) $chk.prop('checked', true);
+                    if (item.status === 'Received') $chk.prop('checked', true);
                     $recvTd.append($chk);
                 }
                 $tr.append($recvTd);
@@ -354,7 +357,7 @@ function renderItemsTable(items) {
                         $('#imagePreviewModal').modal('show');
                     }).appendTo($btnTd);
             }
-            if (!isPending && orderStatus !== 'Voided' && !isVoided) {
+            if (!isPending && orderStatus !== 'Voided' && isCounted(item)) {
                 $('<button class="btn btn-xs btn-warning mr-1">Reasignar</button>')
                     .on('click', function () { openReasignar(item); }).appendTo($btnTd);
             }
@@ -819,7 +822,7 @@ $(function () {
         });
     }
 
-    // IsReceived checkbox handler (delegated)
+    // Received checkbox handler (delegated): toggles the item status Active <-> Received
     $(document).on('change', '.is-received-chk', function () {
         var $chk = $(this);
         var itemId = $chk.data('item-id');
@@ -828,6 +831,8 @@ $(function () {
             function (r) {
                 if (r.success) {
                     $chk.closest('tr').toggleClass('table-success', isReceived);
+                    var changed = currentItems.filter(function (i) { return i.id === itemId; })[0];
+                    if (changed) changed.status = isReceived ? 'Received' : 'Active';
                 } else {
                     $chk.prop('checked', !isReceived);
                     alert(r.error || 'Error al actualizar.');

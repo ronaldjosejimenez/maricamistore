@@ -56,9 +56,12 @@ function renderSaldos(data) {
     var rows = filtered.map(function (r) {
         var isNegative = r.balance < 0;
         var rowClass = isNegative ? ' class="table-success"' : '';
-        var badge = isNegative
-            ? '<span class="badge badge-success ml-1">Crédito a favor</span>'
-            : '<span class="badge badge-warning ml-1">Saldo pendiente</span>';
+        // Labels are not exclusive (spec 021): a customer can show several at once
+        var badge = '';
+        if (isNegative) badge += '<span class="badge badge-success ml-1">Crédito a favor</span>';
+        if (r.itemsInTransit > 0) badge += '<span class="badge badge-primary ml-1">Productos en camino (' + r.itemsInTransit + ')</span>';
+        if (r.suggestAdvance) badge += '<span class="badge badge-warning ml-1">Sugerir adelanto</span>';
+        if (r.deliveredToCollect) badge += '<span class="badge badge-danger ml-1">Entregado – por cobrar</span>';
         var nameDisplay = escapeHtml(r.customerName);
         if (r.isGeneric) {
             nameDisplay += ' <em class="text-muted">(Especulativo)</em>';
