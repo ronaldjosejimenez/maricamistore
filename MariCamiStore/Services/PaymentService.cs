@@ -11,7 +11,7 @@ public class PaymentService(
     /// <summary>Order statuses whose items feed the "Saldos de clientes" labels. Listed explicitly: a new status is not considered until added here.</summary>
     private static readonly string[] OrdersInProgress = { OrderStatus.Active.Key, OrderStatus.Delivering.Key };
 
-    private sealed record CustomerItemStats(Guid CustomerId, int InTransit, int Received, decimal AgreedSum);
+    private sealed record CustomerItemStats(Guid CustomerId, int InTransit, decimal AgreedSum);
 
     public async Task<CustomerBalanceDto?> GetCustomerBalanceAsync(Guid customerId)
     {
@@ -88,9 +88,9 @@ public class PaymentService(
             var cust = customers.GetValueOrDefault(r.CustomerId);
             stats.TryGetValue(r.CustomerId, out var s);
             var inTransit = r.Balance > 0 ? s?.InTransit ?? 0 : 0;
-            var received = r.Balance > 0 ? s?.Received ?? 0 : 0;
-            var deliveredToCollect = received > 0 && inTransit == 0;
-            // "Entregado - por cobrar" wins over "Sugerir adelanto": once everything was received it is no longer an advance.
+            // Nothing left to deliver in the customer's Active/Delivering orders (also true when it has none): the balance is plain debt.
+            var deliveredToCollect = r.Balance > 0 && inTransit == 0;
+            // Needs items pending reception, so it never coincides with "Entregado - por cobrar".
             var suggestAdvance = inTransit > 0 && (s?.AgreedSum ?? 0) >= r.Balance;
             return new SaldoReportRow(
                 r.CustomerId,
@@ -104,7 +104,7 @@ public class PaymentService(
         }).OrderBy(r => r.CustomerName).ToList();
     }
 
-    /// <summary>Counts, per customer, the items in Active/Delivering orders that are pending (Active) or received, plus their agreed price.</summary>
+    /// <summary>Counts, per customer, the items pending reception (Active) in Active/Delivering orders, plus the agreed price of their counted items.</summary>
     /// <remarks>Same organization scope as the balance: all organizations when <paramref name="organizationId"/> is null.</remarks>
     private async Task<Dictionary<Guid, CustomerItemStats>> GetItemStatsAsync(List<Guid> customerIds, Guid? organizationId)
     {
@@ -120,7 +120,6 @@ public class PaymentService(
             .Select(g => new CustomerItemStats(
                 g.Key,
                 g.Count(i => i.Status == OrderItemStatus.Active.Key),
-                g.Count(i => i.Status == OrderItemStatus.Received.Key),
                 g.Sum(i => i.AgreedPriceInLocal)))
             .ToListAsync();
 

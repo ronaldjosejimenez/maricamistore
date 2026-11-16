@@ -41,8 +41,8 @@ Para cada caso, abrir Pagos → Saldos de clientes.
 | d | Saldo ₡50 000, 1 ítem Activo de ₡40 000 | Solo "Productos en camino (1)" |
 | e | Saldo ₡50 000, todos sus ítems de órdenes Entregando Recibidos (suman ₡100 000) | Solo "Entregado – por cobrar" (rojo). **No** aparece "Sugerir adelanto" |
 | f | 1 ítem Activo en una orden Activa + 1 Recibido en una orden Entregando | "Productos en camino (1)", sin "Entregado – por cobrar" |
-| g | Saldo que solo viene de una transacción manual o de órdenes Completadas | Ninguna etiqueta |
-| h | Cliente con ítems solo en otra organización, sin "Ver saldo completo" | No aparece o no tiene etiquetas. Al marcar "Ver saldo completo", aparecen sus etiquetas |
+| g | Saldo que solo viene de órdenes Completadas (todos sus ítems Recibidos) o de una transacción manual | Solo "Entregado – por cobrar" (rojo) |
+| h | Cliente con saldo en esta organización y con ítems Activos solo en otra organización | Sin "Ver saldo completo": "Entregado – por cobrar" (en esta organización no le queda nada por entregar). Con "Ver saldo completo": "Productos en camino (n)" |
 
 Además:
 - "Saldo pendiente" no aparece en ninguna fila.
