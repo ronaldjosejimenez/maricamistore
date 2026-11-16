@@ -9,7 +9,7 @@
 Cubre los issues #44 y #48. El trabajo tiene tres partes:
 
 1. **Estado `Received`.** Reemplaza al booleano `OrderItem.IsReceived`. Se hace con dos migraciones: datos (`IsReceived = 1` → `Status = 'Received'`) y esquema (se elimina la columna). El checkbox "Recibido" escribe el `Status`.
-2. **Consistencia.** Toda condición que hoy significa "ítem no anulado" pasa de `Status == Active` a `Status != Voided` (inventario en research R2). El caso crítico es la anulación de la orden completa, que debe generar el Void también de los ítems recibidos.
+2. **Consistencia.** Toda condición que hoy significa "ítem no anulado" pasa de `Status == Active` a `OrderItemStatus.CountedKeys.Contains(Status)`, una lista positiva de los estados que cuentan: Active y Received (inventario en research R2). El caso crítico es la anulación de la orden completa, que debe generar el Void también de los ítems recibidos.
 3. **Etiquetas en Saldos de clientes.** Se calculan en `PaymentService.GetSaldosReportAsync` **después** del saldo, que no cambia. Se hace una consulta agrupada sobre los ítems de los deudores en órdenes Active/Delivering, con el mismo alcance de organización que el saldo. Se agregan 3 campos a `SaldoReportRow` y `renderSaldos` pinta las etiquetas con sus colores.
 
 ## Technical Context
@@ -66,7 +66,7 @@ MariCamiStore/
 │       └── <ts>_DropOrderItemIsReceived.cs        [NEW] dotnet ef migrations add, DESPUÉS de quitarla
 ├── Services/
 │   ├── IOrderService.cs                           [MODIFY] OrderItemWithCustomerDto sin IsReceived; SetItemReceivedAsync
-│   ├── OrderService.cs                            [MODIFY] filtros != Voided (R2); SetItemReceivedAsync
+│   ├── OrderService.cs                            [MODIFY] filtros CountedKeys (R2); SetItemReceivedAsync
 │   ├── IPaymentService.cs                         [MODIFY] SaldoReportRow + ItemsInTransit, SuggestAdvance, DeliveredToCollect
 │   └── PaymentService.cs                          [MODIFY] etiquetas después del saldo (R5)
 ├── Pages/
@@ -81,12 +81,12 @@ MariCamiStore/
 ## Design Notes
 
 ### Estado Received
-- **`OrderItemStatus`**: `public static OrderItemStatus Received = new OrderItemStatus(nameof(Received), "Recibido");`, con comentario XML. `List()` devuelve `{ Active, Received, Voided }`.
+- **`OrderItemStatus`**: `public static OrderItemStatus Received = new OrderItemStatus(nameof(Received), "Recibido");`, con comentario XML. `List()` devuelve `{ Active, Received, Voided }`. Además `public static readonly string[] CountedKeys = { Active.Key, Received.Key }`.
 - **`SetItemReceivedAsync(Guid itemId, bool received)`**, que reemplaza a `ToggleIsReceivedAsync`. Mantiene los mismos guards y mensajes y asigna `item.Status = received ? Received.Key : Active.Key` y `UpdatedAt`.
 - **`GetOrderItemsWithCustomerAsync`**: el DTO deja de llevar `IsReceived`; sigue llevando `Status`.
 
 ### Consistencia (#48)
-Se aplica research R2. Los cambios son de una línea cada uno: `== OrderItemStatus.Active.Key` → `!= OrderItemStatus.Voided.Key`. Lugares:
+Se aplica research R2. Los cambios son de una línea cada uno: `== OrderItemStatus.Active.Key` → `OrderItemStatus.CountedKeys.Contains(...)`. Lugares:
 - `GetOrderItemCountsAsync`
 - `ComputeOrderTotals`
 - `TransitionOrderAsync` (→ Voided)
@@ -99,7 +99,7 @@ Se actualizan los comentarios que dicen "active items" cuando el sentido es "no 
 ### Etiquetas (`PaymentService.GetSaldosReportAsync`)
 1. El cálculo actual de `rows` queda **tal cual**.
 2. `var debtorIds = rows.Where(r => r.Balance > 0).Select(r => r.CustomerId).ToList();`
-3. Si `debtorIds.Count > 0`, se hace la consulta de research R5 (`IgnoreQueryFilters`, `Status != Voided`, orden Active/Delivering, `organizationId` opcional), agrupada por `CustomerId`, con `InTransit`, `Received` y `AgreedSum`. El resultado va a un `Dictionary`.
+3. Si `debtorIds.Count > 0`, se hace la consulta de research R5 (`IgnoreQueryFilters`, `OrderItemStatus.CountedKeys.Contains(Status)`, orden Active/Delivering, `organizationId` opcional), agrupada por `CustomerId`, con `InTransit`, `Received` y `AgreedSum`. El resultado va a un `Dictionary`.
 4. En el `Select` final de `SaldoReportRow` se derivan los campos según `data-model.md`. Los clientes sin entrada en el diccionario, o con `Balance <= 0`, quedan con `0` / `false`.
 
 ### UI

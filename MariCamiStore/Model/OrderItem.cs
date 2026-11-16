@@ -71,8 +71,6 @@ public class OrderItem
     /// <value>The agreed price in col.</value>
     public decimal AgreedPriceInLocal { get; set; }
 
-    public bool IsReceived { get; set; }
-
     /// <summary>Gets or sets the item status (<see cref="OrderItemStatus"/> key).</summary>
     /// <value>The status.</value>
     public string Status { get; set; } = OrderItemStatus.Active.Key;

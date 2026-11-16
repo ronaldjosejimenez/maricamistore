@@ -14,6 +14,9 @@ public class OrderItemStatus : Enumeration
     /// <summary>The item was voided; it is kept but no longer counts towards the order.</summary>
     public static OrderItemStatus Voided = new OrderItemStatus(nameof(Voided), "Anulado");
 
+    /// <summary>Statuses that count towards the order (totals, counts, charges, voiding the whole order). Listed explicitly on purpose: a new status does not count until it is added here.</summary>
+    public static readonly string[] CountedKeys = { Active.Key, Received.Key };
+
     /// <summary>Enumerates the items in this collection that meet given criteria.</summary>
     /// <returns>An enumerator that allows foreach to be used to process the matched items.</returns>
     public static IEnumerable<OrderItemStatus> List() => new[] { Active, Received, Voided };

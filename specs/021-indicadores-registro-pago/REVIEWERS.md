@@ -20,7 +20,7 @@ En "Saldos de clientes" (Pagos), todos los deudores muestran la misma etiqueta, 
   - `MigrateIsReceivedToStatus` es solo SQL y se crea antes de quitar la propiedad. Pasa `IsReceived = 1` a `Status = 'Received'`, excepto en los Voided.
   - `DropOrderItemIsReceived` hace el `DropColumn`.
   - Las dos son reversibles: el Down repuebla `IsReceived` a partir de `Received`.
-- **Regla "no anulado" (#48).** En `OrderService`, todas las condiciones `Status == Active` que significan "cuenta en la orden" pasan a `Status != Voided`: conteo de ítems, `ComputeOrderTotals`, anulación de la orden completa, Reasignar y la vista previa y ejecución de la anulación parcial.
+- **Regla "no anulado" (#48).** En `OrderService`, todas las condiciones `Status == Active` que significan "cuenta en la orden" pasan a `OrderItemStatus.CountedKeys.Contains(Status)` (Active y Received): conteo de ítems, `ComputeOrderTotals`, anulación de la orden completa, Reasignar y la vista previa y ejecución de la anulación parcial.
 - **Checkbox.** `ToggleIsReceivedAsync` pasa a ser `SetItemReceivedAsync`, con los mismos guards y mensajes, y asigna `Status = Received | Active`. El handler `ToggleReceived` y su JSON no cambian. `items.js` lee `status === 'Received'`.
 - **Etiquetas.** `PaymentService.GetSaldosReportAsync` deja intacto el cálculo del saldo y **después**:
   1. toma los deudores (`Balance > 0`);
@@ -44,7 +44,7 @@ En "Saldos de clientes" (Pagos), todos los deudores muestran la misma etiqueta, 
 ## Key Decisions
 
 1. **Todo el #48 entra en este feature.** Se consideró hacer solo los 3 hallazgos críticos, pero partirlo dejaba el código en un estado inconsistente. La mayoría son cambios de una línea.
-2. **`!= Voided` inline en lugar de un helper.** Varias condiciones están dentro de `IQueryable`, y un helper de C# no se traduce a SQL.
+2. **Lista positiva `CountedKeys` en lugar de `!= Voided`.** Una definición en negativo contaría por omisión cualquier estado futuro; con la lista positiva hay que decidir a propósito si el nuevo estado cuenta. EF la traduce a `IN (...)`. Se mantiene en un solo lugar para no repetirla en 6 consultas.
 3. **Dos migraciones reversibles.** El issue pide separar datos y esquema. Con ese orden, el rollback también recupera `IsReceived`.
 4. **El contrato del checkbox no cambia.** `isReceived` pasa a significar "estado deseado". Así no hay cambios visibles y la operación es idempotente.
 5. **Las reglas de las etiquetas van en el servidor y después del saldo.** La alternativa era calcularlas en JS, lo que habría llevado ítems al navegador y reglas de negocio a la UI. FR-012 exige no tocar el cálculo del saldo.

@@ -20,12 +20,11 @@ public record OrderItemWithCustomerDto(
     decimal EstimateShipping,
     decimal ServiceFeeInLocal,
     decimal AgreedPriceInLocal,
-    bool IsReceived,
     DateTime CreatedAt,
     DateTime UpdatedAt,
     string Status);
 
-/// <summary>The monetary totals of an order, computed from its non-voided (Active and Received) items.</summary>
+/// <summary>The monetary totals of an order, computed from its counted (Active and Received) items.</summary>
 public record OrderTotals(
     decimal TotalAgreedPriceInLocal,
     decimal ShippingAmountToCR,
@@ -104,7 +103,8 @@ public interface IOrderService
     Task<OrderItem> CreateOrderItemAsync(OrderItem item);
     Task<OrderItem> UpdateOrderItemAsync(OrderItem item);
     Task<(bool Success, string? Error)> DeleteOrderItemAsync(Guid itemId);
-    Task<(bool Success, string? Error)> ToggleIsReceivedAsync(Guid itemId, bool isReceived);
+    /// <summary>Marks the item as Received (or back to Active); only for Delivering orders, never for voided items.</summary>
+    Task<(bool Success, string? Error)> SetItemReceivedAsync(Guid itemId, bool received);
     Task<ProductType?> GetProductTypeValuesAsync(Guid productTypeId);
 
     Task<(bool Success, string? Error)> TransitionOrderAsync(TransitionOrderDto dto);

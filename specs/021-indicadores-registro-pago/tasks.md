@@ -7,7 +7,7 @@
 **Tests**: no hay proyecto de pruebas automatizadas y la spec no las pide. La verificación es `dotnet build` más el [quickstart.md](quickstart.md).
 
 **Organization**:
-- **Phase 2** agrega el valor `Received`, cambia todos los filtros de "no anulado" a `!= Voided` (#48) y crea la migración de datos. Los filtros van antes que esa migración porque, en cuanto existan ítems `Received`, el código viejo los excluiría de totales y anulaciones.
+- **Phase 2** agrega el valor `Received`, cambia todos los filtros de "cuenta en la orden" a la lista positiva `OrderItemStatus.CountedKeys` (#48) y crea la migración de datos. Los filtros van antes que esa migración porque, en cuanto existan ítems `Received`, el código viejo los excluiría de totales y anulaciones.
 - **US1** cambia el checkbox para que escriba el estado y elimina `IsReceived`.
 - **US2** verifica la consistencia y ajusta comentarios.
 - **US3** agrega las etiquetas en Saldos de clientes.
@@ -27,16 +27,16 @@
 
 **Purpose**: nuevo estado, la regla "no anulado" (research R1, R2) y la migración de datos (R4).
 
-- [X] T003 [P] En `MariCamiStore/Model/OrderItemStatus.cs`:
+- [X] T003 [P] En `MariCamiStore/Model/OrderItemStatus.cs` (además, `public static readonly string[] CountedKeys = { Active.Key, Received.Key };` con comentario XML):
   - agregar `public static OrderItemStatus Received = new OrderItemStatus(nameof(Received), "Recibido");` entre `Active` y `Voided`, con comentario XML ("The item was received by the customer; it still counts towards the order.");
   - cambiar `List()` a `new[] { Active, Received, Voided }`;
   - ajustar el comentario de `Active` para que diga "pendiente de recibir" ("The item is valid, counts towards the order and is pending reception.").
-- [X] T004 [P] En `MariCamiStore/Services/OrderService.cs` cambiar `i.Status == OrderItemStatus.Active.Key` por `i.Status != OrderItemStatus.Voided.Key` en:
+- [X] T004 [P] En `MariCamiStore/Services/OrderService.cs` cambiar `i.Status == OrderItemStatus.Active.Key` por `OrderItemStatus.CountedKeys.Contains(i.Status)` en:
   - `GetOrderItemCountsAsync`;
   - `ComputeOrderTotals` (la lista `list`);
   - `TransitionOrderAsync`, rama `ToStatus == Voided` (ajustar el comentario: "Items voided earlier already have their Void transaction; Active and Received items are voided now");
   - `ReasignarItemAsync` (`otherTotal`);
-  - `PreviewVoidItemsAsync` y `VoidItemsAsync` (la lista `active`, que pasa a llamarse `notVoided`, incluido su uso en `selected.Count == ...`).
+  - `PreviewVoidItemsAsync` y `VoidItemsAsync` (la lista `active`, que pasa a llamarse `counted`, incluido su uso en `selected.Count == ...`).
 
   Confirmar con `grep "OrderItemStatus.Active.Key"` que solo queden el default del modelo y el de la configuración. T007 agrega uno más, en `SetItemReceivedAsync`.
 - [X] T005 Con el modelo **todavía** con `IsReceived`, correr `dotnet ef migrations add MigrateIsReceivedToStatus` desde `MariCamiStore/`. Debe salir vacía. Completar `Up` y `Down` en `MariCamiStore/Infrastructure/Persistance/Migrations/<ts>_MigrateIsReceivedToStatus.cs`, con el SQL de research R4 y un comentario al estilo de `20261019231103_RemoveDeliveredOrderStatus.cs`: migración solo de datos (spec 021), SQL crudo que se salta el filtro de organización, no toca `UpdatedAt` y su Down es reversible mientras exista la columna.
@@ -55,19 +55,19 @@
 
 **Independent Test**: quickstart §0 (parte de migración) y §1.
 
-- [ ] T006 [US1] En `MariCamiStore/Services/IOrderService.cs`:
+- [X] T006 [US1] En `MariCamiStore/Services/IOrderService.cs`:
   - quitar `bool IsReceived` de `OrderItemWithCustomerDto`;
   - reemplazar `Task<(bool Success, string? Error)> ToggleIsReceivedAsync(Guid itemId, bool isReceived);` por `SetItemReceivedAsync(Guid itemId, bool received)`, con comentario XML ("Marks the item as Received or back to Active; only for Delivering orders, never for voided items.").
-- [ ] T007 [US1] En `MariCamiStore/Services/OrderService.cs` (después de T006):
+- [X] T007 [US1] En `MariCamiStore/Services/OrderService.cs` (después de T006):
   - en `GetOrderItemsWithCustomerAsync`, quitar `i.IsReceived` de la construcción del DTO;
   - renombrar `ToggleIsReceivedAsync` a `SetItemReceivedAsync(Guid itemId, bool received)` con los mismos guards y mensajes, y reemplazar `item.IsReceived = isReceived;` por `item.Status = received ? OrderItemStatus.Received.Key : OrderItemStatus.Active.Key;`.
-- [ ] T008 [US1] En `MariCamiStore/Pages/Orders/Items.cshtml.cs`, `OnPostToggleReceivedAsync` pasa a llamar a `orderService.SetItemReceivedAsync(request.ItemId, request.IsReceived)`. `ToggleReceivedRequest` no cambia (contrato en contracts/ui-handlers.md).
-- [ ] T009 [P] [US1] En `MariCamiStore/wwwroot/js/pages/orders/items.js`:
+- [X] T008 [US1] En `MariCamiStore/Pages/Orders/Items.cshtml.cs`, `OnPostToggleReceivedAsync` pasa a llamar a `orderService.SetItemReceivedAsync(request.ItemId, request.IsReceived)`. `ToggleReceivedRequest` no cambia (contrato en contracts/ui-handlers.md).
+- [X] T009 [P] [US1] En `MariCamiStore/wwwroot/js/pages/orders/items.js`:
   - en `renderItemsTable`, cambiar `else if (item.isReceived)` por `else if (item.status === 'Received')` (fila `table-success`) y `if (item.isReceived) $chk.prop('checked', true);` por `if (item.status === 'Received') ...`;
   - cambiar el comentario `// IsReceived checkbox handler (delegated)` por `// Received checkbox handler (delegated): toggles the item status Active <-> Received`;
   - en el éxito del handler, actualizar `status` del ítem en `currentItems` (`'Received'` o `'Active'`) para que un re-render no lo revierta.
-- [ ] T010 [US1] Quitar `public bool IsReceived { get; set; }` de `MariCamiStore/Model/OrderItem.cs`, y el bloque `builder.Property(oi => oi.IsReceived)...` de `MariCamiStore/Infrastructure/Persistance/EntityConfigurations/OrderItemEntityTypeConfiguration.cs`. Confirmar con `grep -rn "IsReceived\|isReceived"` (sin contar `Migrations/`) que solo queden `ToggleReceivedRequest` y el handler JS, que son el contrato que se mantiene.
-- [ ] T011 [US1] Correr `dotnet ef migrations add DropOrderItemIsReceived` desde `MariCamiStore/`. Revisar que `Up` solo tenga `DropColumn("IsReceived", "OrderItems")` y que `Down` lo vuelva a agregar como `bit NOT NULL DEFAULT 0`. Correr `dotnet ef database update`.
+- [X] T010 [US1] Quitar `public bool IsReceived { get; set; }` de `MariCamiStore/Model/OrderItem.cs`, y el bloque `builder.Property(oi => oi.IsReceived)...` de `MariCamiStore/Infrastructure/Persistance/EntityConfigurations/OrderItemEntityTypeConfiguration.cs`. Confirmar con `grep -rn "IsReceived\|isReceived"` (sin contar `Migrations/`) que solo queden `ToggleReceivedRequest` y el handler JS, que son el contrato que se mantiene.
+- [X] T011 [US1] Correr `dotnet ef migrations add DropOrderItemIsReceived` desde `MariCamiStore/`. Revisar que `Up` solo tenga `DropColumn("IsReceived", "OrderItems")` y que `Down` lo vuelva a agregar como `bit NOT NULL DEFAULT 0`. Correr `dotnet ef database update`.
 
 **Checkpoint**: quickstart §0 (la columna ya no existe; N ítems Received) y §1 completos.
 
@@ -79,8 +79,8 @@
 
 **Independent Test**: quickstart §0 (totales y conteos idénticos) y §2.
 
-- [ ] T012 [P] [US2] En `MariCamiStore/Services/IOrderService.cs`, cambiar el XML de `OrderTotals` de "computed from its active items" a "computed from its non-voided (Active and Received) items". En `MariCamiStore/Services/OrderService.cs`, cambiar el `<param name="items">` de `ComputeOrderTotals` para que diga que se ignoran los Voided y se cuentan los Active y los Received.
-- [ ] T013 [US2] Revisar `MariCamiStore/wwwroot/js/pages/orders/items.js` y `MariCamiStore/wwwroot/js/pages/orders/index.js`: el conteo `#item-count-badge`, los subtotales y el botón Reasignar deben usar `status !== 'Voided'` (no `=== 'Active'`). Corregir cualquier comparación con `'Active'` que signifique "no anulado".
+- [X] T012 [P] [US2] En `MariCamiStore/Services/IOrderService.cs`, cambiar el XML de `OrderTotals` de "computed from its active items" a "computed from its non-voided (Active and Received) items". En `MariCamiStore/Services/OrderService.cs`, cambiar el `<param name="items">` de `ComputeOrderTotals` para que diga que se ignoran los Voided y se cuentan los Active y los Received.
+- [X] T013 [US2] En `MariCamiStore/wwwroot/js/pages/orders/items.js` definir `var COUNTED_STATUSES = ['Active', 'Received'];` y `function isCounted(item)`, y usarlos en el conteo `#item-count-badge` y en los subtotales (`groupSubtotal`), en lugar de `status !== 'Voided'` / `!isVoided`. Revisar también `MariCamiStore/wwwroot/js/pages/orders/index.js`. Las comparaciones con `'Voided'` que son propias de una fila anulada (clase, badge, sin botones) se mantienen.
 - [ ] T014 [US2] Ejecutar el quickstart §2 (totales sin cambio al marcar; Reasignar incluye a los Recibidos; anular una orden Entregando genera el Void de A, B y C).
 
 **Checkpoint**: SC-002 y SC-003 verificados.
@@ -97,7 +97,7 @@
 - [ ] T016 [US3] En `MariCamiStore/Services/PaymentService.cs`, `GetSaldosReportAsync` (después de T015, research R5):
   - dejar intacto el cálculo de `rows`;
   - luego `debtorIds = rows.Where(r => r.Balance > 0)`;
-  - si hay deudores, consultar `context.OrderItems.IgnoreQueryFilters()` filtrando `debtorIds.Contains(i.CustomerId)`, `i.Status != Voided`, `i.Order.Status` Active o Delivering y `organizationId == null || i.Order.OrganizationId == organizationId`, agrupando por `CustomerId` en `{ InTransit = Count(Active), Received = Count(Received), AgreedSum = Sum(AgreedPriceInLocal) }`, a un diccionario;
+  - si hay deudores, consultar `context.OrderItems.IgnoreQueryFilters()` filtrando `debtorIds.Contains(i.CustomerId)`, `OrderItemStatus.CountedKeys.Contains(i.Status)`, `i.Order.Status` Active o Delivering y `organizationId == null || i.Order.OrganizationId == organizationId`, agrupando por `CustomerId` en `{ InTransit = Count(Active), Received = Count(Received), AgreedSum = Sum(AgreedPriceInLocal) }`, a un diccionario;
   - en el `Select` final, derivar `ItemsInTransit`, `DeliveredToCollect = Received > 0 && InTransit == 0` y `SuggestAdvance = !DeliveredToCollect && (InTransit + Received) > 0 && AgreedSum >= Balance`. Usar `0` / `false` cuando `Balance <= 0` o no hay entrada;
   - agregar un comentario que explique que las etiquetas se evalúan después del saldo, solo sobre los deudores (FR-012).
 - [ ] T017 [P] [US3] En `MariCamiStore/wwwroot/js/pages/payments/index.js`, `renderSaldos`, reemplazar el ternario `badge`:

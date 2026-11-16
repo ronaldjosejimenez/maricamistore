@@ -1,20 +1,21 @@
 # Research — 021
 
 ## R1. Cómo expresar "ítem no anulado"
-- **Decision**: agregar `OrderItemStatus.Received = new(nameof(Received), "Recibido")` e incluirlo en `List()`. Toda condición que hoy usa `i.Status == OrderItemStatus.Active.Key` con el sentido de "cuenta en la orden" pasa a `i.Status != OrderItemStatus.Voided.Key`, escrita inline.
-- **Rationale**: varias de estas condiciones están dentro de `IQueryable` (conteo, anulación de orden, Reasignar). Un helper estático de C# no se traduce a SQL. Escribirla inline es el mismo estilo que usa hoy el código.
+- **Decision**: agregar `OrderItemStatus.Received = new(nameof(Received), "Recibido")` e incluirlo en `List()`. Se define **en positivo** una lista de los estados que cuentan en la orden: `OrderItemStatus.CountedKeys = { Active.Key, Received.Key }`. Toda condición que hoy usa `i.Status == OrderItemStatus.Active.Key` con el sentido de "cuenta en la orden" pasa a `OrderItemStatus.CountedKeys.Contains(i.Status)`. Donde el sentido es otro (p. ej. "pendiente de recibir") se compara contra el estado concreto (`Active`).
+- **Rationale**: una lista positiva obliga a decidir, para cada estado nuevo, si cuenta o no. Con `!= Voided` un estado futuro quedaría incluido sin que nadie lo decida. EF Core traduce `array.Contains(i.Status)` a `IN (...)`, así que sirve dentro de `IQueryable`. Está en un solo lugar para no repetir la lista en cada consulta.
 - **Alternatives**:
-  - Usar `Status IN ('Active','Received')`. Se descarta porque obliga a tocar todos los lugares si se agrega otro estado más adelante.
-  - Agregar una propiedad calculada `IsCounted`. Se descarta porque no se traduce a SQL.
+  - `Status != Voided` (decisión original). Se descarta porque es una definición en negativo: un estado nuevo se contaría por omisión.
+  - Listar los estados en cada consulta. Se descarta por repetirse en 6 lugares; se mantiene explícito donde la regla es distinta (etiquetas).
+  - Una propiedad calculada `IsCounted`. Se descarta porque no se traduce a SQL.
 
 ## R2. Inventario de los cambios del issue #48
 | # | Lugar | Cambio |
 |---|-------|--------|
-| 1 | `OrderService.TransitionOrderAsync` (→ Voided) | `Where(Status != Voided)`: genera un Void para Active **y** Received |
-| 2 | `OrderService.ComputeOrderTotals` | `Where(Status != Voided)` |
-| 3 | `OrderService.ReasignarItemAsync` (`otherTotal`) | `Status != Voided` |
-| 4 | `OrderService.GetOrderItemCountsAsync` | `Status != Voided` |
-| 5 | `OrderService.PreviewVoidItemsAsync` / `VoidItemsAsync` (lista `active`) | `Status != Voided`. En órdenes Activas no hay Received, así que no cambia el comportamiento; es solo protección |
+| 1 | `OrderService.TransitionOrderAsync` (→ Voided) | `Where(CountedKeys.Contains(Status))`: genera un Void para Active **y** Received |
+| 2 | `OrderService.ComputeOrderTotals` | `Where(CountedKeys.Contains(Status))` |
+| 3 | `OrderService.ReasignarItemAsync` (`otherTotal`) | `CountedKeys.Contains(Status)` |
+| 4 | `OrderService.GetOrderItemCountsAsync` | `CountedKeys.Contains(Status)` |
+| 5 | `OrderService.PreviewVoidItemsAsync` / `VoidItemsAsync` (lista `active`, ahora `counted`) | `CountedKeys.Contains(Status)`. En órdenes Activas no hay Received, así que no cambia el comportamiento; es solo protección |
 | 6 | `OrderService.ToggleIsReceivedAsync` | Se renombra a `SetItemReceivedAsync`; escribe `Status` (ver R3) |
 | 7 | `items.js` (filas y checkbox) | `item.status === 'Received'` en lugar de `item.isReceived` |
 | 8 | `OrderItemStatus.List()` | Incluye `Received` |
@@ -46,7 +47,7 @@
      ```
      context.OrderItems.IgnoreQueryFilters()
        .Where(i => debtorIds.Contains(i.CustomerId)
-                && i.Status != Voided
+                && OrderItemStatus.CountedKeys.Contains(i.Status)
                 && (i.Order.Status == Active || i.Order.Status == Delivering)
                 && (organizationId == null || i.Order.OrganizationId == organizationId))
        .GroupBy(i => i.CustomerId)
