@@ -81,7 +81,7 @@ MariCamiStore/
 
 ### Servicio
 - **`ComputeOrderTotals(Order, IEnumerable<OrderItem>)`** (privado y estático, puro): son las fórmulas actuales de `ApplyOrderCalculationSuite`. `ApplyOrderCalculationSuite` pasa a llamarla con `items.Where(Active)` y asignar los resultados.
-- **`PreviewVoidItemsAsync(orderId, itemIds)`** → `(VoidItemsPreviewDto? Preview, string? Error)`. Valida la orden Activa y que los ítems sean Active y de la orden. `before` sale de los campos guardados de la orden; `after` sale de `ComputeOrderTotals(order, active − selected)`. Incluye `allSelected` y los ítems con `defaultRefund = ListPriceTaxWithTax` y el nombre del cliente (mismo criterio que `GetOrderItemsWithCustomerAsync`: NickName o Name).
+- **`PreviewVoidItemsAsync(orderId, itemIds)`** → `(VoidItemsPreviewDto? Preview, string? Error)`. Valida la orden Activa y que los ítems sean Active y de la orden. `before` sale de los campos guardados de la orden; `after` sale de `ComputeOrderTotals(order, active − selected)`. Incluye `Position` (`BuildPositionPreviewAsync`, FR-008a: indicadores del período abierto más los deltas de Saldos y Shipping de la orden; null sin período), `allSelected` y los ítems con `defaultRefund = ListPriceTaxWithTax` y el nombre del cliente (mismo criterio que `GetOrderItemsWithCustomerAsync`: NickName o Name).
 - **`VoidItemsAsync(orderId, justification, IReadOnlyList<VoidItemLine>)`** → `(bool, string?)`, con validaciones en el orden del contrato:
   1. Período: `cxpService.GetOpenPeriodAsync()`; si es null, devuelve error.
   2. Por ítem: `Status = Voided`, `UpdatedAt` y un `Transaction` Void (R5).
@@ -109,6 +109,7 @@ MariCamiStore/
   - una tabla de ítems (descripción, cliente, acordado e input `.void-refund` con step 0.01 y min 0, precargado con `defaultRefund`);
   - la tabla Antes/Después de los 7 totales (signos de moneda como en el header);
   - el bloque de ajuste: Ajuste = Σ refund, Teórico y Diferencia, recalculados en el `input` de `.void-refund`;
+  - la tabla de Posición de CxP (`#void-position-before` / `#void-position-after`), calculada en `renderVoidPosition` al abrir y en el `input` de `.void-refund`;
   - `#void-justification` (textarea obligatorio);
   - `#void-all-warning`, visible si `allSelected`.
 

@@ -468,12 +468,26 @@ function voidRefundTotal() {
     return valid ? round2(total) : null;
 }
 
+// CxP Posición of the open period today and after the void (mirrors the CxP panel formula; see VoidPositionPreviewDto)
+function renderVoidPosition(adjustment) {
+    var p = voidPreview ? voidPreview.position : null;
+    if (!p) {
+        $('#void-position-before, #void-position-after').text('—');
+        return;
+    }
+    $('#void-position-before').text(formatMoney(p.current, localCurrencySign));
+    $('#void-position-after').text(adjustment === null
+        ? '—'
+        : formatMoney(round2(p.current + p.saldosDelta + p.shippingDelta + adjustment * p.refundRate), localCurrencySign));
+}
+
 function recalcVoidAdjustment() {
     var adjustment = voidRefundTotal();
     var theoretical = voidPreview ? voidPreview.theoreticalRefund : 0;
     $('#void-adjustment').text(adjustment === null ? '—' : formatMoney(adjustment, orderCurrencySign));
     $('#void-theoretical').text(formatMoney(theoretical, orderCurrencySign));
     $('#void-difference').text(adjustment === null ? '—' : formatMoney(round2(adjustment - theoretical), orderCurrencySign));
+    renderVoidPosition(adjustment);
     updateVoidConfirmState();
 }
 

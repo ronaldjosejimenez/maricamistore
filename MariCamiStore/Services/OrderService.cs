@@ -533,8 +533,36 @@ public class OrderService(
             Before: before,
             After: after,
             TheoreticalRefund: before.TotalToPayToSupplier - after.TotalToPayToSupplier,
+            Position: await BuildPositionPreviewAsync(order, selected, after),
             Items: lines);
         return (preview, null);
+    }
+
+    /// <summary>Components of the CxP Posición change caused by voiding <paramref name="selected"/>; null without an open period.</summary>
+    private async Task<VoidPositionPreviewDto?> BuildPositionPreviewAsync(
+        Order order, List<OrderItem> selected, OrderTotals after)
+    {
+        var period = await cxpService.GetOpenPeriodAsync();
+        if (period == null) return null;
+
+        var indicators = await cxpService.GetPeriodIndicatorsAsync(period.Id);
+        var saldosDelta = -selected.Sum(i => i.AgreedPriceInLocal);
+
+        // Without an exchange rate the indicators ignore debt and shipping, so those terms do not move
+        if (indicators.ExchangeRateWarning)
+            return new VoidPositionPreviewDto(indicators.Posicion, saldosDelta, 0m, 0m);
+
+        var config = await context.Configurations.FirstOrDefaultAsync();
+        var factor = order.CurrencyId == config?.LocalCurrencyId ? 1m : period.ExchangeRate;
+
+        // Same rule as the indicator: pending shipping = max(0, estimated shipping - registered packages)
+        var packages = await context.OrderPackages
+            .Where(p => p.OrderId == order.Id)
+            .SumAsync(p => (decimal?)p.Amount) ?? 0m;
+        var pendingBefore = Math.Max(0m, order.ShippingAmountToCR - packages);
+        var pendingAfter = Math.Max(0m, after.ShippingAmountToCR - packages);
+
+        return new VoidPositionPreviewDto(indicators.Posicion, saldosDelta, (pendingBefore - pendingAfter) * factor, factor);
     }
 
     public async Task<(bool Success, string? Error)> VoidItemsAsync(

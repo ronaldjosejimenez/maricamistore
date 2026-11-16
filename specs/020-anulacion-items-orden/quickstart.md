@@ -36,6 +36,7 @@ Activar la orden. Totales esperados: Acordado ₡44 000, SubTotal $60.00, Impues
 5. Monto vacío: "Continuar" deshabilitado (el Ajuste muestra "—"). Monto **0**: permitido; el Ajuste es 0.00 y la diferencia es −21.40.
 6. Justificación de más de 1000 caracteres: el campo no deja escribir más de 1000. Por API, una de 1001 devuelve "La justificación no puede superar 1000 caracteres." y no cambia nada.
 7. Por API, un monto de 1 000 000 001 devuelve "El monto a devolver es demasiado grande."
+8. **Posición en el modal (FR-008a).** Con B marcado, la tabla "Posición CxP" muestra la Posición actual del panel de CxP (la misma cifra que el panel) y la de "Después de anular", que es **₡3 300 menor** con el monto precargado 21.40. Cambiar el monto a 18 la deja ₡5 000 menor; a 25, ₡1 500 menor; vacío, "—". Sin período abierto (§5.1) ambas columnas muestran "—". Tras confirmar, la Posición del panel de CxP coincide con la "Después" mostrada.
 
 ## 3. Escenario A (US1, US3)
 Anular B con 21.40 y la justificación "Cliente desistió".

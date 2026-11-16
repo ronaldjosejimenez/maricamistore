@@ -16,11 +16,13 @@ Response (éxito):
               "totalToPayToSupplier": 0, "totalOfTheOrder": 0, "estimatedProfitInLocal": 0 },
   "after":  { "...": "mismos campos" },
   "theoreticalRefund": 0,
+  "position": { "current": 0, "saldosDelta": 0, "shippingDelta": 0, "refundRate": 1 },
   "items": [ { "id": "guid", "productDescription": "", "customerDisplayName": "", "agreedPriceInLocal": 0, "defaultRefund": 0 } ]
 }
 ```
 - `before` = los totales guardados de la orden; `after` = `ComputeOrderTotals` sobre los Active que no están seleccionados.
 - `theoreticalRefund` = `before.totalToPayToSupplier − after.totalToPayToSupplier`.
+- `position` = componentes de la Posición de CxP del período abierto (FR-008a); `null` si no hay período abierto. La UI calcula `current + saldosDelta + shippingDelta + ajuste × refundRate` (moneda local). Ver research R3.
 - `defaultRefund` = `ListPriceTaxWithTax` del ítem.
 - `allSelected` = la selección cubre todos los ítems Active. En ese caso `after` puede venir en cero; la UI bloquea "Continuar".
 

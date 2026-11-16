@@ -36,5 +36,8 @@ Los 7 totales se recalculan con `ComputeOrderTotals` sobre los ítems `Active`. 
 ## OrderTotals (NEW, record interno)
 `TotalAgreedPriceInLocal, ShippingAmountToCR, TotalWithoutTaxes, TaxesAmount, TotalToPayToSupplier, TotalOfTheOrder, EstimatedProfitInLocal`. Lo devuelve `ComputeOrderTotals`, que es puro y usa las mismas fórmulas y redondeo (`AwayFromZero`) que hoy usa `ApplyOrderCalculationSuite`.
 
+## VoidPositionPreviewDto (NEW, record interno)
+`Current, SaldosDelta, ShippingDelta, RefundRate`. Va en `VoidItemsPreviewDto.Position` (null sin período abierto). Posición después = `Current + SaldosDelta + ShippingDelta + ajuste × RefundRate`, en moneda local. No se persiste.
+
 ## Migración
 `<ts>_AddOrderItemStatus`: `AddColumn Status nvarchar(20) NOT NULL DEFAULT 'Active'` en `dbo.OrderItems`. No requiere backfill.

@@ -321,6 +321,7 @@ public class ItemsModel(
             preview.Before,
             preview.After,
             preview.TheoreticalRefund,
+            preview.Position,
             preview.Items
         });
     }

@@ -56,12 +56,29 @@ public record VoidPreviewItemDto(
     decimal AgreedPriceInLocal,
     decimal DefaultRefund);
 
+/// <summary>
+/// What the CxP Posición of the open period would become after the void:
+/// Posición after = Current + SaldosDelta + ShippingDelta + refund × RefundRate (all in local currency).
+/// The refund is typed by the user, so the client adds that last term.
+/// </summary>
+/// <param name="Current">Posición of the open period today.</param>
+/// <param name="SaldosDelta">Change in Saldos por cobrar (negative: the customers are no longer charged).</param>
+/// <param name="ShippingDelta">Reduction of the pending shipping to CR of the order (raises the Posición).</param>
+/// <param name="RefundRate">Factor that converts a refund in the order currency to local currency.</param>
+public record VoidPositionPreviewDto(
+    decimal Current,
+    decimal SaldosDelta,
+    decimal ShippingDelta,
+    decimal RefundRate);
+
 /// <summary>The before/after comparison shown before voiding items.</summary>
+/// <param name="Position">Null when there is no open CxP period (the void is blocked in that case).</param>
 public record VoidItemsPreviewDto(
     bool AllSelected,
     OrderTotals Before,
     OrderTotals After,
     decimal TheoreticalRefund,
+    VoidPositionPreviewDto? Position,
     List<VoidPreviewItemDto> Items);
 
 public record TransitionOrderDto(
