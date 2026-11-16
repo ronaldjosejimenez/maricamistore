@@ -31,7 +31,7 @@
   - agregar `public static OrderItemStatus Received = new OrderItemStatus(nameof(Received), "Recibido");` entre `Active` y `Voided`, con comentario XML ("The item was received by the customer; it still counts towards the order.");
   - cambiar `List()` a `new[] { Active, Received, Voided }`;
   - ajustar el comentario de `Active` para que diga "pendiente de recibir" ("The item is valid, counts towards the order and is pending reception.").
-- [ ] T004 En `MariCamiStore/Services/OrderService.cs` cambiar `i.Status == OrderItemStatus.Active.Key` por `i.Status != OrderItemStatus.Voided.Key` en:
+- [ ] T004 [P] En `MariCamiStore/Services/OrderService.cs` cambiar `i.Status == OrderItemStatus.Active.Key` por `i.Status != OrderItemStatus.Voided.Key` en:
   - `GetOrderItemCountsAsync`;
   - `ComputeOrderTotals` (la lista `list`);
   - `TransitionOrderAsync`, rama `ToStatus == Voided` (ajustar el comentario: "Items voided earlier already have their Void transaction; Active and Received items are voided now");
@@ -114,7 +114,7 @@
 ## Phase 6: Polish & Cross-Cutting
 
 - [ ] T019 Correr `dotnet build` en `MariCamiStore/`: cero errores y ningún warning nuevo respecto a T001
-- [ ] T020 Generar el script de producción con `dotnet ef migrations script --idempotent`, desde `AddOrderItemStatus` hasta `DropOrderItemIsReceived`. Adjuntarlo en la descripción del PR con la nota "ejecutar antes del deploy"
+- [ ] T020 Generar el script de producción desde `MariCamiStore/` con `dotnet ef migrations script AddOrderItemStatus DropOrderItemIsReceived --idempotent -o ../specs/021-indicadores-registro-pago/migration.sql`. Incluye `MigrateIsReceivedToStatus` y `DropOrderItemIsReceived`. Adjuntarlo en la descripción del PR con la nota "ejecutar antes del deploy"
 - [ ] T021 Probar el rollback en local: `dotnet ef database update AddOrderItemStatus` debe recrear `IsReceived` con los N ítems en 1 y `Status` en Active. Volver a `dotnet ef database update`
 - [ ] T022 Ejecutar el [quickstart.md](quickstart.md) completo (§0–§3)
 - [ ] T023 [P] El PR debe decir "Closes #44, closes #48"
@@ -125,7 +125,7 @@
 
 - **Phase 1 → Phase 2 → US1 → US2 → US3 → Polish.**
 - **Phase 2:**
-  - T003 va antes de T004 (`Received` debe existir para T007/T016, aunque T004 en sí solo usa `Voided`).
+  - T003 y T004 son independientes entre sí (T004 solo usa `Voided`). T003 tiene que estar antes de T007 y T016, que usan `Received`.
   - T004 va **antes** de T005: los filtros nuevos tienen que estar antes de que existan datos `Received`.
   - T005 corre con `IsReceived` todavía en el modelo.
 - **US1:**
@@ -139,7 +139,7 @@
 ## Parallel Example
 
 ```text
-Phase 2: T003 OrderItemStatus.cs (luego T004 OrderService.cs)
+Phase 2: T003 OrderItemStatus.cs | T004 OrderService.cs (luego T005)
 US1: T009 items.js | T006→T007→T008 (servicio y página)
 US3: T017 payments/index.js | T015→T016 (PaymentService)
 ```
