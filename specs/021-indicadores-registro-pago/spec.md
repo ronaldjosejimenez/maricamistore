@@ -61,6 +61,7 @@ En "Saldos de clientes" de la pantalla de Pagos, el usuario ve junto a cada clie
 5. **Given** un cliente con saldo pendiente, al menos un ítem Recibido en órdenes Activas o Entregando y ningún ítem Activo en esas órdenes, **When** se muestra la lista, **Then** aparece "Entregado – por cobrar".
 6. **Given** un cliente con saldo pendiente que solo proviene de transacciones manuales u órdenes Completadas, sin ítems en órdenes Activas o Entregando, **When** se muestra la lista, **Then** no aparece ninguna de las tres etiquetas nuevas.
 7. **Given** un cliente con un ítem Activo en una orden Activa y un ítem Recibido en una orden Entregando, **When** se muestra la lista, **Then** aparece "Productos en camino" y no aparece "Entregado – por cobrar".
+8. **Given** un cliente que recibió todos sus ítems en órdenes Activas o Entregando (suman 100.000) y debe 50.000, **When** se muestra la lista, **Then** aparece "Entregado – por cobrar" y **no** aparece "Sugerir adelanto", aunque la suma sea mayor que el saldo.
 
 ---
 
@@ -100,9 +101,9 @@ En "Saldos de clientes" de la pantalla de Pagos, el usuario ve junto a cada clie
 - **FR-012**: El saldo de cada cliente MUST seguir calculándose exactamente como hoy. Las etiquetas MUST evaluarse después de ese cálculo, reutilizando el saldo obtenido y solo para los clientes incluidos en la lista.
 - **FR-013**: Las etiquetas nuevas MUST evaluarse solo para clientes con saldo pendiente positivo y MUST considerar solo ítems del cliente en órdenes Activas o Entregando. Las órdenes se limitan a la misma organización usada para calcular el saldo, o a todas cuando el saldo es global.
 - **FR-014**: "Productos en camino" MUST mostrarse cuando el cliente tiene al menos un ítem Activo en esas órdenes.
-- **FR-015**: "Sugerir adelanto" MUST mostrarse cuando la suma del precio acordado de los ítems no anulados del cliente en esas órdenes es mayor o igual que su saldo pendiente.
+- **FR-015**: "Sugerir adelanto" MUST mostrarse cuando la suma del precio acordado de los ítems no anulados del cliente en esas órdenes es mayor o igual que su saldo pendiente, **salvo** que corresponda "Entregado – por cobrar" (FR-016). Esa etiqueta tiene prioridad, porque ya no se trata de un adelanto.
 - **FR-016**: "Entregado – por cobrar" MUST mostrarse cuando el cliente tiene al menos un ítem Recibido y ningún ítem Activo en esas órdenes.
-- **FR-017**: Las etiquetas MUST NOT ser excluyentes. Un cliente puede mostrar varias a la vez.
+- **FR-017**: Las etiquetas MUST NOT ser excluyentes. Un cliente puede mostrar varias a la vez. La única excepción es la prioridad de FR-015.
 
 ### Key Entities
 
@@ -119,7 +120,7 @@ En "Saldos de clientes" de la pantalla de Pagos, el usuario ve junto a cada clie
 - **SC-003**: Al anular una orden Entregando con ítems recibidos, el saldo de cada cliente baja exactamente en la suma del precio acordado de sus ítems no anulados de esa orden.
 - **SC-004**: Los saldos mostrados en Saldos de clientes son idénticos antes y después del cambio. Solo cambian las etiquetas.
 - **SC-005**: El usuario identifica, sin abrir órdenes, qué clientes tienen mercadería en camino, a cuáles sugerirles adelanto y cuáles ya recibieron todo y deben. Para cada cliente de prueba las etiquetas coinciden con las reglas en el 100% de los casos.
-- **SC-006**: La lista de Saldos de clientes sigue cargando en un tiempo similar al actual (sin demora perceptible para el usuario).
+- **SC-006**: Con el volumen de datos actual, la lista de Saldos de clientes con sus etiquetas carga en menos de 2 segundos.
 
 ## Assumptions
 
