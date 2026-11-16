@@ -31,7 +31,7 @@ public class OrderService(
     {
         var ids = orderIds.ToList();
         return await context.OrderItems
-            .Where(i => ids.Contains(i.OrderId))
+            .Where(i => ids.Contains(i.OrderId) && i.Status == OrderItemStatus.Active.Key)
             .GroupBy(i => i.OrderId)
             .Select(g => new { OrderId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.OrderId, x => x.Count);
@@ -124,15 +124,34 @@ public class OrderService(
 
     private static void ApplyOrderCalculationSuite(Order order, List<OrderItem> items)
     {
-        order.TotalAgreedPriceInLocal = Math.Round(items.Sum(i => i.AgreedPriceInLocal), 2, MidpointRounding.AwayFromZero);
-        order.ShippingAmountToCR     = Math.Round(items.Sum(i => i.EstimateShipping), 2, MidpointRounding.AwayFromZero);
+        var totals = ComputeOrderTotals(order, items);
+        order.TotalAgreedPriceInLocal = totals.TotalAgreedPriceInLocal;
+        order.ShippingAmountToCR      = totals.ShippingAmountToCR;
+        order.TotalWithoutTaxes       = totals.TotalWithoutTaxes;
+        order.TaxesAmount             = totals.TaxesAmount;
+        order.TotalToPayToSupplier    = totals.TotalToPayToSupplier;
+        order.TotalOfTheOrder         = totals.TotalOfTheOrder;
+        order.EstimatedProfitInLocal  = totals.EstimatedProfitInLocal;
+        order.UpdatedAt               = DateTime.UtcNow;
+    }
+
+    /// <summary>Computes the order totals from the given items, using the order's tax, rate, discount and internal shipping. Pure: it does not modify the order.</summary>
+    /// <param name="order">The order.</param>
+    /// <param name="items">The order items; voided ones are ignored here.</param>
+    /// <returns>The totals.</returns>
+    /// <remarks>The client mirrors this formula in <c>recalcOrderHeader</c> (items.js), used only for Pending orders: keep both in sync.</remarks>
+    private static OrderTotals ComputeOrderTotals(Order order, IEnumerable<OrderItem> items)
+    {
+        var list = items.Where(i => i.Status == OrderItemStatus.Active.Key).ToList();
+        var totalAgreed = Math.Round(list.Sum(i => i.AgreedPriceInLocal), 2, MidpointRounding.AwayFromZero);
+        var shippingToCR = Math.Round(list.Sum(i => i.EstimateShipping), 2, MidpointRounding.AwayFromZero);
         // Spec 018, FR-021: RealPrice now includes tax and shipping, so the subtotal is based on list prices
-        order.TotalWithoutTaxes      = Math.Round(items.Sum(i => i.ListPrice), 2, MidpointRounding.AwayFromZero);
-        order.TaxesAmount            = Math.Round((order.TotalWithoutTaxes - order.DiscountAmount) * (order.TaxPercentage / 100), 2, MidpointRounding.AwayFromZero);
-        order.TotalToPayToSupplier   = Math.Round(order.ShippingAmountIntern + order.TotalWithoutTaxes + order.TaxesAmount - order.DiscountAmount, 2, MidpointRounding.AwayFromZero);
-        order.TotalOfTheOrder        = Math.Round(order.TotalToPayToSupplier + order.ShippingAmountToCR, 2, MidpointRounding.AwayFromZero);
-        order.EstimatedProfitInLocal = Math.Round(order.TotalAgreedPriceInLocal - order.TotalOfTheOrder * order.ExchangeRate, 2, MidpointRounding.AwayFromZero);
-        order.UpdatedAt              = DateTime.UtcNow;
+        var totalWithoutTaxes = Math.Round(list.Sum(i => i.ListPrice), 2, MidpointRounding.AwayFromZero);
+        var taxes = Math.Round((totalWithoutTaxes - order.DiscountAmount) * (order.TaxPercentage / 100), 2, MidpointRounding.AwayFromZero);
+        var toSupplier = Math.Round(order.ShippingAmountIntern + totalWithoutTaxes + taxes - order.DiscountAmount, 2, MidpointRounding.AwayFromZero);
+        var totalOrder = Math.Round(toSupplier + shippingToCR, 2, MidpointRounding.AwayFromZero);
+        var profit = Math.Round(totalAgreed - totalOrder * order.ExchangeRate, 2, MidpointRounding.AwayFromZero);
+        return new OrderTotals(totalAgreed, shippingToCR, totalWithoutTaxes, taxes, toSupplier, totalOrder, profit);
     }
 
     // ── Order Items ───────────────────────────────────────────────────────────
@@ -163,7 +182,7 @@ public class OrderService(
                 i.ProductImage != null, i.ProductTypeId,
                 i.ListPrice, i.ListPriceTaxWithTax, i.RealPrice, i.RealPriceInLocal,
                 i.EstimateShipping, i.ServiceFeeInLocal, i.AgreedPriceInLocal,
-                i.IsReceived, i.CreatedAt, i.UpdatedAt))
+                i.IsReceived, i.CreatedAt, i.UpdatedAt, i.Status))
             .OrderBy(x => x.CustomerDisplayName)
             .ThenByDescending(x => x.CreatedAt)
             .ToList();
@@ -173,6 +192,7 @@ public class OrderService(
     {
         var item = await context.OrderItems.FindAsync(itemId);
         if (item == null) return (false, "Artículo no encontrado.");
+        if (item.Status == OrderItemStatus.Voided.Key) return (false, "No se puede modificar un ítem anulado.");
 
         var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == item.OrderId);
         if (order == null) return (false, "Orden no encontrada.");
@@ -298,7 +318,10 @@ public class OrderService(
         }
         else if (dto.ToStatus == OrderStatus.Voided.Key && previousStatus != OrderStatus.Pending.Key)
         {
-            var items = await context.OrderItems.Where(i => i.OrderId == order.Id).ToListAsync();
+            // Items voided earlier already have their Void transaction (partial void), so they are not voided twice
+            var items = await context.OrderItems
+                .Where(i => i.OrderId == order.Id && i.Status == OrderItemStatus.Active.Key)
+                .ToListAsync();
             foreach (var item in items)
             {
                 context.Transactions.Add(BuildTransaction(order, item, TransactionType.Void.Key));
@@ -361,6 +384,7 @@ public class OrderService(
     {
         var item = await context.OrderItems.FindAsync(itemId);
         if (item == null) return (false, "Ítem no encontrado.");
+        if (item.Status == OrderItemStatus.Voided.Key) return (false, "No se puede reasignar un ítem anulado.");
 
         var order = await context.Orders.FindAsync(item.OrderId);
         if (order == null) return (false, "Orden no encontrada.");
@@ -448,7 +472,7 @@ public class OrderService(
         item.UpdatedAt          = DateTime.UtcNow;
 
         var otherTotal = await context.OrderItems
-            .Where(i => i.OrderId == item.OrderId && i.Id != itemId)
+            .Where(i => i.OrderId == item.OrderId && i.Id != itemId && i.Status == OrderItemStatus.Active.Key)
             .SumAsync(i => i.AgreedPriceInLocal);
         order.TotalAgreedPriceInLocal = Math.Round(otherTotal + newAgreedPriceInLocal, 2);
         order.EstimatedProfitInLocal  = Math.Round(
@@ -459,10 +483,170 @@ public class OrderService(
         return (true, null);
     }
 
-    private Transaction BuildTransaction(Order order, OrderItem item, string type)
+    // ── Partial void of items ────────────────────────────────────────────────
+
+    private const int VoidTextMaxLength = 500;
+    private const int VoidJustificationMaxLength = 1000;
+
+    // Sanity cap per refund line: far above any real refund, far below the decimal(18,2) column limit
+    private const decimal VoidRefundMaxAmount = 1_000_000_000m;
+
+    private static string TruncateText(string text, int max) =>
+        text.Length > max ? text[..max] : text;
+
+    public async Task<(VoidItemsPreviewDto? Preview, string? Error)> PreviewVoidItemsAsync(
+        Guid orderId, IReadOnlyList<Guid> itemIds)
+    {
+        var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+        if (order == null) return (null, "Orden no encontrada.");
+        if (order.Status != OrderStatus.Active.Key)
+            return (null, "Solo se pueden anular ítems de órdenes en estado Activa.");
+        if (itemIds.Count == 0) return (null, "Seleccione al menos un ítem.");
+
+        var items = await context.OrderItems.Where(i => i.OrderId == orderId).ToListAsync();
+        var active = items.Where(i => i.Status == OrderItemStatus.Active.Key).ToList();
+        var selectedIds = itemIds.Distinct().ToHashSet();
+        var selected = active.Where(i => selectedIds.Contains(i.Id)).ToList();
+        if (selected.Count != selectedIds.Count)
+            return (null, "Hay ítems que no pertenecen a la orden o ya están anulados.");
+
+        var before = new OrderTotals(
+            order.TotalAgreedPriceInLocal, order.ShippingAmountToCR, order.TotalWithoutTaxes, order.TaxesAmount,
+            order.TotalToPayToSupplier, order.TotalOfTheOrder, order.EstimatedProfitInLocal);
+        var after = ComputeOrderTotals(order, active.Where(i => !selectedIds.Contains(i.Id)));
+
+        var customerIds = selected.Select(i => i.CustomerId).Distinct().ToList();
+        var customers = await context.Customers.Where(c => customerIds.Contains(c.Id)).ToListAsync();
+        var displayNames = customers.ToDictionary(
+            c => c.Id,
+            c => c.NickName != "" ? c.NickName : (c.Name ?? c.Id.ToString()));
+
+        var lines = selected
+            .Select(i => new VoidPreviewItemDto(
+                i.Id, i.ProductDescription,
+                displayNames.GetValueOrDefault(i.CustomerId, i.CustomerId.ToString()),
+                i.AgreedPriceInLocal, i.ListPriceTaxWithTax))
+            .ToList();
+
+        var preview = new VoidItemsPreviewDto(
+            AllSelected: selected.Count == active.Count,
+            Before: before,
+            After: after,
+            TheoreticalRefund: before.TotalToPayToSupplier - after.TotalToPayToSupplier,
+            Position: await BuildPositionPreviewAsync(order, selected, after),
+            Items: lines);
+        return (preview, null);
+    }
+
+    /// <summary>Components of the CxP Posición change caused by voiding <paramref name="selected"/>; null without an open period.</summary>
+    private async Task<VoidPositionPreviewDto?> BuildPositionPreviewAsync(
+        Order order, List<OrderItem> selected, OrderTotals after)
+    {
+        var period = await cxpService.GetOpenPeriodAsync();
+        if (period == null) return null;
+
+        var indicators = await cxpService.GetPeriodIndicatorsAsync(period.Id);
+        var saldosDelta = -selected.Sum(i => i.AgreedPriceInLocal);
+
+        // Without an exchange rate the indicators ignore debt and shipping, so those terms do not move
+        if (indicators.ExchangeRateWarning)
+            return new VoidPositionPreviewDto(indicators.Posicion, saldosDelta, 0m, 0m);
+
+        var config = await context.Configurations.FirstOrDefaultAsync();
+        var factor = order.CurrencyId == config?.LocalCurrencyId ? 1m : period.ExchangeRate;
+
+        // Same rule as the indicator: pending shipping = max(0, estimated shipping - registered packages)
+        var packages = await context.OrderPackages
+            .Where(p => p.OrderId == order.Id)
+            .SumAsync(p => (decimal?)p.Amount) ?? 0m;
+        var pendingBefore = Math.Max(0m, order.ShippingAmountToCR - packages);
+        var pendingAfter = Math.Max(0m, after.ShippingAmountToCR - packages);
+
+        return new VoidPositionPreviewDto(indicators.Posicion, saldosDelta, (pendingBefore - pendingAfter) * factor, factor);
+    }
+
+    public async Task<(bool Success, string? Error)> VoidItemsAsync(
+        Guid orderId, string? justification, IReadOnlyList<VoidItemLine> lines)
+    {
+        var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+        if (order == null) return (false, "Orden no encontrada.");
+        if (order.Status != OrderStatus.Active.Key)
+            return (false, "Solo se pueden anular ítems de órdenes en estado Activa.");
+        if (lines.Count == 0) return (false, "Seleccione al menos un ítem.");
+
+        var reason = justification?.Trim() ?? string.Empty;
+        if (reason.Length == 0) return (false, "Se requiere justificación para anular ítems.");
+        if (reason.Length > VoidJustificationMaxLength)
+            return (false, $"La justificación no puede superar {VoidJustificationMaxLength} caracteres.");
+        if (lines.Any(l => l.RefundAmount < 0)) return (false, "El monto a devolver no puede ser negativo.");
+        if (lines.Any(l => l.RefundAmount > VoidRefundMaxAmount)) return (false, "El monto a devolver es demasiado grande.");
+
+        var items = await context.OrderItems.Where(i => i.OrderId == orderId).ToListAsync();
+        var active = items.Where(i => i.Status == OrderItemStatus.Active.Key).ToList();
+        var selectedIds = lines.Select(l => l.ItemId).Distinct().ToHashSet();
+        var selected = active.Where(i => selectedIds.Contains(i.Id)).ToList();
+        if (selected.Count != selectedIds.Count || selectedIds.Count != lines.Count)
+            return (false, "Hay ítems que no pertenecen a la orden o ya están anulados.");
+        if (selected.Count == active.Count)
+            return (false, "No se pueden anular todos los ítems; use la anulación de la orden.");
+
+        var period = await cxpService.GetOpenPeriodAsync();
+        if (period == null) return (false, "No hay un período CxP abierto.");
+
+        var currency = await context.Currencies.FirstOrDefaultAsync(c => c.Id == order.CurrencyId);
+        var now = DateTime.UtcNow;
+        var txDate = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(now, "Central America Standard Time");
+
+        foreach (var item in selected)
+        {
+            item.Status = OrderItemStatus.Voided.Key;
+            item.UpdatedAt = now;
+
+            // Same transaction as a full-order void (BuildTransaction), with the justification in the description
+            var description = $"Anulación de ítem – {TruncateText(item.ProductDescription, 100)} – Orden {order.NameOfOrder} – {reason}";
+            context.Transactions.Add(BuildTransaction(order, item, TransactionType.Void.Key, TruncateText(description, VoidTextMaxLength)));
+        }
+
+        ApplyOrderCalculationSuite(order, items);
+
+        var refundTotal = Math.Round(lines.Sum(l => l.RefundAmount), 2, MidpointRounding.AwayFromZero);
+        context.CxPEntries.Add(new CxPEntry
+        {
+            Id = Guid.NewGuid(),
+            PeriodControlId = period.Id,
+            CurrencyId = order.CurrencyId,
+            Amount = refundTotal,
+            Reference = TruncateText($"Anulación ítems: {order.NameOfOrder} – {reason}", VoidTextMaxLength),
+            Type = CxPEntryType.AnulacionItems,
+            OrderId = order.Id,
+            CreatedAt = now
+        });
+
+        context.OrderStatusHistories.Add(new OrderStatusHistory
+        {
+            Id = Guid.NewGuid(),
+            OrderId = order.Id,
+            FromStatus = OrderStatus.Active.Key,
+            ToStatus = OrderStatus.Active.Key,
+            TransitionDate = txDate,
+            Notes = $"Anulación parcial: {selected.Count} ítem(s) – ajuste {currency?.Sign}{refundTotal:N2}",
+            Justification = reason,
+            CreatedAt = now
+        });
+
+        // Single SaveChanges: items, transactions, totals, CxP entry and history are persisted atomically.
+        await context.SaveChangesAsync();
+
+        logger.LogInformation(
+            "Voided {Count} item(s) of order {OrderId} ({Items}); supplier refund {Refund} {Currency}; CxP period {PeriodId}.",
+            selected.Count, order.Id, string.Join(",", selected.Select(i => i.Id)), refundTotal, currency?.Sign, period.Id);
+        return (true, null);
+    }
+
+    private Transaction BuildTransaction(Order order, OrderItem item, string type, string? description = null)
     {
         var config = context.Configurations.FirstOrDefault();
-        var description = type == TransactionType.Charge.Key
+        description ??= type == TransactionType.Charge.Key
             ? $"Cargo – {item.ProductDescription} – Orden {order.NameOfOrder}"
             : $"Anulación – {item.ProductDescription} – Orden {order.NameOfOrder}";
 
