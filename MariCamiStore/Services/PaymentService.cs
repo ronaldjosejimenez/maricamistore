@@ -8,6 +8,11 @@ public class PaymentService(
     MariCamiStoreContext context,
     ICurrentOrganizationService currentOrg) : IPaymentService
 {
+    /// <summary>Order statuses whose items feed the "Saldos de clientes" labels. Listed explicitly: a new status is not considered until added here.</summary>
+    private static readonly string[] OrdersInProgress = { OrderStatus.Active.Key, OrderStatus.Delivering.Key };
+
+    private sealed record CustomerItemStats(Guid CustomerId, int InTransit, int Received, decimal AgreedSum);
+
     public async Task<CustomerBalanceDto?> GetCustomerBalanceAsync(Guid customerId)
     {
         var customer = await context.Customers.FindAsync(customerId);
@@ -76,15 +81,50 @@ public class PaymentService(
                 IsGeneric = c.IsGeneric
             });
 
+        // Labels (spec 021): evaluated AFTER the balance, reusing it, and only for the customers that owe money.
+        var stats = await GetItemStatsAsync(rows.Where(r => r.Balance > 0).Select(r => r.CustomerId).ToList(), organizationId);
+
         return rows.Select(r => {
             var cust = customers.GetValueOrDefault(r.CustomerId);
+            stats.TryGetValue(r.CustomerId, out var s);
+            var inTransit = r.Balance > 0 ? s?.InTransit ?? 0 : 0;
+            var received = r.Balance > 0 ? s?.Received ?? 0 : 0;
+            var deliveredToCollect = received > 0 && inTransit == 0;
+            // "Entregado - por cobrar" wins over "Sugerir adelanto": once everything was received it is no longer an advance.
+            var suggestAdvance = inTransit > 0 && (s?.AgreedSum ?? 0) >= r.Balance;
             return new SaldoReportRow(
                 r.CustomerId,
                 cust?.Name ?? r.CustomerId.ToString(),
                 r.Balance,
-                cust?.IsGeneric ?? false
+                cust?.IsGeneric ?? false,
+                inTransit,
+                suggestAdvance,
+                deliveredToCollect
             );
         }).OrderBy(r => r.CustomerName).ToList();
+    }
+
+    /// <summary>Counts, per customer, the items in Active/Delivering orders that are pending (Active) or received, plus their agreed price.</summary>
+    /// <remarks>Same organization scope as the balance: all organizations when <paramref name="organizationId"/> is null.</remarks>
+    private async Task<Dictionary<Guid, CustomerItemStats>> GetItemStatsAsync(List<Guid> customerIds, Guid? organizationId)
+    {
+        if (customerIds.Count == 0) return [];
+
+        var list = await context.OrderItems
+            .IgnoreQueryFilters()
+            .Where(i => customerIds.Contains(i.CustomerId)
+                     && OrderItemStatus.CountedKeys.Contains(i.Status)
+                     && OrdersInProgress.Contains(i.Order.Status)
+                     && (organizationId == null || i.Order.OrganizationId == organizationId.Value))
+            .GroupBy(i => i.CustomerId)
+            .Select(g => new CustomerItemStats(
+                g.Key,
+                g.Count(i => i.Status == OrderItemStatus.Active.Key),
+                g.Count(i => i.Status == OrderItemStatus.Received.Key),
+                g.Sum(i => i.AgreedPriceInLocal)))
+            .ToListAsync();
+
+        return list.ToDictionary(x => x.CustomerId);
     }
 
     private async Task<decimal> CalcBalanceAsync(Guid customerId, bool ignoreOrgFilter)

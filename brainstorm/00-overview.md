@@ -25,6 +25,7 @@ Last updated: 2026-11-15
 | 17 | 2026-10-19 | ajustes-ordenes-metas-clientes | implemented | specs/017-ajustes-ordenes-metas-clientes |
 | 18 | 2026-10-25 | defaults-proveedor-calculadora | implemented | specs/018-defaults-proveedor-calculadora |
 | 19 | 2026-11-15 | anulacion-items-orden | implemented | specs/020-anulacion-items-orden |
+| 20 | 2026-11-15 | indicadores-registro-pago | spec-created | specs/021-indicadores-registro-pago |
 
 ## Open Threads
 
@@ -38,6 +39,9 @@ Last updated: 2026-11-15
 - Confirmar que la migración `RemoveDeliveredOrderStatus` se aplicó en producción (0 órdenes en Delivered) (from #17)
 - `GetOrderStatusHistoryAsync` no filtra por organización; revisar con la autenticación (from #17)
 - ¿Limpiar el tipo CxP `AutoDelivered` (sin uso)? (from #17)
+- ¿Etiquetas de Saldos también en clientes con crédito a favor? Propuesta: solo saldo positivo (from #20)
+- ¿Etiquetas de Saldos respetan el filtro de organización / "Ver saldo completo"? (from #20)
+- ¿Etiquetas en clientes genéricos (especulativos)? (from #20)
 - Confirmar que la migración `SupplierDefaultsAndRealPriceInLocal` se aplicó en producción y revisar las órdenes Pendientes con ítems previos a la 018 (from #18)
 - ¿Migrar `ReversoPaquete` (monto negativo) al esquema "tipo que resta" con monto positivo? (from #19)
 - ¿`ShippingAmountIntern` y `DiscountAmount` quedan intactos al anular ítems? (from #19)
