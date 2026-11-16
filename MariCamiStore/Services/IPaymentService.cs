@@ -13,4 +13,11 @@ public interface IPaymentService
     Task<List<SaldoReportRow>> GetSaldosReportAsync(Guid? organizationId);
 }
 
-public record SaldoReportRow(Guid CustomerId, string CustomerName, decimal Balance, bool IsGeneric);
+/// <summary>A row of "Saldos de clientes".</summary>
+/// <param name="ItemsInTransit">Items still pending reception (Active) in the customer's Active/Delivering orders.</param>
+/// <param name="SuggestAdvance">The customer's pending items add up to at least the balance, so an advance is worth asking for.</param>
+/// <param name="DeliveredToCollect">Everything in the customer's Active/Delivering orders was received and a balance remains.</param>
+/// <remarks>The three label fields are only evaluated when <c>Balance &gt; 0</c>; otherwise they are 0 / false.</remarks>
+public record SaldoReportRow(
+    Guid CustomerId, string CustomerName, decimal Balance, bool IsGeneric,
+    int ItemsInTransit, bool SuggestAdvance, bool DeliveredToCollect);
