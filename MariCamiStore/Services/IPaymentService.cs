@@ -15,7 +15,7 @@ public interface IPaymentService
 
 /// <summary>A row of "Saldos de clientes".</summary>
 /// <param name="ItemsInTransit">Items still pending reception (Active) in the customer's Active/Delivering orders.</param>
-/// <param name="SuggestAdvance">The customer's pending items add up to at least the balance, so an advance is worth asking for.</param>
+/// <param name="SuggestAdvance">The customer's balance is at least the sum of the pending items, i.e. nothing has been contributed yet, so an advance is worth asking for.</param>
 /// <param name="DeliveredToCollect">A balance remains and nothing is left to deliver in the customer's Active/Delivering orders (also when it has none).</param>
 /// <remarks>The three label fields are only evaluated when <c>Balance &gt; 0</c>; otherwise they are 0 / false.</remarks>
 public record SaldoReportRow(

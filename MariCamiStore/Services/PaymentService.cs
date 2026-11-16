@@ -90,8 +90,8 @@ public class PaymentService(
             var inTransit = r.Balance > 0 ? s?.InTransit ?? 0 : 0;
             // Nothing left to deliver in the customer's Active/Delivering orders (also true when it has none): the balance is plain debt.
             var deliveredToCollect = r.Balance > 0 && inTransit == 0;
-            // Needs items pending reception, so it never coincides with "Entregado - por cobrar".
-            var suggestAdvance = inTransit > 0 && (s?.AgreedSum ?? 0) >= r.Balance;
+            // Nothing has been contributed yet: the balance covers all the pending items. Needs items pending reception, so it never coincides with "Entregado - por cobrar".
+            var suggestAdvance = inTransit > 0 && r.Balance >= (s?.AgreedSum ?? 0);
             return new SaldoReportRow(
                 r.CustomerId,
                 cust?.Name ?? r.CustomerId.ToString(),

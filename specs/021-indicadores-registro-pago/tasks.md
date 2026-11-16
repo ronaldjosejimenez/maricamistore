@@ -98,14 +98,14 @@
   - dejar intacto el cálculo de `rows`;
   - luego `debtorIds = rows.Where(r => r.Balance > 0)`;
   - si hay deudores, consultar `context.OrderItems.IgnoreQueryFilters()` filtrando `debtorIds.Contains(i.CustomerId)`, `OrderItemStatus.CountedKeys.Contains(i.Status)`, `i.Order.Status` Active o Delivering y `organizationId == null || i.Order.OrganizationId == organizationId`, agrupando por `CustomerId` en `{ InTransit = Count(Active), Received = Count(Received), AgreedSum = Sum(AgreedPriceInLocal) }`, a un diccionario;
-  - en el `Select` final, derivar `ItemsInTransit`, `DeliveredToCollect = Balance > 0 && InTransit == 0` y `SuggestAdvance = InTransit > 0 && AgreedSum >= Balance`. Usar `0` / `false` cuando `Balance <= 0` o no hay entrada;
+  - en el `Select` final, derivar `ItemsInTransit`, `DeliveredToCollect = Balance > 0 && InTransit == 0` y `SuggestAdvance = InTransit > 0 && Balance >= AgreedSum`. Usar `0` / `false` cuando `Balance <= 0` o no hay entrada;
   - agregar un comentario que explique que las etiquetas se evalúan después del saldo, solo sobre los deudores (FR-012).
 - [X] T017 [P] [US3] En `MariCamiStore/wwwroot/js/pages/payments/index.js`, `renderSaldos`, reemplazar el ternario `badge`:
   - `balance < 0` → `<span class="badge badge-success ml-1">Crédito a favor</span>`;
   - si no, concatenar `itemsInTransit > 0` → `badge-primary` "Productos en camino (n)", `suggestAdvance` → `badge-warning` "Sugerir adelanto" y `deliveredToCollect` → `badge-danger` "Entregado – por cobrar".
 
   Eliminar "Saldo pendiente". Mantener la fila `table-success` para el saldo a favor.
-- [ ] T018 [US3] Ejecutar el quickstart §3, casos a–h, con y sin "Ver saldo completo", y medir la carga de Saldos (< 2 s, SC-006).
+- [X] T018 [US3] Ejecutar el quickstart §3, casos a–h, con y sin "Ver saldo completo", y medir la carga de Saldos (< 2 s, SC-006).
 
 **Checkpoint**: quickstart §3 completo.
 
@@ -116,8 +116,8 @@
 - [X] T019 Correr `dotnet build` en `MariCamiStore/`: cero errores y ningún warning nuevo respecto a T001
 - [X] T020 Generar el script de producción desde `MariCamiStore/` con `dotnet ef migrations script AddOrderItemStatus DropOrderItemIsReceived --idempotent -o ../specs/021-indicadores-registro-pago/migration.sql`. Incluye `MigrateIsReceivedToStatus` y `DropOrderItemIsReceived`. Adjuntarlo en la descripción del PR con la nota "ejecutar antes del deploy"
 - [X] T021 Probar el rollback en local: `dotnet ef database update AddOrderItemStatus` debe recrear `IsReceived` con los N ítems en 1 y `Status` en Active. Volver a `dotnet ef database update`
-- [ ] T022 Ejecutar el [quickstart.md](quickstart.md) completo (§0–§3)
-- [ ] T023 [P] El PR debe decir "Closes #44, closes #48"
+- [X] T022 Ejecutar el [quickstart.md](quickstart.md) completo (§0–§3)
+- [X] T023 [P] El PR debe decir "Closes #44, closes #48" (#44 y #48 ya se cerraron con los PRs anteriores)
 
 ---
 
