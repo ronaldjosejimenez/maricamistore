@@ -60,7 +60,7 @@ Fuentes:
 - Se **quita** "Saldo pendiente". "Crédito a favor" se mantiene.
 - **"Productos en camino"**: el cliente tiene al menos un ítem con `Status = Active` en órdenes `Active` o `Delivering`.
 - **"Sugerir adelanto"**: la suma del precio acordado (`AgreedPriceInLocal`) de los ítems no anulados del cliente en órdenes `Active` o `Delivering` es mayor o igual a su saldo pendiente.
-- **"Entregado – por cobrar"**: el cliente tiene saldo pendiente, al menos un ítem `Received` en órdenes `Active` o `Delivering` y ningún ítem `Active` en esas órdenes. Solo mira órdenes: un saldo que viene de transacciones manuales u órdenes `Completed` no genera la etiqueta.
+- **"Entregado – por cobrar"**: el cliente tiene saldo pendiente y ningún ítem `Active` en órdenes `Active` o `Delivering` (regla literal del issue #44). No exige ítems `Received`: un saldo que viene de órdenes `Completed` o de transacciones manuales también la muestra. Ajustado después del primer PR, a partir de un caso real (cliente con todas sus órdenes `Completed`).
 
 ### Pipeline
 - **El cálculo del saldo no cambia.** Las etiquetas se calculan **después**, reutilizando el saldo ya calculado y solo para los clientes que salen en la lista.

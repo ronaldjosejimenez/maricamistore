@@ -13,6 +13,7 @@
 ### Session 2026-11-15
 
 - Q: ¿La etiqueta "Productos en camino" muestra la cantidad de ítems? → A: Sí, el texto incluye la cantidad de ítems Activos, por ejemplo "Productos en camino (3)".
+- Q: ¿"Entregado – por cobrar" exige tener ítems Recibidos? → A: No. Se aplica la regla del issue #44: saldo pendiente y ningún ítem Activo en órdenes Activas o Entregando. Incluye a los clientes sin órdenes en curso (órdenes Completadas o transacciones manuales). Caso real: un cliente con todas sus órdenes Completadas y saldo pendiente no mostraba la etiqueta.
 - Q: ¿Qué colores usan las etiquetas nuevas? → A: "Productos en camino" en azul (informativa), "Sugerir adelanto" en amarillo (alerta) y "Entregado – por cobrar" en rojo (urgente). "Crédito a favor" sigue en verde.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -53,7 +54,7 @@ Un ítem recibido sigue siendo parte de la orden con todos sus efectos. Cuenta e
 
 ### User Story 3 - Etiquetas informativas en Saldos de clientes (Priority: P2)
 
-En "Saldos de clientes" de la pantalla de Pagos, el usuario ve junto a cada cliente con saldo pendiente unas etiquetas que explican su situación. **"Productos en camino"** indica que el cliente tiene mercadería por recibir. **"Sugerir adelanto"** indica que conviene pedirle un anticipo; la práctica comercial es 50% al ordenar y 50% al recibir, como guía y no como bloqueo. **"Entregado – por cobrar"** indica que ya recibió todo lo de sus órdenes en curso y falta cobrar. Un cliente puede tener varias etiquetas a la vez. La etiqueta "Saldo pendiente" desaparece.
+En "Saldos de clientes" de la pantalla de Pagos, el usuario ve junto a cada cliente con saldo pendiente unas etiquetas que explican su situación. **"Productos en camino"** indica que el cliente tiene mercadería por recibir. **"Sugerir adelanto"** indica que conviene pedirle un anticipo; la práctica comercial es 50% al ordenar y 50% al recibir, como guía y no como bloqueo. **"Entregado – por cobrar"** indica que ya no le queda nada por recibir en sus órdenes en curso y falta cobrar. Un cliente puede tener varias etiquetas a la vez. La etiqueta "Saldo pendiente" desaparece.
 
 **Why this priority**: Es el valor visible del requerimiento, pero depende de las historias 1 y 2.
 
@@ -65,8 +66,8 @@ En "Saldos de clientes" de la pantalla de Pagos, el usuario ve junto a cada clie
 2. **Given** un cliente con saldo pendiente y al menos un ítem Activo en una orden Activa o Entregando, **When** se muestra la lista, **Then** aparece "Productos en camino" con la cantidad de esos ítems Activos. Por ejemplo, con 3 ítems Activos en dos órdenes se ve "Productos en camino (3)".
 3. **Given** un cliente con saldo pendiente de 50.000, cuyos ítems no anulados en órdenes Activas o Entregando suman 60.000 en precio acordado, **When** se muestra la lista, **Then** aparece "Sugerir adelanto". Si suman exactamente 50.000, también aparece.
 4. **Given** el mismo cliente, pero sus ítems suman 40.000, **When** se muestra la lista, **Then** no aparece "Sugerir adelanto".
-5. **Given** un cliente con saldo pendiente, al menos un ítem Recibido en órdenes Activas o Entregando y ningún ítem Activo en esas órdenes, **When** se muestra la lista, **Then** aparece "Entregado – por cobrar".
-6. **Given** un cliente con saldo pendiente que solo proviene de transacciones manuales u órdenes Completadas, sin ítems en órdenes Activas o Entregando, **When** se muestra la lista, **Then** no aparece ninguna de las tres etiquetas nuevas.
+5. **Given** un cliente con saldo pendiente y ningún ítem Activo en órdenes Activas o Entregando (por ejemplo, todos sus ítems están Recibidos), **When** se muestra la lista, **Then** aparece "Entregado – por cobrar".
+6. **Given** un cliente con saldo pendiente que proviene de órdenes Completadas o de transacciones manuales, sin ítems en órdenes Activas o Entregando, **When** se muestra la lista, **Then** aparece "Entregado – por cobrar" y no aparecen "Productos en camino" ni "Sugerir adelanto".
 7. **Given** un cliente con un ítem Activo en una orden Activa y un ítem Recibido en una orden Entregando, **When** se muestra la lista, **Then** aparece "Productos en camino" y no aparece "Entregado – por cobrar".
 8. **Given** un cliente que recibió todos sus ítems en órdenes Activas o Entregando (suman 100.000) y debe 50.000, **When** se muestra la lista, **Then** aparece "Entregado – por cobrar" y **no** aparece "Sugerir adelanto", aunque la suma sea mayor que el saldo.
 
@@ -75,7 +76,7 @@ En "Saldos de clientes" de la pantalla de Pagos, el usuario ve junto a cada clie
 ### Edge Cases
 
 - **Ítem marcado como recibido y luego anulado:** no puede ocurrir. La anulación parcial solo aplica a órdenes Activas y la recepción solo a órdenes Entregando. Aun así, la conversión de datos no pasa a Recibido ningún ítem que ya esté Anulado.
-- **Órdenes Completadas o Anuladas con ítems recibidos:** sus ítems también pasan a Recibido en la conversión. No influyen en las etiquetas, porque las etiquetas solo miran órdenes Activas o Entregando.
+- **Órdenes Completadas o Anuladas con ítems recibidos:** sus ítems también pasan a Recibido en la conversión. No influyen en "Productos en camino" ni en "Sugerir adelanto", que solo miran órdenes Activas o Entregando. Un cliente que solo tiene órdenes Completadas y aún debe muestra "Entregado – por cobrar".
 - **Cliente con saldo a favor (negativo):** solo muestra "Crédito a favor". Las etiquetas nuevas se evalúan únicamente con saldo pendiente positivo.
 - **Filtro de organización:** las etiquetas consideran las órdenes de la misma organización que se usa para calcular el saldo mostrado. Con la vista de saldo completo se consideran todas las organizaciones.
 - **Cliente genérico (especulativo):** se le aplican las mismas reglas que a cualquier otro cliente.
@@ -108,9 +109,9 @@ En "Saldos de clientes" de la pantalla de Pagos, el usuario ve junto a cada clie
 - **FR-012**: El saldo de cada cliente MUST seguir calculándose exactamente como hoy. Las etiquetas MUST evaluarse después de ese cálculo, reutilizando el saldo obtenido y solo para los clientes incluidos en la lista.
 - **FR-013**: Las etiquetas nuevas MUST evaluarse solo para clientes con saldo pendiente positivo y MUST considerar solo ítems del cliente en órdenes Activas o Entregando. Las órdenes se limitan a la misma organización usada para calcular el saldo, o a todas cuando el saldo es global.
 - **FR-014**: "Productos en camino" MUST mostrarse cuando el cliente tiene al menos un ítem Activo en esas órdenes. El texto MUST incluir la cantidad de esos ítems, por ejemplo "Productos en camino (3)".
-- **FR-015**: "Sugerir adelanto" MUST mostrarse cuando la suma del precio acordado de los ítems no anulados del cliente en esas órdenes es mayor o igual que su saldo pendiente, **salvo** que corresponda "Entregado – por cobrar" (FR-016). Esa etiqueta tiene prioridad, porque ya no se trata de un adelanto.
-- **FR-016**: "Entregado – por cobrar" MUST mostrarse cuando el cliente tiene al menos un ítem Recibido y ningún ítem Activo en esas órdenes.
-- **FR-017**: Las etiquetas MUST NOT ser excluyentes. Un cliente puede mostrar varias a la vez. La única excepción es la prioridad de FR-015.
+- **FR-015**: "Sugerir adelanto" MUST mostrarse cuando el cliente tiene al menos un ítem Activo en esas órdenes y la suma del precio acordado de sus ítems no anulados en ellas es mayor o igual que su saldo pendiente. Por eso nunca coincide con "Entregado – por cobrar", que aplica cuando ya no le queda nada por entregar.
+- **FR-016**: "Entregado – por cobrar" MUST mostrarse cuando el cliente tiene saldo pendiente y ningún ítem Activo en órdenes Activas o Entregando. Aplica también cuando no tiene ninguna orden en curso, por ejemplo si su saldo viene de órdenes Completadas o de transacciones manuales.
+- **FR-017**: Las etiquetas MUST NOT ser excluyentes. Un cliente puede mostrar varias a la vez; solo "Productos en camino" y "Entregado – por cobrar" no coinciden nunca, porque dependen de tener o no ítems Activos.
 - **FR-018**: Cada etiqueta MUST tener un color propio según su urgencia: "Productos en camino" en azul, "Sugerir adelanto" en amarillo y "Entregado – por cobrar" en rojo. "Crédito a favor" se mantiene en verde.
 
 ### Key Entities

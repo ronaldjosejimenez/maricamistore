@@ -34,8 +34,8 @@ SaldoReportRow(Guid CustomerId, string CustomerName, decimal Balance, bool IsGen
 | Campo | Regla |
 |-------|-------|
 | `ItemsInTransit` | Cantidad de ítems `Active` |
-| `DeliveredToCollect` | `Received > 0 && ItemsInTransit == 0` |
-| `SuggestAdvance` | `!DeliveredToCollect && Σ AgreedPriceInLocal ≥ Balance` (con al menos un ítem) |
+| `DeliveredToCollect` | `Balance > 0 && ItemsInTransit == 0` (también sin ninguna orden en curso) |
+| `SuggestAdvance` | `ItemsInTransit > 0 && Σ AgreedPriceInLocal ≥ Balance` |
 
 ## Migraciones (en orden)
 1. `MigrateIsReceivedToStatus`: solo datos. Up: `IsReceived = 1 AND Status <> 'Voided'` → `Status = 'Received'`. Down: `Status = 'Received'` → `IsReceived = 1, Status = 'Active'`.
