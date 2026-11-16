@@ -8,6 +8,13 @@
 
 **Input**: User description: "Indicadores en Saldos de clientes y estado Recibido de los ítems (issues #44 y #48). Fuente: brainstorm/20-indicadores-registro-pago.md."
 
+## Clarifications
+
+### Session 2026-11-15
+
+- Q: ¿La etiqueta "Productos en camino" muestra la cantidad de ítems? → A: Sí, el texto incluye la cantidad de ítems Activos, por ejemplo "Productos en camino (3)".
+- Q: ¿Qué colores usan las etiquetas nuevas? → A: "Productos en camino" en azul (informativa), "Sugerir adelanto" en amarillo (alerta) y "Entregado – por cobrar" en rojo (urgente). "Crédito a favor" sigue en verde.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Marcar ítems como recibidos mediante su estado (Priority: P1)
@@ -55,7 +62,7 @@ En "Saldos de clientes" de la pantalla de Pagos, el usuario ve junto a cada clie
 **Acceptance Scenarios**:
 
 1. **Given** cualquier cliente en Saldos de clientes, **When** se muestra la lista, **Then** ya no aparece la etiqueta "Saldo pendiente". Los clientes con saldo a favor siguen mostrando "Crédito a favor".
-2. **Given** un cliente con saldo pendiente y al menos un ítem Activo en una orden Activa o Entregando, **When** se muestra la lista, **Then** aparece "Productos en camino".
+2. **Given** un cliente con saldo pendiente y al menos un ítem Activo en una orden Activa o Entregando, **When** se muestra la lista, **Then** aparece "Productos en camino" con la cantidad de esos ítems Activos. Por ejemplo, con 3 ítems Activos en dos órdenes se ve "Productos en camino (3)".
 3. **Given** un cliente con saldo pendiente de 50.000, cuyos ítems no anulados en órdenes Activas o Entregando suman 60.000 en precio acordado, **When** se muestra la lista, **Then** aparece "Sugerir adelanto". Si suman exactamente 50.000, también aparece.
 4. **Given** el mismo cliente, pero sus ítems suman 40.000, **When** se muestra la lista, **Then** no aparece "Sugerir adelanto".
 5. **Given** un cliente con saldo pendiente, al menos un ítem Recibido en órdenes Activas o Entregando y ningún ítem Activo en esas órdenes, **When** se muestra la lista, **Then** aparece "Entregado – por cobrar".
@@ -100,10 +107,11 @@ En "Saldos de clientes" de la pantalla de Pagos, el usuario ve junto a cada clie
 - **FR-011**: La etiqueta "Saldo pendiente" MUST eliminarse. "Crédito a favor" se mantiene.
 - **FR-012**: El saldo de cada cliente MUST seguir calculándose exactamente como hoy. Las etiquetas MUST evaluarse después de ese cálculo, reutilizando el saldo obtenido y solo para los clientes incluidos en la lista.
 - **FR-013**: Las etiquetas nuevas MUST evaluarse solo para clientes con saldo pendiente positivo y MUST considerar solo ítems del cliente en órdenes Activas o Entregando. Las órdenes se limitan a la misma organización usada para calcular el saldo, o a todas cuando el saldo es global.
-- **FR-014**: "Productos en camino" MUST mostrarse cuando el cliente tiene al menos un ítem Activo en esas órdenes.
+- **FR-014**: "Productos en camino" MUST mostrarse cuando el cliente tiene al menos un ítem Activo en esas órdenes. El texto MUST incluir la cantidad de esos ítems, por ejemplo "Productos en camino (3)".
 - **FR-015**: "Sugerir adelanto" MUST mostrarse cuando la suma del precio acordado de los ítems no anulados del cliente en esas órdenes es mayor o igual que su saldo pendiente, **salvo** que corresponda "Entregado – por cobrar" (FR-016). Esa etiqueta tiene prioridad, porque ya no se trata de un adelanto.
 - **FR-016**: "Entregado – por cobrar" MUST mostrarse cuando el cliente tiene al menos un ítem Recibido y ningún ítem Activo en esas órdenes.
 - **FR-017**: Las etiquetas MUST NOT ser excluyentes. Un cliente puede mostrar varias a la vez. La única excepción es la prioridad de FR-015.
+- **FR-018**: Cada etiqueta MUST tener un color propio según su urgencia: "Productos en camino" en azul, "Sugerir adelanto" en amarillo y "Entregado – por cobrar" en rojo. "Crédito a favor" se mantiene en verde.
 
 ### Key Entities
 
