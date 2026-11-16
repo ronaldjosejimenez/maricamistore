@@ -55,7 +55,7 @@
      ```
   3. Por cliente:
      - `deliveredToCollect = Balance > 0 && InTransit == 0` (un deudor sin ítems en curso también cuenta);
-     - `suggestAdvance = InTransit > 0 && Sum >= Balance`;
+     - `suggestAdvance = InTransit > 0 && Balance >= Sum`;
      - `itemsInTransit = InTransit`.
 - **Rationale**:
   - `IgnoreQueryFilters` + `organizationId` replica exactamente el alcance que usa el saldo, tanto con "Ver saldo completo" como sin él (FR-013).
@@ -64,7 +64,7 @@
 - **Alternatives**:
   - Calcular en JS. Se descarta porque llevaría ítems al cliente y dejaría reglas de negocio en la UI.
   - Una subconsulta dentro del `GroupBy` de transacciones. Se descarta porque mezcla el cálculo del saldo con el de las etiquetas, y FR-012 pide separarlos.
-- `suggestAdvance` exige al menos un ítem en esas órdenes. Sin ítems la suma es 0, y como `Balance > 0`, la condición ya es falsa; la cláusula extra solo hace explícita la intención.
+- `suggestAdvance` exige al menos un ítem en esas órdenes. Sin ítems la suma es 0 y, como `Balance > 0`, la comparación `Balance >= Sum` sería verdadera: la cláusula `InTransit > 0` es necesaria para no marcar a los clientes sin nada pendiente.
 
 ## R6. Presentación
 - **Decision**: `SaldoReportRow` gana `int ItemsInTransit`, `bool SuggestAdvance` y `bool DeliveredToCollect`. `renderSaldos` (en `payments/index.js`) pinta:

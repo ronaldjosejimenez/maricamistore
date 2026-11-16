@@ -98,7 +98,7 @@
   - dejar intacto el cálculo de `rows`;
   - luego `debtorIds = rows.Where(r => r.Balance > 0)`;
   - si hay deudores, consultar `context.OrderItems.IgnoreQueryFilters()` filtrando `debtorIds.Contains(i.CustomerId)`, `OrderItemStatus.CountedKeys.Contains(i.Status)`, `i.Order.Status` Active o Delivering y `organizationId == null || i.Order.OrganizationId == organizationId`, agrupando por `CustomerId` en `{ InTransit = Count(Active), Received = Count(Received), AgreedSum = Sum(AgreedPriceInLocal) }`, a un diccionario;
-  - en el `Select` final, derivar `ItemsInTransit`, `DeliveredToCollect = Balance > 0 && InTransit == 0` y `SuggestAdvance = InTransit > 0 && AgreedSum >= Balance`. Usar `0` / `false` cuando `Balance <= 0` o no hay entrada;
+  - en el `Select` final, derivar `ItemsInTransit`, `DeliveredToCollect = Balance > 0 && InTransit == 0` y `SuggestAdvance = InTransit > 0 && Balance >= AgreedSum`. Usar `0` / `false` cuando `Balance <= 0` o no hay entrada;
   - agregar un comentario que explique que las etiquetas se evalúan después del saldo, solo sobre los deudores (FR-012).
 - [X] T017 [P] [US3] En `MariCamiStore/wwwroot/js/pages/payments/index.js`, `renderSaldos`, reemplazar el ternario `badge`:
   - `balance < 0` → `<span class="badge badge-success ml-1">Crédito a favor</span>`;
