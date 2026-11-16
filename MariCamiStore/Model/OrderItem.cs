@@ -73,6 +73,10 @@ public class OrderItem
 
     public bool IsReceived { get; set; }
 
+    /// <summary>Gets or sets the item status (<see cref="OrderItemStatus"/> key).</summary>
+    /// <value>The status.</value>
+    public string Status { get; set; } = OrderItemStatus.Active.Key;
+
     /// <summary>Gets or sets the Date/Time of the created at.</summary>
     /// <value>The created at.</value>
     public DateTime CreatedAt { get; set; }

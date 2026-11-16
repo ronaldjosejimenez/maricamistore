@@ -21,6 +21,7 @@ public record CxPPeriodIndicatorsDto(
     bool IsClosed,
     bool ExchangeRateWarning);
 
+/// <summary>A CxP entry for display. <c>Amount</c> is signed: negative for the entries that subtract (see <see cref="MariCamiStore.Model.CxPEntryType.SignedAmount"/>).</summary>
 public record CxPEntryDto(
     Guid Id,
     Guid CurrencyId,

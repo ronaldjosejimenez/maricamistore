@@ -207,6 +207,8 @@ public class ItemsModel(
             .FirstOrDefault(i => i.Id == dto.Id);
         if (existing == null)
             return new JsonResult(new { error = "Artículo no encontrado." });
+        if (existing.Status == OrderItemStatus.Voided.Key)
+            return new JsonResult(new { error = "No se puede modificar un ítem anulado." });
 
         byte[]? imageBytes = existing.ProductImage;
         if (dto.ProductImageBase64 == string.Empty)
@@ -294,6 +296,44 @@ public class ItemsModel(
             await orderService.RecalcItemsOnOrderSaveAsync(dto.OrderId, dto.TaxPercentage, dto.ExchangeRate, rateChanged);
 
         return new JsonResult(new { success = true });
+    }
+
+    // ── Partial void of items (spec 020) ─────────────────────────────────────
+
+    public record VoidItemsPreviewRequest(Guid OrderId, List<Guid>? ItemIds);
+
+    public record VoidItemsRequest(Guid OrderId, string? Justification, List<VoidItemLine>? Items);
+
+    public async Task<JsonResult> OnPostVoidItemsPreviewAsync([FromBody] VoidItemsPreviewRequest? request)
+    {
+        if (request == null)
+            return new JsonResult(new { success = false, error = "Solicitud inválida." });
+
+        var (preview, error) = await orderService.PreviewVoidItemsAsync(request.OrderId, request.ItemIds ?? []);
+        if (preview == null)
+            return new JsonResult(new { success = false, error });
+
+        return new JsonResult(new
+        {
+            success = true,
+            error = (string?)null,
+            preview.AllSelected,
+            preview.Before,
+            preview.After,
+            preview.TheoreticalRefund,
+            preview.Position,
+            preview.Items
+        });
+    }
+
+    public async Task<JsonResult> OnPostVoidItemsAsync([FromBody] VoidItemsRequest? request)
+    {
+        if (request == null)
+            return new JsonResult(new { success = false, error = "Solicitud inválida." });
+
+        var (success, error) = await orderService.VoidItemsAsync(
+            request.OrderId, request.Justification, request.Items ?? []);
+        return new JsonResult(new { success, error });
     }
 
     public record DeleteRequest(Guid Id);
