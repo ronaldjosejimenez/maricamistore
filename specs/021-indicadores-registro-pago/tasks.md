@@ -14,8 +14,8 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Correr `dotnet build` en `MariCamiStore/` antes de los cambios y anotar los warnings que ya existen
-- [ ] T002 En la BD local, **antes** de cualquier migración, anotar lo que pide el [quickstart.md](quickstart.md) §0:
+- [X] T001 Correr `dotnet build` en `MariCamiStore/` antes de los cambios y anotar los warnings que ya existen
+- [X] T002 En la BD local, **antes** de cualquier migración, anotar lo que pide el [quickstart.md](quickstart.md) §0:
   - el conteo `IsReceived = 1 AND Status <> 'Voided'` (N);
   - los totales de las órdenes;
   - los saldos de Saldos de clientes, con y sin "Ver saldo completo";
@@ -27,11 +27,11 @@
 
 **Purpose**: nuevo estado, la regla "no anulado" (research R1, R2) y la migración de datos (R4).
 
-- [ ] T003 [P] En `MariCamiStore/Model/OrderItemStatus.cs`:
+- [X] T003 [P] En `MariCamiStore/Model/OrderItemStatus.cs`:
   - agregar `public static OrderItemStatus Received = new OrderItemStatus(nameof(Received), "Recibido");` entre `Active` y `Voided`, con comentario XML ("The item was received by the customer; it still counts towards the order.");
   - cambiar `List()` a `new[] { Active, Received, Voided }`;
   - ajustar el comentario de `Active` para que diga "pendiente de recibir" ("The item is valid, counts towards the order and is pending reception.").
-- [ ] T004 [P] En `MariCamiStore/Services/OrderService.cs` cambiar `i.Status == OrderItemStatus.Active.Key` por `i.Status != OrderItemStatus.Voided.Key` en:
+- [X] T004 [P] En `MariCamiStore/Services/OrderService.cs` cambiar `i.Status == OrderItemStatus.Active.Key` por `i.Status != OrderItemStatus.Voided.Key` en:
   - `GetOrderItemCountsAsync`;
   - `ComputeOrderTotals` (la lista `list`);
   - `TransitionOrderAsync`, rama `ToStatus == Voided` (ajustar el comentario: "Items voided earlier already have their Void transaction; Active and Received items are voided now");
@@ -39,7 +39,7 @@
   - `PreviewVoidItemsAsync` y `VoidItemsAsync` (la lista `active`, que pasa a llamarse `notVoided`, incluido su uso en `selected.Count == ...`).
 
   Confirmar con `grep "OrderItemStatus.Active.Key"` que solo queden el default del modelo y el de la configuración. T007 agrega uno más, en `SetItemReceivedAsync`.
-- [ ] T005 Con el modelo **todavía** con `IsReceived`, correr `dotnet ef migrations add MigrateIsReceivedToStatus` desde `MariCamiStore/`. Debe salir vacía. Completar `Up` y `Down` en `MariCamiStore/Infrastructure/Persistance/Migrations/<ts>_MigrateIsReceivedToStatus.cs`, con el SQL de research R4 y un comentario al estilo de `20261019231103_RemoveDeliveredOrderStatus.cs`: migración solo de datos (spec 021), SQL crudo que se salta el filtro de organización, no toca `UpdatedAt` y su Down es reversible mientras exista la columna.
+- [X] T005 Con el modelo **todavía** con `IsReceived`, correr `dotnet ef migrations add MigrateIsReceivedToStatus` desde `MariCamiStore/`. Debe salir vacía. Completar `Up` y `Down` en `MariCamiStore/Infrastructure/Persistance/Migrations/<ts>_MigrateIsReceivedToStatus.cs`, con el SQL de research R4 y un comentario al estilo de `20261019231103_RemoveDeliveredOrderStatus.cs`: migración solo de datos (spec 021), SQL crudo que se salta el filtro de organización, no toca `UpdatedAt` y su Down es reversible mientras exista la columna.
   - Up: `UPDATE dbo.OrderItems SET Status = 'Received' WHERE IsReceived = 1 AND Status <> 'Voided';`
   - Down: `UPDATE dbo.OrderItems SET IsReceived = 1, Status = 'Active' WHERE Status = 'Received';`
 

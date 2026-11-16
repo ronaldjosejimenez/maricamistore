@@ -31,7 +31,7 @@ public class OrderService(
     {
         var ids = orderIds.ToList();
         return await context.OrderItems
-            .Where(i => ids.Contains(i.OrderId) && i.Status == OrderItemStatus.Active.Key)
+            .Where(i => ids.Contains(i.OrderId) && i.Status != OrderItemStatus.Voided.Key)
             .GroupBy(i => i.OrderId)
             .Select(g => new { OrderId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.OrderId, x => x.Count);
@@ -137,12 +137,12 @@ public class OrderService(
 
     /// <summary>Computes the order totals from the given items, using the order's tax, rate, discount and internal shipping. Pure: it does not modify the order.</summary>
     /// <param name="order">The order.</param>
-    /// <param name="items">The order items; voided ones are ignored here.</param>
+    /// <param name="items">The order items; voided ones are ignored, Active and Received ones count.</param>
     /// <returns>The totals.</returns>
     /// <remarks>The client mirrors this formula in <c>recalcOrderHeader</c> (items.js), used only for Pending orders: keep both in sync.</remarks>
     private static OrderTotals ComputeOrderTotals(Order order, IEnumerable<OrderItem> items)
     {
-        var list = items.Where(i => i.Status == OrderItemStatus.Active.Key).ToList();
+        var list = items.Where(i => i.Status != OrderItemStatus.Voided.Key).ToList();
         var totalAgreed = Math.Round(list.Sum(i => i.AgreedPriceInLocal), 2, MidpointRounding.AwayFromZero);
         var shippingToCR = Math.Round(list.Sum(i => i.EstimateShipping), 2, MidpointRounding.AwayFromZero);
         // Spec 018, FR-021: RealPrice now includes tax and shipping, so the subtotal is based on list prices
@@ -318,9 +318,9 @@ public class OrderService(
         }
         else if (dto.ToStatus == OrderStatus.Voided.Key && previousStatus != OrderStatus.Pending.Key)
         {
-            // Items voided earlier already have their Void transaction (partial void), so they are not voided twice
+            // Items voided earlier already have their Void transaction (partial void); Active and Received items are voided now
             var items = await context.OrderItems
-                .Where(i => i.OrderId == order.Id && i.Status == OrderItemStatus.Active.Key)
+                .Where(i => i.OrderId == order.Id && i.Status != OrderItemStatus.Voided.Key)
                 .ToListAsync();
             foreach (var item in items)
             {
@@ -472,7 +472,7 @@ public class OrderService(
         item.UpdatedAt          = DateTime.UtcNow;
 
         var otherTotal = await context.OrderItems
-            .Where(i => i.OrderId == item.OrderId && i.Id != itemId && i.Status == OrderItemStatus.Active.Key)
+            .Where(i => i.OrderId == item.OrderId && i.Id != itemId && i.Status != OrderItemStatus.Voided.Key)
             .SumAsync(i => i.AgreedPriceInLocal);
         order.TotalAgreedPriceInLocal = Math.Round(otherTotal + newAgreedPriceInLocal, 2);
         order.EstimatedProfitInLocal  = Math.Round(
@@ -504,16 +504,16 @@ public class OrderService(
         if (itemIds.Count == 0) return (null, "Seleccione al menos un ítem.");
 
         var items = await context.OrderItems.Where(i => i.OrderId == orderId).ToListAsync();
-        var active = items.Where(i => i.Status == OrderItemStatus.Active.Key).ToList();
+        var notVoided = items.Where(i => i.Status != OrderItemStatus.Voided.Key).ToList();
         var selectedIds = itemIds.Distinct().ToHashSet();
-        var selected = active.Where(i => selectedIds.Contains(i.Id)).ToList();
+        var selected = notVoided.Where(i => selectedIds.Contains(i.Id)).ToList();
         if (selected.Count != selectedIds.Count)
             return (null, "Hay ítems que no pertenecen a la orden o ya están anulados.");
 
         var before = new OrderTotals(
             order.TotalAgreedPriceInLocal, order.ShippingAmountToCR, order.TotalWithoutTaxes, order.TaxesAmount,
             order.TotalToPayToSupplier, order.TotalOfTheOrder, order.EstimatedProfitInLocal);
-        var after = ComputeOrderTotals(order, active.Where(i => !selectedIds.Contains(i.Id)));
+        var after = ComputeOrderTotals(order, notVoided.Where(i => !selectedIds.Contains(i.Id)));
 
         var customerIds = selected.Select(i => i.CustomerId).Distinct().ToList();
         var customers = await context.Customers.Where(c => customerIds.Contains(c.Id)).ToListAsync();
@@ -529,7 +529,7 @@ public class OrderService(
             .ToList();
 
         var preview = new VoidItemsPreviewDto(
-            AllSelected: selected.Count == active.Count,
+            AllSelected: selected.Count == notVoided.Count,
             Before: before,
             After: after,
             TheoreticalRefund: before.TotalToPayToSupplier - after.TotalToPayToSupplier,
@@ -582,12 +582,12 @@ public class OrderService(
         if (lines.Any(l => l.RefundAmount > VoidRefundMaxAmount)) return (false, "El monto a devolver es demasiado grande.");
 
         var items = await context.OrderItems.Where(i => i.OrderId == orderId).ToListAsync();
-        var active = items.Where(i => i.Status == OrderItemStatus.Active.Key).ToList();
+        var notVoided = items.Where(i => i.Status != OrderItemStatus.Voided.Key).ToList();
         var selectedIds = lines.Select(l => l.ItemId).Distinct().ToHashSet();
-        var selected = active.Where(i => selectedIds.Contains(i.Id)).ToList();
+        var selected = notVoided.Where(i => selectedIds.Contains(i.Id)).ToList();
         if (selected.Count != selectedIds.Count || selectedIds.Count != lines.Count)
             return (false, "Hay ítems que no pertenecen a la orden o ya están anulados.");
-        if (selected.Count == active.Count)
+        if (selected.Count == notVoided.Count)
             return (false, "No se pueden anular todos los ítems; use la anulación de la orden.");
 
         var period = await cxpService.GetOpenPeriodAsync();

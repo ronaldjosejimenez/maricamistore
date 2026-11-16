@@ -25,7 +25,7 @@ public record OrderItemWithCustomerDto(
     DateTime UpdatedAt,
     string Status);
 
-/// <summary>The monetary totals of an order, computed from its active items.</summary>
+/// <summary>The monetary totals of an order, computed from its non-voided (Active and Received) items.</summary>
 public record OrderTotals(
     decimal TotalAgreedPriceInLocal,
     decimal ShippingAmountToCR,
